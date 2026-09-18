@@ -7,6 +7,11 @@ import tseslint from 'typescript-eslint';
 export default defineConfig([
   globalIgnores(['dist']),
   {
+    linterOptions: {
+      noInlineConfig: true,
+    },
+  },
+  {
     files: ['**/*.ts'],
     extends: [
       js.configs.recommended,
