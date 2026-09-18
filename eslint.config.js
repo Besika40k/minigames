@@ -28,6 +28,8 @@ export default defineConfig([
     rules: {
       'no-console': ['error', { allow: ['warn', 'error'] }],
       '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/explicit-function-return-type': 'error',
+      '@typescript-eslint/no-inferrable-types': 'off',
     },
   },
   prettierConfig,
