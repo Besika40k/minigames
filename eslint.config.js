@@ -1,12 +1,12 @@
-import js from "@eslint/js";
-import prettierConfig from "eslint-config-prettier/flat";
-import { defineConfig, globalIgnores } from "eslint/config";
-import tseslint from "typescript-eslint";
+import js from '@eslint/js';
+import prettierConfig from 'eslint-config-prettier/flat';
+import { defineConfig, globalIgnores } from 'eslint/config';
+import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-  globalIgnores(["dist"]),
+  globalIgnores(['dist']),
   {
-    files: ["**/*.ts"],
+    files: ['**/*.ts'],
     extends: [
       js.configs.recommended,
       tseslint.configs.recommendedTypeChecked,
@@ -19,8 +19,8 @@ export default defineConfig([
       },
     },
     rules: {
-      "no-console": ["error", { allow: ["warn", "error"] }],
-      "@typescript-eslint/no-explicit-any": "error",
+      'no-console': ['error', { allow: ['warn', 'error'] }],
+      '@typescript-eslint/no-explicit-any': 'error',
     },
   },
   prettierConfig,
