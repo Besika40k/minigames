@@ -11,3 +11,36 @@ The layout is responsive and follows the Figma design at three breakpoints: 375p
 - Sass (SCSS)
 - ESLint (typescript-eslint, Unicorn) and Prettier
 - Husky and commitlint for Git hooks
+
+## Getting started
+
+Requires Node.js 22 or newer.
+
+```bash
+    git clone https://github.com/Besika40k/minigames.git
+    cd minigames
+    npm install
+    npm run dev
+```
+
+## Scripts
+
+| Script                 | Description                                        |
+| ---------------------- | -------------------------------------------------- |
+| `npm run dev`          | Start the development server                       |
+| `npm run build`        | Type-check and create a production build in `dist` |
+| `npm run build:dev`    | Create a development build with source maps        |
+| `npm run preview`      | Serve the latest build locally                     |
+| `npm run lint`         | Run ESLint on the codebase (fails on warnings)     |
+| `npm run lint:fix`     | Run ESLint and fix what can be fixed automatically |
+| `npm run format`       | Format the codebase with Prettier                  |
+| `npm run format:check` | Check formatting without changing files            |
+
+## Git hooks
+
+- `commit-msg`: validates commit messages against the RS School Git convention
+- `pre-push`: runs `npm run lint` and `npm run format:check`; the push is aborted on any error or warning
+
+## Deployment
+
+Coming soon.
