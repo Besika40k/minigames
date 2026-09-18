@@ -41,6 +41,27 @@ Requires Node.js 22 or newer.
 - `commit-msg`: validates commit messages against the RS School Git convention
 - `pre-push`: runs `npm run lint` and `npm run format:check`; the push is aborted on any error or warning
 
+## Project structure
+
+```text
+src/
+├── main.ts            # entry point
+├── app/               # app bootstrap and SPA router
+├── components/        # UI reused across pages (header, burger menu, footer, auth dialog)
+├── pages/             # one folder per page, each section in its own subfolder
+│   └── home/          # hero, games carousel, leaderboard, game dev section
+├── data/              # mock data (games, leaderboard)
+├── types/             # shared interfaces and enums
+├── utils/             # DOM and formatting helpers
+├── assets/            # fonts, icons, images
+└── styles/
+    ├── main.scss      # global styles entry point
+    ├── abstracts/     # tokens, functions, mixins (no CSS output)
+    └── base/          # global element styles and typography
+```
+
+Each component and page section keeps its TypeScript and SCSS files together in one folder.
+
 ## Deployment
 
 Coming soon.
