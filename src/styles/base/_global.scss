@@ -19,3 +19,8 @@ img {
   display: block;
   max-width: 100%;
 }
+
+:focus-visible {
+  outline: $border-width solid get-color(tertiary);
+  outline-offset: get-size(0.5);
+}
