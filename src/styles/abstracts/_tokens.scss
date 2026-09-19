@@ -159,3 +159,12 @@ $shadows: (
   level-2: 6px 6px $shadow-color,
   level-3: 8px 8px $shadow-color,
 );
+
+// ---------- Breakpoints ----------
+// The three widths of the design. Media queries never repeat these numbers:
+// they go through the media-up and media-down mixins.
+$breakpoints: (
+  mobile: 375px,
+  tablet: 768px,
+  desktop: 1920px,
+);
