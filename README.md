@@ -62,6 +62,12 @@ src/
 
 Each component and page section keeps its TypeScript and SCSS files together in one folder.
 
+## Architecture
+
+The app is a single-page application: `index.html` has an empty `body` and one script tag, and every element is created from TypeScript with the typed `createElement` helper (`src/utils/create-element.ts`). Routes live in the URL hash (`#/`), so the app works on any static host without server rules.
+
+To add a page, add a value to the `Route` enum (`src/types/route.ts`), write a function that returns the page's elements, and register both in `src/app/app.ts`.
+
 ## Styling
 
 Design tokens from the style guide live in `src/styles/abstracts/_tokens.scss`: colors, typography, sizes, corner radii, button sizes, shadows and breakpoints. Styles read them through helpers instead of raw values:
