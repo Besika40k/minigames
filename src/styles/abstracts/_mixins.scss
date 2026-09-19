@@ -1,0 +1,33 @@
+@use 'sass:map';
+@use 'functions' as *;
+
+// Styles for viewports wider than the breakpoint.
+// media-up and media-down never overlap: at exactly 768px only
+// media-down(tablet) applies.
+@mixin media-up($name) {
+  @media (width > #{get-breakpoint($name)}) {
+    @content;
+  }
+}
+
+// Styles for viewports up to and including the breakpoint.
+@mixin media-down($name) {
+  @media (width <= #{get-breakpoint($name)}) {
+    @content;
+  }
+}
+
+// Hover styles only on devices that can really hover. On touch screens
+// :hover would otherwise stay stuck after a tap.
+@mixin hover {
+  @media (hover: hover) {
+    &:hover {
+      @content;
+    }
+  }
+}
+
+// Padding of one of the style guide's button sizes: large, medium, small or icon.
+@mixin button-size($name) {
+  padding: map.get(get-button-size($name), padding);
+}
