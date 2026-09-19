@@ -5,6 +5,8 @@
 // Inside a map, a comment describes the entry directly below it.
 // Prettier moves end-of-line comments, so they are kept on their own line.
 
+@use 'sass:map';
+
 // ---------- Colors ----------
 $colors: (
   // Base
@@ -128,4 +130,32 @@ $corner-radii: (
   large: 16px,
   extra-large: 24px,
   full: 9999px,
+);
+
+// ---------- Button sizes ----------
+// Padding is in CSS order (vertical horizontal). The style guide lists it the
+// other way round (btn-large is "24px 16px"); measuring its PDF export shows
+// that the first number is the horizontal padding.
+$button-sizes: (
+  large: (
+    padding: 16px 24px,
+  ),
+  medium: (
+    padding: 10px 20px,
+  ),
+  small: (
+    padding: 8px 16px,
+  ),
+  icon: (
+    padding: 8px,
+  ),
+);
+
+// ---------- Shadows ----------
+// Hard offset shadows in the on-primary color, no blur.
+$shadow-color: map.get($colors, on-primary);
+$shadows: (
+  level-1: 4px 4px $shadow-color,
+  level-2: 6px 6px $shadow-color,
+  level-3: 8px 8px $shadow-color,
 );
