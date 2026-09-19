@@ -1,0 +1,64 @@
+// Design tokens from the style guide.
+// Plain data only: nothing here emits CSS, so any stylesheet can @use it
+// without duplicating output.
+//
+// Inside a map, a comment describes the entry directly below it.
+// Prettier moves end-of-line comments, so they are kept on their own line.
+
+// ---------- Colors ----------
+$colors: (
+  // Base
+  // bg, text-color
+  white: #ffffff,
+  // gradient
+  black: #000000,
+
+  // General
+  // base background
+  bg: #f9f8f3,
+  // base text-color
+  on-bg: #5f5d75,
+  // secondary/info text-color
+  on-bg-low: #737380,
+  // footer background
+  bg-footer: #1e1b3a,
+  // social-link
+  bg-footer-low: #2a264f,
+  // social-link hover
+  bg-footer-lowest: #3c376e,
+  // footer text-color
+  on-bg-footer: #b9b5c9,
+  // button hover
+  surface: #fff9e5,
+  // input focus
+  surface-low: #fffcf5,
+  // button, text-color
+  primary: #ffd02b,
+  // sort action
+  primary-low: #fde047,
+  // button hover
+  primary-high: #e5bb00,
+  // text-color on primary; also shadow base color
+  on-primary: #242145,
+  // badge
+  secondary: #f0eeff,
+  // table header, button hover
+  tertiary: #3a2ebf,
+  // like icon
+  like: #ff4b4b,
+  // validation error
+  error: #b3261e,
+  // price
+  price-free: #0b8a8f,
+
+  // Borders
+  outline: #e5e7eb,
+  outline-variant: #d2d2d2,
+
+  // Avatar backgrounds (random assignment pool)
+  avatar-random-1: #e9eef6,
+  avatar-random-2: #a3e2c9,
+  avatar-random-3: #bce3ff,
+  avatar-random-4: #ffc6ff,
+  avatar-random-5: #e8dff5
+);
