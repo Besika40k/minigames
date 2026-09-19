@@ -45,3 +45,7 @@
 @function get-button-size($name) {
   @return -lookup(tokens.$button-sizes, $name, 'button size');
 }
+
+@function get-breakpoint($name) {
+  @return -lookup(tokens.$breakpoints, $name, 'breakpoint');
+}
