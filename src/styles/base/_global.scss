@@ -1,0 +1,21 @@
+@use 'abstracts' as *;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: get-color(bg);
+  color: get-color(on-bg);
+  font-family: get-font-family(primary);
+  font-size: get-font-size(body-medium);
+  font-weight: get-font-weight(regular);
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
