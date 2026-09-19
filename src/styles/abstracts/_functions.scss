@@ -49,3 +49,7 @@
 @function get-breakpoint($name) {
   @return -lookup(tokens.$breakpoints, $name, 'breakpoint');
 }
+
+@function get-duration($name) {
+  @return -lookup(tokens.$durations, $name, 'duration');
+}
