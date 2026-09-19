@@ -47,10 +47,10 @@ Requires Node.js 22 or newer.
 src/
 ├── main.ts            # entry point
 ├── app/               # app bootstrap and SPA router
-├── components/        # UI reused across pages (header, burger menu, footer, auth dialog)
+├── components/        # UI reused across pages (button, logo, header, burger menu, footer, auth dialog)
 ├── pages/             # one folder per page, each section in its own subfolder
 │   └── home/          # hero, games carousel, leaderboard, game dev section
-├── data/              # mock data (games, leaderboard)
+├── data/              # static data (navigation links, mock games and leaderboard)
 ├── types/             # shared interfaces and enums
 ├── utils/             # DOM and formatting helpers
 ├── assets/            # fonts, icons, images
