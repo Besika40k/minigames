@@ -1,0 +1,18 @@
+// Form controls do not inherit the page font on their own.
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+// Headings and paragraphs get their spacing from the layout, using size tokens.
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin: 0;
+}
