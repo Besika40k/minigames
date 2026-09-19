@@ -62,3 +62,38 @@ $colors: (
   avatar-random-4: #ffc6ff,
   avatar-random-5: #e8dff5
 );
+
+// ---------- Typography ----------
+$font-families: (
+  primary: (
+    'Inter',
+    sans-serif,
+  ),
+  secondary: (
+    'Roboto',
+    sans-serif,
+  ),
+);
+
+$font-sizes: (
+  display-large: 56px,
+  display-medium: 36px,
+  display-small: 24px,
+  headline-large: 32px,
+  headline-medium: 24px,
+  headline-small: 20px,
+  body-large: 18px,
+  body-medium: 16px,
+  body-small: 14px,
+  label-extra-large: 16px,
+  label-large: 14px,
+  label-medium: 12px,
+  label-small: 10px,
+);
+
+$font-weights: (
+  regular: 400,
+  medium: 500,
+  bold: 700,
+  extra-bold: 800,
+);
