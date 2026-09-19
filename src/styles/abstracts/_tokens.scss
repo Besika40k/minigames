@@ -161,10 +161,25 @@ $shadows: (
 );
 
 // ---------- Breakpoints ----------
-// The three widths of the design. Media queries never repeat these numbers:
-// they go through the media-up and media-down mixins.
+// The three widths of the design, plus laptop: the desktop header needs about
+// 970px at full spacing, so below laptop it switches to a compact version.
+// Media queries never repeat these numbers: they go through the media-up and
+// media-down mixins.
 $breakpoints: (
   mobile: 375px,
   tablet: 768px,
+  laptop: 1024px,
   desktop: 1920px,
+);
+
+// ---------- Border width ----------
+// Not a style guide variable: every button, tile and divider in the mockups
+// uses a 2px line.
+$border-width: 2px;
+
+// ---------- Durations ----------
+// Not a style guide variable: shared timing for hover and open/close transitions.
+$durations: (
+  fast: 200ms,
+  medium: 300ms,
 );
