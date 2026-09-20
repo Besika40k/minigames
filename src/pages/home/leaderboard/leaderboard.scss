@@ -1,0 +1,342 @@
+@use 'sass:list';
+@use 'abstracts' as *;
+
+// Column widths measured from the mockups, where the table is 1680px wide on
+// desktop, 688px on tablet and 343px on mobile. The columns are fixed: a column
+// with a width keeps it, and the columns without one share the rest equally.
+// The first column starts with the table's 16px padding, and the last column
+// carries the space the mockup leaves to the right of it.
+$rank-width-desktop: 112px;
+// 326px of 1680px
+$favorite-width-desktop: 19.4%;
+
+$rank-width-tablet: 95px;
+// 182px of 688px
+$player-width-tablet: 26.5%;
+// 163px of 688px
+$streak-width-tablet: 23.7%;
+
+$rank-width-mobile: 55px;
+// 115px of 343px
+$player-width-mobile: 33.5%;
+// 80px of 343px
+$score-width-mobile: 23.3%;
+
+// Sizes of the mockups that fall between two size tokens
+$avatar-gap-desktop: get-size(1) + get-size(0.5);
+$avatar-gap-mobile: 6px;
+$avatar-size-tablet: get-size(3) + get-size(0.5);
+$tag-padding-inline: get-size(1) + get-size(0.5);
+$flame-size-small: 14px;
+
+// The first player gets the brand yellow, the next four players take the
+// avatar colors in turn
+$avatar-colors: (
+  get-color(primary),
+  get-color(avatar-random-2),
+  get-color(avatar-random-3),
+  get-color(avatar-random-4),
+  get-color(avatar-random-5)
+);
+
+// The section owns the space above it. The game developers section below owns
+// the space between the two.
+.leaderboard {
+  padding-block-start: get-size(10);
+
+  @include media-down(laptop) {
+    padding-block-start: get-size(6);
+  }
+
+  @include media-down(mobile) {
+    padding-block-start: get-size(4);
+  }
+}
+
+.leaderboard__inner {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(5);
+  max-width: get-breakpoint(desktop);
+  margin-inline: auto;
+  padding-inline: get-size(15);
+
+  @include media-down(laptop) {
+    gap: get-size(3);
+    padding-inline: get-size(5);
+  }
+
+  @include media-down(mobile) {
+    gap: get-size(2);
+    padding-inline: get-size(2);
+  }
+}
+
+// The mockup draws the table's stroke over the rows instead of around them, so
+// the border is an overlay on top of the table and takes no room of its own.
+// The wrapper clips the header's background to the rounded corners.
+.leaderboard__table-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: get-radius(large);
+  background-color: get-color(white);
+  box-shadow: get-shadow(level-2);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: $border-width solid get-color(on-primary);
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  @include media-down(laptop) {
+    box-shadow: get-shadow(level-1);
+  }
+}
+
+// The table uses the secondary font
+.leaderboard__table {
+  width: 100%;
+  table-layout: fixed;
+  border-spacing: 0;
+  color: get-color(on-primary);
+  font-family: get-font-family(secondary);
+  font-size: get-font-size(body-medium);
+  font-weight: get-font-weight(bold);
+
+  @include media-down(laptop) {
+    font-size: get-font-size(body-small);
+  }
+}
+
+.leaderboard__cell {
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+// ---------- Columns ----------
+.leaderboard__cell--rank {
+  width: $rank-width-desktop;
+  padding-inline-start: get-size(2);
+
+  @include media-down(laptop) {
+    width: $rank-width-tablet;
+  }
+
+  @include media-down(mobile) {
+    width: $rank-width-mobile;
+  }
+}
+
+.leaderboard__cell--player {
+  @include media-down(laptop) {
+    width: $player-width-tablet;
+  }
+
+  @include media-down(mobile) {
+    width: $player-width-mobile;
+  }
+}
+
+.leaderboard__cell--games {
+  @include media-down(mobile) {
+    display: none;
+  }
+}
+
+.leaderboard__cell--score {
+  @include media-down(mobile) {
+    width: $score-width-mobile;
+  }
+}
+
+.leaderboard__cell--streak {
+  @include media-down(laptop) {
+    width: $streak-width-tablet;
+    padding-inline-end: get-size(5);
+  }
+
+  // The last column takes the rest of the width
+  @include media-down(mobile) {
+    width: auto;
+    padding-inline-end: get-size(1);
+  }
+}
+
+// The tablet and mobile mockups leave this column out
+.leaderboard__cell--favorite {
+  width: $favorite-width-desktop;
+  padding-inline-end: get-size(2);
+
+  @include media-down(laptop) {
+    display: none;
+  }
+}
+
+// ---------- Header ----------
+// The line under the header is an inset shadow, so it takes no height
+.leaderboard__head .leaderboard__cell {
+  padding-block: get-size(3);
+  background-color: get-color(tertiary);
+  box-shadow: inset 0 (-$border-width) 0 get-color(on-primary);
+  color: get-color(white);
+  text-transform: uppercase;
+
+  @include media-down(laptop) {
+    padding-block: get-size(2);
+  }
+}
+
+// ---------- Rows ----------
+// Rows alternate between the page color and white. The height of a row is the
+// height of its avatar plus 16px above and below.
+.leaderboard__row {
+  background-color: get-color(bg);
+
+  &:nth-child(even) {
+    background-color: get-color(white);
+  }
+
+  // A 1px line between two rows, drawn inside the row so it adds no height
+  & + & .leaderboard__cell {
+    box-shadow: inset 0 1px 0 get-color(outline);
+  }
+
+  // Tablet and mobile show the top three players
+  @include media-down(laptop) {
+    &:nth-child(n + 4) {
+      display: none;
+    }
+  }
+
+  // The leader's rank is highlighted: yellow on desktop and blue on tablet and
+  // mobile, as in the mockups
+  &:first-child .leaderboard__cell--rank {
+    color: get-color(tertiary);
+
+    @include media-up(laptop) {
+      color: get-color(primary);
+    }
+  }
+}
+
+.leaderboard__body .leaderboard__cell {
+  padding-block: get-size(2);
+}
+
+.leaderboard__body .leaderboard__cell--player {
+  padding-inline-start: get-size(1);
+  text-align: start;
+
+  @include media-down(laptop) {
+    padding-inline-start: get-size(2);
+  }
+
+  @include media-down(mobile) {
+    padding-inline-start: get-size(1);
+  }
+}
+
+.leaderboard__player {
+  display: flex;
+  align-items: center;
+  gap: $avatar-gap-desktop;
+
+  @include media-down(laptop) {
+    gap: get-size(1);
+  }
+
+  @include media-down(mobile) {
+    gap: $avatar-gap-mobile;
+  }
+}
+
+.leaderboard__avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: get-size(5);
+  height: get-size(5);
+  border-radius: get-radius(full);
+  box-shadow: inset 0 0 0 $border-width-thin get-color(on-primary);
+  font-size: get-font-size(body-small);
+  line-height: 1;
+
+  @include media-down(laptop) {
+    width: $avatar-size-tablet;
+    height: $avatar-size-tablet;
+    font-size: get-font-size(label-small);
+  }
+
+  @include media-down(mobile) {
+    width: get-size(3);
+    height: get-size(3);
+  }
+}
+
+@for $index from 1 through list.length($avatar-colors) {
+  .leaderboard__row:nth-child(#{list.length($avatar-colors)}n + #{$index}) .leaderboard__avatar {
+    background-color: list.nth($avatar-colors, $index);
+  }
+}
+
+.leaderboard__streak {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: get-size(0.5);
+}
+
+.leaderboard__flame {
+  width: get-size(2);
+  height: get-size(2);
+
+  @include media-down(laptop) {
+    width: $flame-size-small;
+    height: $flame-size-small;
+  }
+}
+
+// The tag is never cut: right after the desktop layout starts, the longest game
+// name is a few pixels wider than its column and reaches into the column's
+// padding
+.leaderboard__tag {
+  display: inline-block;
+  padding: get-size(0.5) $tag-padding-inline;
+  border-radius: get-radius(full);
+  background-color: get-color(bg);
+  box-shadow: inset 0 0 0 $border-width-thin get-color(on-primary);
+  font-size: get-font-size(label-medium);
+  vertical-align: middle;
+}
+
+// ---------- Long and short texts ----------
+// Wide screens show the long form and small ones the short form. `--laptop`
+// texts switch at the laptop breakpoint and `--mobile` texts at the mobile one.
+.leaderboard__short {
+  display: none;
+}
+
+@include media-down(laptop) {
+  .leaderboard__long--laptop {
+    display: none;
+  }
+
+  .leaderboard__short--laptop {
+    display: inline;
+  }
+}
+
+@include media-down(mobile) {
+  .leaderboard__long--mobile {
+    display: none;
+  }
+
+  .leaderboard__short--mobile {
+    display: inline;
+  }
+}
