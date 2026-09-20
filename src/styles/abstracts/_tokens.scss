@@ -161,12 +161,18 @@ $shadows: (
 );
 
 // ---------- Breakpoints ----------
-// The three widths of the design, plus laptop: the desktop header needs about
-// 970px at full spacing, so below laptop it switches to a compact version.
+// The widest screen of each layout. The mockups are drawn at 375px, 768px and
+// 1920px, and each layout must also work on the widths up to the next bound:
+// - mobile: the 375px layout holds up to 560px, where the tablet hero card
+//   (480px) and its two 40px margins start to fit
+// - tablet: the width of the tablet mockup
+// - laptop: the desktop header needs about 970px at full spacing, so below
+//   laptop it switches to a compact version
+// - desktop: the width of the desktop mockup, where the content stops growing
 // Media queries never repeat these numbers: they go through the media-up and
 // media-down mixins.
 $breakpoints: (
-  mobile: 375px,
+  mobile: 560px,
   tablet: 768px,
   laptop: 1024px,
   desktop: 1920px,
