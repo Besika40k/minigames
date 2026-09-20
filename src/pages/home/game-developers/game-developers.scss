@@ -1,9 +1,21 @@
+@use 'sass:list';
 @use 'abstracts' as *;
 
 // Column widths of the desktop mockup (682px illustration, 958px card), kept
 // as a ratio so the two columns scale with the screen
 $illustration-column: 682fr;
 $card-column: 958fr;
+
+// The illustration's box keeps the shape it has in each mockup (682 by 480 on
+// desktop, 688 by 300 on tablet, 343 by 227 on mobile) instead of a fixed
+// height, so the picture is cropped by the same amount at every width
+$illustration-ratio-desktop: list.slash(682, 480);
+$illustration-ratio-tablet: list.slash(688, 300);
+$illustration-ratio-mobile: list.slash(343, 227);
+
+// The style guide gives no line heights: these are measured from the mockup
+$title-line-height: 1.2;
+$description-line-height: 1.5;
 
 // The desktop mockup crops the picture at the bottom only; tablet and mobile
 // crop it evenly
@@ -47,26 +59,23 @@ $illustration-position-desktop: center top;
   }
 }
 
-// The box keeps the shape it has in each mockup (682 by 480 on desktop, 688 by
-// 300 on tablet, 343 by 227 on mobile) instead of a fixed height, so the picture
-// is cropped by the same amount at every width. A fixed height crops far too
-// much between the widths of the mockups. `height: auto` replaces the height
-// attribute of the image.
+// A fixed height would crop far too much between the widths of the mockups.
+// `height: auto` replaces the height attribute of the image.
 .game-developers__illustration {
   width: 100%;
   height: auto;
-  aspect-ratio: 682 / 480;
+  aspect-ratio: $illustration-ratio-desktop;
   border-radius: get-radius(extra-large);
   object-fit: cover;
   object-position: $illustration-position-desktop;
 
   @include media-down(laptop) {
-    aspect-ratio: 688 / 300;
+    aspect-ratio: $illustration-ratio-tablet;
     object-position: center;
   }
 
   @include media-down(mobile) {
-    aspect-ratio: 343 / 227;
+    aspect-ratio: $illustration-ratio-mobile;
   }
 }
 
@@ -97,7 +106,7 @@ $illustration-position-desktop: center top;
   color: get-color(on-primary);
   font-size: get-font-size(headline-large);
   font-weight: get-font-weight(bold);
-  line-height: 1.2;
+  line-height: $title-line-height;
 
   @include media-down(laptop) {
     font-size: get-font-size(headline-medium);
@@ -107,7 +116,7 @@ $illustration-position-desktop: center top;
 .game-developers__description {
   color: get-color(on-bg);
   font-size: get-font-size(body-large);
-  line-height: 1.5;
+  line-height: $description-line-height;
 
   @include media-down(laptop) {
     font-size: get-font-size(body-small);
