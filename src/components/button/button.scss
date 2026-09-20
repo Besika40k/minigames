@@ -1,5 +1,9 @@
 @use 'abstracts' as *;
 
+// A pressed button shrinks a little, and a disabled one is half see-through
+$pressed-scale: 0.98;
+$disabled-opacity: 0.5;
+
 .button {
   display: inline-flex;
   align-items: center;
@@ -16,11 +20,11 @@
     transform get-duration(fast);
 
   &:active {
-    transform: scale(0.98);
+    transform: scale($pressed-scale);
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: $disabled-opacity;
     cursor: not-allowed;
   }
 }
