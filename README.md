@@ -74,6 +74,10 @@ The auth dialog (`src/components/auth-dialog`) is a native `<dialog>` opened wit
 
 Inside, a tab bar (ARIA tabs, arrow keys move between the tabs) switches between the two forms. The forms cross-fade while the box around them eases to the new height. The dialog closes with Esc or a click on the backdrop, and both the opening and the closing are animated (only a fade when the system asks for reduced motion). The content of the forms lives in `src/data/auth.ts`. Checking the fields and sending them are not implemented yet, so a form only stays on the page when it is submitted.
 
+## Games carousel
+
+The carousel on the Home page (`src/pages/home/games-carousel`) is a static layout for now: five cards with the numbers of the mock dataset (`src/data/carousel.ts`), and arrows that do nothing. Each card asks its own width through a container query: a card that is 288px wide or wider shows its title, rating and likes, and a narrower card shows only its photo. The active card in the middle is the exception, because the mobile mockup shows its text at 218px. The text of a narrow card stays in the page for screen readers.
+
 ## Styling
 
 Design tokens from the style guide live in `src/styles/abstracts/_tokens.scss`: colors, typography, sizes, corner radii, button sizes, shadows and breakpoints. Styles read them through helpers instead of raw values:
