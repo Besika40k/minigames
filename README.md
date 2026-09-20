@@ -68,6 +68,12 @@ The app is a single-page application: `index.html` has an empty `body` and one s
 
 To add a page, add a value to the `Route` enum (`src/types/route.ts`), write a function that returns the page's elements, and register both in `src/app/app.ts`.
 
+## Auth dialog
+
+The auth dialog (`src/components/auth-dialog`) is a native `<dialog>` opened with `showModal()`, so the browser centers it, dims the page behind it, traps the focus and returns the focus to the button that opened it. `createAuthDialog()` returns the dialog element and an `open(mode)` function, and `app.ts` passes that function to the header and to the mobile menu: Log In opens the login form and Sign Up the registration form. The mobile menu closes itself before it opens the dialog.
+
+Inside, a tab bar (ARIA tabs, arrow keys move between the tabs) switches between the two forms. The forms cross-fade while the box around them eases to the new height. The dialog closes with Esc or a click on the backdrop, and both the opening and the closing are animated (only a fade when the system asks for reduced motion). The content of the forms lives in `src/data/auth.ts`. Checking the fields and sending them are not implemented yet, so a form only stays on the page when it is submitted.
+
 ## Styling
 
 Design tokens from the style guide live in `src/styles/abstracts/_tokens.scss`: colors, typography, sizes, corner radii, button sizes, shadows and breakpoints. Styles read them through helpers instead of raw values:
