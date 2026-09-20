@@ -1,0 +1,160 @@
+@use 'sass:color';
+@use 'abstracts' as *;
+
+// The mockup shows the photo at 20% opacity on top of a navy tint (65% opacity)
+// that sits on the page background. The same look comes from covering an opaque
+// photo with the mixed tint color at the remaining 80%.
+$tint-weight: 65%;
+$photo-opacity: 0.2;
+$tint: color.mix(get-color(bg-footer), get-color(bg), $tint-weight);
+
+// Stroke of the card. It sits inside the card box, so the card padding is the
+// mockup's padding minus the stroke. The mockup makes it thicker on bigger
+// screens.
+$stroke-desktop: 3px;
+$stroke-tablet: 2.5px;
+$stroke-mobile: $border-width;
+
+// Card widths in the mockup
+$card-width-desktop: 640px;
+$card-width-tablet: 480px;
+
+// The description is a little narrower than the card's content, so it breaks
+// after "Play" as in the mockup instead of fitting "instantly" on the first line.
+$description-width: 535px;
+
+// The desktop mockup zooms the photo in to this width, which crops the blank
+// margins of the illustration. Tablet and mobile simply fill the section.
+$photo-width-desktop: 2290px;
+
+.hero {
+  position: relative;
+  background-color: $tint;
+  background-image: url('../../../assets/images/hero-background.jpg');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+
+  @include media-up(laptop) {
+    background-position: 48% 73%;
+    background-size: max($photo-width-desktop, 100%) auto;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: rgba($tint, 1 - $photo-opacity);
+  }
+}
+
+.hero__inner {
+  position: relative;
+  max-width: get-breakpoint(desktop);
+  margin-inline: auto;
+  padding: get-size(14) get-size(15);
+
+  @include media-down(laptop) {
+    padding: get-size(9) get-size(5);
+  }
+
+  @include media-down(mobile) {
+    padding: get-size(8) get-size(2);
+  }
+}
+
+.hero__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: get-size(3);
+  max-width: $card-width-desktop;
+  padding: get-size(6) - $stroke-desktop;
+  border: $stroke-desktop solid get-color(on-primary);
+  border-radius: get-radius(extra-large);
+  background-color: get-color(bg);
+  box-shadow: get-shadow(level-3);
+
+  @include media-down(laptop) {
+    gap: get-size(2);
+    max-width: $card-width-tablet;
+    padding: get-size(3) - $stroke-tablet;
+    border-width: $stroke-tablet;
+    border-radius: get-radius(large);
+    box-shadow: get-shadow(level-2);
+  }
+
+  // The card fills the width between the margins, as in the 375px mockup
+  @include media-down(mobile) {
+    max-width: none;
+    padding: get-size(3) - $stroke-mobile;
+    border-width: $stroke-mobile;
+    border-radius: get-radius(medium);
+    box-shadow: get-shadow(level-1);
+  }
+}
+
+// The style guide gives no line heights, so the ones below are measured from
+// the mockup.
+.hero__title {
+  color: get-color(on-primary);
+  font-size: get-font-size(display-large);
+  font-weight: get-font-weight(bold);
+  line-height: 62px;
+
+  @include media-down(laptop) {
+    font-size: get-font-size(display-medium);
+    line-height: 41px;
+  }
+
+  @include media-down(mobile) {
+    font-size: get-font-size(display-small);
+    line-height: 29px;
+  }
+}
+
+.hero__description {
+  max-width: $description-width;
+  color: get-color(on-bg);
+  font-size: get-font-size(body-large);
+  font-weight: get-font-weight(medium);
+  line-height: 27px;
+
+  @include media-down(laptop) {
+    font-size: get-font-size(body-small);
+    line-height: 20px;
+  }
+
+  // No body style is as small as the mockup's 12px; label-medium has that size
+  @include media-down(mobile) {
+    font-size: get-font-size(label-medium);
+    line-height: 17px;
+  }
+}
+
+.hero__description-text--short {
+  display: none;
+
+  @include media-down(mobile) {
+    display: inline;
+  }
+}
+
+.hero__description-text--full {
+  @include media-down(mobile) {
+    display: none;
+  }
+}
+
+// The button grows smaller with the screen, like the type around it
+.button.hero__button {
+  @include media-down(laptop) {
+    @include button-size(medium);
+    font-size: get-font-size(label-large);
+  }
+
+  @include media-down(mobile) {
+    @include button-size(small);
+    font-size: get-font-size(label-medium);
+  }
+}
