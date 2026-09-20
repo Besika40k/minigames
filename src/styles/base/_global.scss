@@ -6,13 +6,23 @@
   box-sizing: border-box;
 }
 
+// The page is at least as tall as the window and the content takes the spare
+// room, so the footer sits at the bottom of short pages too
 body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
   background-color: get-color(bg);
   color: get-color(on-bg);
   font-family: get-font-family(primary);
   font-size: get-font-size(body-medium);
   font-weight: get-font-weight(regular);
+}
+
+main {
+  flex: 1 0 auto;
 }
 
 img {
