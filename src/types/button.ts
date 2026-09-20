@@ -4,6 +4,7 @@ export enum ButtonVariant {
 }
 
 export enum ButtonSize {
+  Large = 'large',
   Medium = 'medium',
   Small = 'small',
   Icon = 'icon',
