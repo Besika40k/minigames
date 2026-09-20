@@ -1,0 +1,267 @@
+@use 'abstracts' as *;
+
+// The mockup's rule above the bottom bar is 1px, and the border width token is 2px
+$divider-width: 1px;
+
+// The tagline breaks after "curated" in the mockup; wider, "casual" would fit
+// on the first line
+$tagline-width: 400px;
+
+// The UI guide makes a hovered link bold, but a real bold is about 4px wider
+// and would move the whole column. A text stroke thickens the letters and keeps
+// their width; 0.6px looks closest to the bold weight.
+$hover-stroke: 0.6px;
+
+.footer {
+  background-color: get-color(bg-footer);
+  color: get-color(on-bg-footer);
+  font-size: get-font-size(body-small);
+
+  // The default focus ring is dark, which disappears on this background
+  :focus-visible {
+    outline-color: get-color(primary);
+  }
+}
+
+.footer__inner {
+  max-width: get-breakpoint(desktop);
+  margin-inline: auto;
+  padding: get-size(5) get-size(15);
+
+  @include media-down(laptop) {
+    padding-inline: get-size(5);
+  }
+
+  @include media-down(mobile) {
+    padding: get-size(4) get-size(2);
+  }
+}
+
+.footer__main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: get-size(8);
+  padding-block-end: get-size(8);
+
+  // Tablet and mobile stack the columns under the logo and the tagline
+  @include media-down(laptop) {
+    flex-direction: column;
+    gap: get-size(3);
+    padding-block-end: get-size(5);
+  }
+
+  @include media-down(mobile) {
+    padding-block-end: get-size(3);
+  }
+}
+
+.footer__about {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: get-size(3);
+}
+
+.logo.footer__logo {
+  color: get-color(white);
+}
+
+.footer__tagline {
+  max-width: $tagline-width;
+  line-height: 1.5;
+
+  @include media-down(laptop) {
+    max-width: none;
+  }
+}
+
+.footer__columns {
+  display: flex;
+  gap: get-size(10);
+
+  @include media-down(laptop) {
+    gap: get-size(5);
+  }
+
+  // Two equal columns; the community column takes a row of its own
+  @include media-down(mobile) {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: get-size(3) get-size(5);
+    align-self: stretch;
+  }
+}
+
+.footer__column {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(2);
+
+  &:last-child {
+    @include media-down(mobile) {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+.footer__heading {
+  color: get-color(white);
+  font-size: get-font-size(body-medium);
+  font-weight: get-font-weight(bold);
+}
+
+.footer__list {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &--social {
+    flex-direction: row;
+  }
+}
+
+.footer__link {
+  display: block;
+  width: fit-content;
+  color: get-color(on-bg-footer);
+  text-decoration: none;
+
+  @include hover {
+    color: get-color(primary);
+    -webkit-text-stroke: $hover-stroke currentcolor;
+    text-decoration: underline;
+    // the 1.5px line of the UI guide
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: get-size(0.5);
+  }
+}
+
+.footer__social-link {
+  display: grid;
+  place-items: center;
+  width: get-size(5);
+  height: get-size(5);
+  border-radius: get-radius(full);
+  background-color: get-color(bg-footer-low);
+  color: get-color(white);
+  transition:
+    background-color get-duration(fast),
+    box-shadow get-duration(fast);
+
+  svg {
+    width: get-size(2) + get-size(0.5);
+    height: get-size(2) + get-size(0.5);
+  }
+
+  @include media-down(laptop) {
+    width: get-size(4);
+    height: get-size(4);
+
+    svg {
+      width: get-size(2);
+      height: get-size(2);
+    }
+  }
+
+  // The UI guide draws a yellow ring around the lighter circle
+  @include hover {
+    background-color: get-color(bg-footer-lowest);
+    box-shadow: 0 0 0 $border-width get-color(primary);
+  }
+}
+
+.footer__bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  // Only the smallest gap between items: space-between shares out the rest
+  gap: get-size(1);
+  padding-block-start: get-size(3);
+  border-block-start: $divider-width solid get-color(bg-footer-low);
+
+  @include media-down(laptop) {
+    padding-block-start: get-size(2);
+  }
+
+  // Mobile: the copyright line, then the two links side by side
+  @include media-down(mobile) {
+    justify-content: flex-start;
+    column-gap: get-size(2);
+    padding-block-start: get-size(1);
+    font-size: get-font-size(label-medium);
+  }
+}
+
+.footer__copyright {
+  @include media-down(mobile) {
+    flex-basis: 100%;
+  }
+}
+
+.footer__note {
+  @include media-down(mobile) {
+    display: none;
+  }
+}
+
+.footer__credit {
+  display: inline-flex;
+  align-items: center;
+  gap: get-size(1);
+  color: get-color(on-bg-footer);
+  text-decoration: none;
+
+  @include hover {
+    color: get-color(primary);
+    text-decoration: underline;
+    text-underline-offset: get-size(0.5);
+  }
+}
+
+.footer__badge {
+  display: grid;
+  place-items: center;
+  width: get-size(3);
+  height: get-size(3);
+  border-radius: get-radius(full);
+
+  @include media-down(laptop) {
+    width: get-size(2) + get-size(0.5);
+    height: get-size(2) + get-size(0.5);
+  }
+
+  &--course {
+    background-color: get-color(on-primary);
+    color: get-color(primary);
+    font-size: get-font-size(label-small);
+    font-weight: get-font-weight(bold);
+
+    // 8px: no font size token is this small, and size-1 has the value
+    @include media-down(laptop) {
+      font-size: get-size(1);
+    }
+  }
+
+  &--developer {
+    background-color: get-color(white);
+    color: get-color(on-primary);
+
+    svg {
+      width: get-size(2);
+      height: get-size(2);
+    }
+
+    // The mockup's code glyph is 14px on tablet and mobile
+    @include media-down(laptop) {
+      svg {
+        width: 14px;
+        height: 14px;
+      }
+    }
+  }
+}
