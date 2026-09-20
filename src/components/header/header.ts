@@ -10,7 +10,11 @@ import './header.scss';
 
 export interface HeaderOptions {
   readonly onAuthClick?: () => void;
-  readonly onMenuClick?: () => void;
+}
+
+export interface Header {
+  readonly element: HTMLElement;
+  readonly menuButton: HTMLButtonElement;
 }
 
 function createNavigationItem(link: NavigationLink): HTMLLIElement {
@@ -40,7 +44,17 @@ function createNavigation(): HTMLElement {
   });
 }
 
-function createActions(options: HeaderOptions): HTMLElement {
+function createMenuButton(): HTMLButtonElement {
+  return createButton({
+    variant: ButtonVariant.Outlined,
+    size: ButtonSize.Icon,
+    label: 'Open menu',
+    className: 'header__burger',
+    children: [createIcon(IconName.Burger)],
+  });
+}
+
+function createActions(options: HeaderOptions, menuButton: HTMLButtonElement): HTMLElement {
   const logIn: HTMLButtonElement = createButton({
     variant: ButtonVariant.Outlined,
     size: ButtonSize.Medium,
@@ -57,23 +71,16 @@ function createActions(options: HeaderOptions): HTMLElement {
     onClick: options.onAuthClick,
   });
 
-  const burger: HTMLButtonElement = createButton({
-    variant: ButtonVariant.Outlined,
-    size: ButtonSize.Icon,
-    label: 'Open menu',
-    className: 'header__burger',
-    children: [createIcon(IconName.Burger)],
-    onClick: options.onMenuClick,
-  });
-
   return createElement('div', {
     className: 'header__actions',
-    children: [logIn, signUp, burger],
+    children: [logIn, signUp, menuButton],
   });
 }
 
-export function createHeader(options: HeaderOptions = {}): HTMLElement {
-  return createElement('header', {
+export function createHeader(options: HeaderOptions = {}): Header {
+  const menuButton: HTMLButtonElement = createMenuButton();
+
+  const element: HTMLElement = createElement('header', {
     className: 'header',
     children: [
       createElement('div', {
@@ -81,9 +88,11 @@ export function createHeader(options: HeaderOptions = {}): HTMLElement {
         children: [
           createLogo({ className: 'header__logo' }),
           createNavigation(),
-          createActions(options),
+          createActions(options, menuButton),
         ],
       }),
     ],
   });
+
+  return { element, menuButton };
 }
