@@ -1,9 +1,5 @@
 @use 'abstracts' as *;
 
-// 12px between the button edges, as in the header: the mockup's 16px between
-// boxes minus the two 2px strokes that sit outside them there
-$button-gap: get-size(1) + get-size(0.5);
-
 .mobile-menu {
   // Full screen: undo the dialog defaults (a centered box with a size limit)
   width: 100%;
@@ -92,6 +88,7 @@ body:has(.mobile-menu[open]) {
 .mobile-menu__link {
   color: get-color(on-bg-footer);
   font-size: get-font-size(body-large);
+  font-weight: get-font-weight(medium);
   text-decoration: none;
 
   @include hover {
@@ -109,7 +106,7 @@ body:has(.mobile-menu[open]) {
 .mobile-menu__actions {
   display: flex;
   flex-direction: column;
-  gap: $button-gap;
+  gap: get-size(2);
   margin-block-start: auto;
   padding-block-start: get-size(4);
 
