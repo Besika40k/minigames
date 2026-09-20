@@ -1,5 +1,8 @@
 @use 'abstracts' as *;
 
+// The mockup's line is a quarter taller than the type: 40px for the 32px title
+$title-line-height: 1.25;
+
 // A yellow marker, then the title. The marker is as tall as the title's font
 // size (32px, and 24px on tablet and mobile) and 8px wide.
 .section-title {
@@ -9,7 +12,7 @@
   color: get-color(on-primary);
   font-size: get-font-size(headline-large);
   font-weight: get-font-weight(bold);
-  line-height: 1.25;
+  line-height: $title-line-height;
 
   &::before {
     content: '';
