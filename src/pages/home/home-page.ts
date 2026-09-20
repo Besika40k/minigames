@@ -1,5 +1,5 @@
-import { createElement } from '../../utils/create-element.ts';
+import { createHero } from './hero/hero.ts';
 
 export function renderHomePage(): readonly HTMLElement[] {
-  return [createElement('h1', { text: 'MiniGames' })];
+  return [createHero()];
 }
