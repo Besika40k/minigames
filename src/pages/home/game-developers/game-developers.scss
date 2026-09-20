@@ -1,0 +1,155 @@
+@use 'abstracts' as *;
+
+// Column widths of the desktop mockup (682px illustration, 958px card), kept
+// as a ratio so the two columns scale with the screen
+$illustration-column: 682fr;
+$card-column: 958fr;
+
+// The desktop mockup crops the picture at the bottom only; tablet and mobile
+// crop it evenly
+$illustration-position-desktop: center top;
+
+// The section owns the space above it and the space below it, down to the footer
+.game-developers {
+  padding-block: get-size(10) get-size(5);
+
+  @include media-down(laptop) {
+    padding-block: get-size(6) get-size(3);
+  }
+
+  @include media-down(mobile) {
+    padding-block: get-size(4) get-size(2);
+  }
+}
+
+.game-developers__inner {
+  display: grid;
+  grid-template-columns: minmax(0, $illustration-column) minmax(0, $card-column);
+  align-items: center;
+  gap: get-size(5);
+  max-width: get-breakpoint(desktop);
+  margin-inline: auto;
+  padding-inline: get-size(15);
+
+  // Tablet and mobile stack the illustration above the card. The stack stops
+  // growing at the tablet mockup's width: wider, the illustration would be
+  // stretched past its own resolution.
+  @include media-down(laptop) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: get-size(3);
+    max-width: get-breakpoint(tablet);
+    padding-inline: get-size(5);
+  }
+
+  @include media-down(mobile) {
+    gap: get-size(2);
+    padding-inline: get-size(2);
+  }
+}
+
+// The box keeps the shape it has in each mockup (682 by 480 on desktop, 688 by
+// 300 on tablet, 343 by 227 on mobile) instead of a fixed height, so the picture
+// is cropped by the same amount at every width. A fixed height crops far too
+// much between the widths of the mockups. `height: auto` replaces the height
+// attribute of the image.
+.game-developers__illustration {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 682 / 480;
+  border-radius: get-radius(extra-large);
+  object-fit: cover;
+  object-position: $illustration-position-desktop;
+
+  @include media-down(laptop) {
+    aspect-ratio: 688 / 300;
+    object-position: center;
+  }
+
+  @include media-down(mobile) {
+    aspect-ratio: 343 / 227;
+  }
+}
+
+// The stroke sits inside the card box, so the padding is the mockup's padding
+// minus the border
+.game-developers__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: get-size(3);
+  padding: get-size(5) - $border-width;
+  border: $border-width solid get-color(on-primary);
+  border-radius: get-radius(extra-large);
+  background-color: get-color(white);
+  box-shadow: get-shadow(soft-card);
+
+  @include media-down(laptop) {
+    gap: get-size(2);
+    padding: get-size(4) - $border-width;
+  }
+
+  @include media-down(mobile) {
+    padding: get-size(3) - $border-width;
+  }
+}
+
+.game-developers__title {
+  color: get-color(on-primary);
+  font-size: get-font-size(headline-large);
+  font-weight: get-font-weight(bold);
+  line-height: 1.2;
+
+  @include media-down(laptop) {
+    font-size: get-font-size(headline-medium);
+  }
+}
+
+.game-developers__description {
+  color: get-color(on-bg);
+  font-size: get-font-size(body-large);
+  line-height: 1.5;
+
+  @include media-down(laptop) {
+    font-size: get-font-size(body-small);
+  }
+
+  // No body style is as small as the mockup's 12px; label-medium has that size
+  @include media-down(mobile) {
+    font-size: get-font-size(label-medium);
+  }
+}
+
+// The button gets smaller with the screen, like the type around it
+.button.game-developers__button {
+  gap: get-size(1);
+  box-shadow: get-shadow(soft-button);
+
+  svg {
+    width: get-size(3);
+    height: get-size(3);
+  }
+
+  @include media-down(laptop) {
+    @include button-size(medium);
+    font-size: get-font-size(label-large);
+
+    svg {
+      width: get-size(2);
+      height: get-size(2);
+    }
+  }
+
+  @include media-down(mobile) {
+    @include button-size(small);
+    font-size: get-font-size(label-medium);
+  }
+}
+
+.game-developers__contact {
+  color: get-color(on-bg-low);
+  font-size: get-font-size(body-small);
+
+  @include media-down(laptop) {
+    font-size: get-font-size(label-medium);
+  }
+}
