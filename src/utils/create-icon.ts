@@ -7,6 +7,7 @@ export enum IconName {
   Chat = 'chat',
   Rss = 'rss',
   Code = 'code',
+  Upload = 'upload',
 }
 
 interface IconDefinition {
@@ -14,9 +15,9 @@ interface IconDefinition {
   readonly path: string;
 }
 
-// Shapes measured from the mockups: three 2px bars, a 1.5px cross, and four
+// Shapes measured from the mockups: three 2px bars, a 1.5px cross, and five
 // glyphs of the mockup's icon font, drawn on the box they sit in there (20px
-// for the social icons, 16px for code).
+// for the social icons, 16px for code, 24px for upload).
 const ICONS: Readonly<Record<IconName, IconDefinition>> = {
   [IconName.Burger]: {
     viewBox: '0 0 16 16',
@@ -41,6 +42,10 @@ const ICONS: Readonly<Record<IconName, IconDefinition>> = {
   [IconName.Code]: {
     viewBox: '0 0 16 16',
     path: 'M5.6 12.5L1.6 8.5L5.6 4.5L6.45 5.35L3.3 8.5L6.45 11.65L5.6 12.5ZM10.4 12.5L9.55 11.65L12.7 8.5L9.55 5.35L10.4 4.5L14.4 8.5L10.4 12.5Z',
+  },
+  [IconName.Upload]: {
+    viewBox: '0 0 24 24',
+    path: 'M12 3.21L12.71 2.5L12 1.8L11.29 2.5L12 3.21ZM11 15.21C11 15.76 11.45 16.21 12 16.21C12.55 16.21 13 15.76 13 15.21L12 15.21L11 15.21ZM16.29 8.92C16.68 9.31 17.32 9.31 17.71 8.92C18.1 8.53 18.1 7.89 17.71 7.5L17 8.21L16.29 8.92ZM6.29 7.5C5.9 7.89 5.9 8.53 6.29 8.92C6.68 9.31 7.32 9.31 7.71 8.92L7 8.21L6.29 7.5ZM22 15.21C22 14.66 21.55 14.21 21 14.21C20.45 14.21 20 14.66 20 15.21L21 15.21L22 15.21ZM3 19.21L2 19.21L3 19.21ZM4 15.21C4 14.66 3.55 14.21 3 14.21C2.45 14.21 2 14.66 2 15.21L3 15.21L4 15.21ZM12 3.21L11 3.21L11 15.21L12 15.21L13 15.21L13 3.21L12 3.21L11.29 3.92L16.29 8.92L17 8.21L17.71 7.5L12.71 2.5L12 3.21L11.29 2.5L6.29 7.5L7 8.21L7.71 8.92L12.71 3.92L12 3.21ZM21 15.21L20 15.21L20 19.21L21 19.21L22 19.21L22 15.21L21 15.21ZM21 19.21L20 19.21C20 19.47 19.89 19.73 19.71 19.92L20.41 20.62L21.12 21.33C21.68 20.77 22 20 22 19.21L21 19.21ZM20.41 20.62L19.71 19.92C19.52 20.1 19.27 20.21 19 20.21L19 21.21L19 22.21C19.8 22.21 20.56 21.89 21.12 21.33L20.41 20.62ZM19 21.21L19 20.21L5 20.21L5 21.21L5 22.21L19 22.21L19 21.21ZM5 21.21L5 20.21C4.73 20.21 4.48 20.1 4.29 19.92L3.59 20.62L2.88 21.33C3.44 21.89 4.2 22.21 5 22.21L5 21.21ZM3.59 20.62L4.29 19.92C4.11 19.73 4 19.47 4 19.21L3 19.21L2 19.21C2 20 2.32 20.77 2.88 21.33L3.59 20.62ZM3 19.21L4 19.21L4 15.21L3 15.21L2 15.21L2 19.21L3 19.21Z',
   },
 };
 
