@@ -1,5 +1,6 @@
 import { getRouteHref } from '../../app/router.ts';
 import { NAVIGATION_LINKS } from '../../data/navigation.ts';
+import { AuthMode } from '../../types/auth.ts';
 import { ButtonSize, ButtonVariant } from '../../types/button.ts';
 import type { NavigationLink } from '../../types/navigation.ts';
 import { createElement } from '../../utils/create-element.ts';
@@ -10,7 +11,7 @@ import { createLogo } from '../logo/logo.ts';
 export interface MenuContentHandlers {
   readonly onClose: () => void;
   readonly onLinkClick: () => void;
-  readonly onAuthClick: () => void;
+  readonly onAuthClick: (mode: AuthMode) => void;
 }
 
 function createTop(handlers: MenuContentHandlers): HTMLElement {
@@ -60,14 +61,18 @@ function createActions(handlers: MenuContentHandlers): HTMLElement {
     variant: ButtonVariant.Outlined,
     size: ButtonSize.Medium,
     text: 'Log In',
-    onClick: handlers.onAuthClick,
+    onClick: (): void => {
+      handlers.onAuthClick(AuthMode.Login);
+    },
   });
 
   const signUp: HTMLButtonElement = createButton({
     variant: ButtonVariant.Filled,
     size: ButtonSize.Medium,
     text: 'Sign Up',
-    onClick: handlers.onAuthClick,
+    onClick: (): void => {
+      handlers.onAuthClick(AuthMode.Register);
+    },
   });
 
   return createElement('div', { className: 'mobile-menu__actions', children: [logIn, signUp] });

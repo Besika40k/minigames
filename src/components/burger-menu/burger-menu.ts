@@ -1,3 +1,4 @@
+import type { AuthMode } from '../../types/auth.ts';
 import type { BurgerMenuOptions } from '../../types/burger-menu.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { isDisplayed } from '../../utils/is-displayed.ts';
@@ -20,9 +21,9 @@ export function createBurgerMenu(options: BurgerMenuOptions): HTMLDialogElement 
     ...createMenuContent({
       onClose: closeMenu,
       onLinkClick: closeMenu,
-      onAuthClick: (): void => {
+      onAuthClick: (mode: AuthMode): void => {
         closeMenu();
-        options.onAuthClick?.();
+        options.onAuthClick?.(mode);
       },
     }),
   );

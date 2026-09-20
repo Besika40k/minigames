@@ -1,5 +1,6 @@
 import { getRouteHref } from '../../app/router.ts';
 import { NAVIGATION_LINKS } from '../../data/navigation.ts';
+import { AuthMode } from '../../types/auth.ts';
 import { ButtonSize, ButtonVariant } from '../../types/button.ts';
 import type { NavigationLink } from '../../types/navigation.ts';
 import { createElement } from '../../utils/create-element.ts';
@@ -9,7 +10,8 @@ import { createLogo } from '../logo/logo.ts';
 import './header.scss';
 
 export interface HeaderOptions {
-  readonly onAuthClick?: () => void;
+  // Log In asks for the login form and Sign Up for the registration form
+  readonly onAuthClick?: (mode: AuthMode) => void;
 }
 
 export interface Header {
@@ -60,7 +62,9 @@ function createActions(options: HeaderOptions, menuButton: HTMLButtonElement): H
     size: ButtonSize.Medium,
     text: 'Log In',
     className: 'header__auth-button header__auth-button--log-in',
-    onClick: options.onAuthClick,
+    onClick: (): void => {
+      options.onAuthClick?.(AuthMode.Login);
+    },
   });
 
   const signUp: HTMLButtonElement = createButton({
@@ -68,7 +72,9 @@ function createActions(options: HeaderOptions, menuButton: HTMLButtonElement): H
     size: ButtonSize.Medium,
     text: 'Sign Up',
     className: 'header__auth-button header__auth-button--sign-up',
-    onClick: options.onAuthClick,
+    onClick: (): void => {
+      options.onAuthClick?.(AuthMode.Register);
+    },
   });
 
   return createElement('div', {
