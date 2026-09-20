@@ -24,8 +24,18 @@ $card-width-tablet: 480px;
 $description-width: 535px;
 
 // The desktop mockup zooms the photo in to this width, which crops the blank
-// margins of the illustration. Tablet and mobile simply fill the section.
+// margins of the illustration, and keeps this point of it in the middle of the
+// section. Tablet and mobile simply fill the section.
 $photo-width-desktop: 2290px;
+$photo-position-desktop: 48% 73%;
+
+// The style guide gives no line heights, so these are measured from the mockup
+$title-line-height-desktop: 62px;
+$title-line-height-tablet: 41px;
+$title-line-height-mobile: 29px;
+$description-line-height-desktop: 27px;
+$description-line-height-tablet: 20px;
+$description-line-height-mobile: 17px;
 
 .hero {
   position: relative;
@@ -36,7 +46,7 @@ $photo-width-desktop: 2290px;
   background-size: cover;
 
   @include media-up(laptop) {
-    background-position: 48% 73%;
+    background-position: $photo-position-desktop;
     background-size: max($photo-width-desktop, 100%) auto;
   }
 
@@ -94,22 +104,20 @@ $photo-width-desktop: 2290px;
   }
 }
 
-// The style guide gives no line heights, so the ones below are measured from
-// the mockup.
 .hero__title {
   color: get-color(on-primary);
   font-size: get-font-size(display-large);
   font-weight: get-font-weight(bold);
-  line-height: 62px;
+  line-height: $title-line-height-desktop;
 
   @include media-down(laptop) {
     font-size: get-font-size(display-medium);
-    line-height: 41px;
+    line-height: $title-line-height-tablet;
   }
 
   @include media-down(mobile) {
     font-size: get-font-size(display-small);
-    line-height: 29px;
+    line-height: $title-line-height-mobile;
   }
 }
 
@@ -118,17 +126,17 @@ $photo-width-desktop: 2290px;
   color: get-color(on-bg);
   font-size: get-font-size(body-large);
   font-weight: get-font-weight(medium);
-  line-height: 27px;
+  line-height: $description-line-height-desktop;
 
   @include media-down(laptop) {
     font-size: get-font-size(body-small);
-    line-height: 20px;
+    line-height: $description-line-height-tablet;
   }
 
   // No body style is as small as the mockup's 12px; label-medium has that size
   @include media-down(mobile) {
     font-size: get-font-size(label-medium);
-    line-height: 17px;
+    line-height: $description-line-height-mobile;
   }
 }
 
