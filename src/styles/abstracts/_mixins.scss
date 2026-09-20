@@ -1,18 +1,23 @@
+@use 'sass:list';
 @use 'sass:map';
 @use 'functions' as *;
+@use 'tokens';
 
 // Styles for viewports wider than the breakpoint.
-// media-up and media-down never overlap: at exactly 768px only
-// media-down(tablet) applies.
+// A viewport width is not always a whole number: a screen scaled to 125% shows
+// a 375px window as 375.2px, and browser zoom does the same. So a breakpoint
+// covers everything up to the next whole pixel: media-down(tablet) is
+// `width < 769px` and media-up(tablet) is `width >= 769px`. The two never
+// overlap and never leave a gap, and 768.2px is still a tablet.
 @mixin media-up($name) {
-  @media (width > #{get-breakpoint($name)}) {
+  @media (width >= #{get-breakpoint($name) + 1px}) {
     @content;
   }
 }
 
-// Styles for viewports up to and including the breakpoint.
+// Styles for viewports up to the breakpoint (see media-up).
 @mixin media-down($name) {
-  @media (width <= #{get-breakpoint($name)}) {
+  @media (width < #{get-breakpoint($name) + 1px}) {
     @content;
   }
 }
@@ -28,8 +33,15 @@
 }
 
 // Padding of one of the style guide's button sizes: large, medium, small or icon.
+// The mockups draw a button's stroke inside its box, and the style guide's
+// padding is measured to the box edge. The border takes part of that space in
+// CSS, so it is taken off the padding to keep the button the size of the mockup.
 @mixin button-size($name) {
-  padding: map.get(get-button-size($name), padding);
+  $padding: map.get(get-button-size($name), padding);
+  $vertical: list.nth($padding, 1);
+  $horizontal: if(list.length($padding) > 1, list.nth($padding, 2), $vertical);
+
+  padding: ($vertical - tokens.$border-width) ($horizontal - tokens.$border-width);
 }
 
 // Styles for people who asked their system to reduce motion.
