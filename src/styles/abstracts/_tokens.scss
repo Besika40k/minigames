@@ -96,6 +96,8 @@ $font-sizes: (
 $font-weights: (
   regular: 400,
   medium: 500,
+  // Not in the style guide: the rating and likes of a game card use it
+  semi-bold: 600,
   bold: 700,
   extra-bold: 800,
 );
