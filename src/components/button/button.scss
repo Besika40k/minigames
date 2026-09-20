@@ -25,6 +25,11 @@
   }
 }
 
+.button--large {
+  @include button-size(large);
+  font-size: get-font-size(body-large);
+}
+
 .button--medium {
   @include button-size(medium);
 }
