@@ -1,0 +1,55 @@
+@use 'sass:map';
+@use 'tokens';
+
+// Reads a token by name. Sass turns a missing map key into null and then drops
+// the whole CSS declaration without a word, so a typo would silently vanish.
+// Failing the build instead makes the mistake impossible to miss.
+// The leading dash makes this helper private to the module.
+@function -lookup($map, $key, $group) {
+  @if not map.has-key($map, $key) {
+    @error 'Unknown #{$group} token "#{$key}". Available: #{map.keys($map)}';
+  }
+
+  @return map.get($map, $key);
+}
+
+// white and black are real Sass colors, so write get-color(white) without quotes.
+@function get-color($name) {
+  @return -lookup(tokens.$colors, $name, 'color');
+}
+
+@function get-font-family($name) {
+  @return -lookup(tokens.$font-families, $name, 'font family');
+}
+
+@function get-font-size($name) {
+  @return -lookup(tokens.$font-sizes, $name, 'font size');
+}
+
+@function get-font-weight($name) {
+  @return -lookup(tokens.$font-weights, $name, 'font weight');
+}
+
+@function get-size($key) {
+  @return -lookup(tokens.$sizes, $key, 'size');
+}
+
+@function get-radius($name) {
+  @return -lookup(tokens.$corner-radii, $name, 'corner radius');
+}
+
+@function get-shadow($level) {
+  @return -lookup(tokens.$shadows, $level, 'shadow');
+}
+
+@function get-button-size($name) {
+  @return -lookup(tokens.$button-sizes, $name, 'button size');
+}
+
+@function get-breakpoint($name) {
+  @return -lookup(tokens.$breakpoints, $name, 'breakpoint');
+}
+
+@function get-duration($name) {
+  @return -lookup(tokens.$durations, $name, 'duration');
+}

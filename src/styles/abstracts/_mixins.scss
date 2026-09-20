@@ -1,0 +1,104 @@
+@use 'sass:list';
+@use 'sass:map';
+@use 'functions' as *;
+@use 'tokens';
+
+// Styles for viewports wider than the breakpoint.
+// A viewport width is not always a whole number: a screen scaled to 125% shows
+// a 375px window as 375.2px, and browser zoom does the same. So a breakpoint
+// covers everything up to the next whole pixel: media-down(tablet) is
+// `width < 769px` and media-up(tablet) is `width >= 769px`. The two never
+// overlap and never leave a gap, and 768.2px is still a tablet.
+@mixin media-up($name) {
+  @media (width >= #{get-breakpoint($name) + 1px}) {
+    @content;
+  }
+}
+
+// Styles for viewports up to the breakpoint (see media-up).
+@mixin media-down($name) {
+  @media (width < #{get-breakpoint($name) + 1px}) {
+    @content;
+  }
+}
+
+// Hover styles only on devices that can really hover. On touch screens
+// :hover would otherwise stay stuck after a tap.
+@mixin hover {
+  @media (hover: hover) {
+    &:hover {
+      @content;
+    }
+  }
+}
+
+// Padding of one of the style guide's button sizes: large, medium, small or icon.
+// The mockups draw a button's stroke inside its box, and the style guide's
+// padding is measured to the box edge. The border takes part of that space in
+// CSS, so it is taken off the padding to keep the button the size of the mockup.
+@mixin button-size($name) {
+  $padding: map.get(get-button-size($name), padding);
+  $vertical: list.nth($padding, 1);
+  // A single value (the icon button) applies to every side, so the last value
+  // of the list is the horizontal padding for both kinds of button
+  $horizontal: list.nth($padding, list.length($padding));
+
+  padding: ($vertical - tokens.$border-width) ($horizontal - tokens.$border-width);
+}
+
+// Takes an element off the screen but leaves it to screen readers, for a text
+// that a sighted person does not need (or that does not fit)
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+// Styles for people who asked their system to reduce motion.
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+// Open and close animation for a modal <dialog>: it fades and moves in from
+// $closed-transform, and back out again. `allow-discrete` on display and
+// overlay keeps the dialog visible and in the top layer until the exit
+// animation has finished. For people who prefer reduced motion the movement
+// is dropped and only the fade remains, so the animation is still visible.
+@mixin animated-dialog($closed-transform) {
+  transform: $closed-transform;
+  opacity: 0;
+  transition:
+    transform get-duration(medium),
+    opacity get-duration(medium),
+    overlay get-duration(medium) allow-discrete,
+    display get-duration(medium) allow-discrete;
+
+  &[open] {
+    transform: none;
+    opacity: 1;
+
+    @starting-style {
+      transform: $closed-transform;
+      opacity: 0;
+    }
+  }
+
+  @include reduced-motion {
+    transform: none;
+
+    &[open] {
+      @starting-style {
+        transform: none;
+        opacity: 0;
+      }
+    }
+  }
+}

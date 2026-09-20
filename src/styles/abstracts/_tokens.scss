@@ -1,0 +1,216 @@
+// Design tokens from the style guide.
+// Plain data only: nothing here emits CSS, so any stylesheet can @use it
+// without duplicating output.
+//
+// Inside a map, a comment describes the entry directly below it.
+// Prettier moves end-of-line comments, so they are kept on their own line.
+
+@use 'sass:map';
+
+// ---------- Colors ----------
+$colors: (
+  // Base
+  // bg, text-color
+  white: #ffffff,
+  // gradient
+  black: #000000,
+
+  // General
+  // base background
+  bg: #f9f8f3,
+  // base text-color
+  on-bg: #5f5d75,
+  // secondary/info text-color
+  on-bg-low: #737380,
+  // footer background
+  bg-footer: #1e1b3a,
+  // social-link
+  bg-footer-low: #2a264f,
+  // social-link hover
+  bg-footer-lowest: #3c376e,
+  // footer text-color
+  on-bg-footer: #b9b5c9,
+  // button hover
+  surface: #fff9e5,
+  // input focus
+  surface-low: #fffcf5,
+  // button, text-color
+  primary: #ffd02b,
+  // sort action
+  primary-low: #fde047,
+  // button hover
+  primary-high: #e5bb00,
+  // text-color on primary; also shadow base color
+  on-primary: #242145,
+  // badge
+  secondary: #f0eeff,
+  // table header, button hover
+  tertiary: #3a2ebf,
+  // like icon
+  like: #ff4b4b,
+  // validation error
+  error: #b3261e,
+  // price
+  price-free: #0b8a8f,
+
+  // Borders
+  outline: #e5e7eb,
+  outline-variant: #d2d2d2,
+
+  // Avatar backgrounds (random assignment pool)
+  avatar-random-1: #e9eef6,
+  avatar-random-2: #a3e2c9,
+  avatar-random-3: #bce3ff,
+  avatar-random-4: #ffc6ff,
+  avatar-random-5: #e8dff5
+);
+
+// ---------- Typography ----------
+$font-families: (
+  primary: (
+    'Inter',
+    sans-serif,
+  ),
+  secondary: (
+    'Roboto',
+    sans-serif,
+  ),
+);
+
+$font-sizes: (
+  display-large: 56px,
+  display-medium: 36px,
+  display-small: 24px,
+  headline-large: 32px,
+  headline-medium: 24px,
+  headline-small: 20px,
+  body-large: 18px,
+  body-medium: 16px,
+  body-small: 14px,
+  label-extra-large: 16px,
+  label-large: 14px,
+  label-medium: 12px,
+  label-small: 10px,
+);
+
+$font-weights: (
+  regular: 400,
+  medium: 500,
+  // Not in the style guide: the rating and likes of a game card use it
+  semi-bold: 600,
+  bold: 700,
+  extra-bold: 800,
+);
+
+// ---------- Sizes ----------
+// Keys match the style guide's size-N names. `0.5` is its size-05: Sass reads
+// a key written `05` as 5, which would collide with size-5.
+$sizes: (
+  0.5: 4px,
+  1: 8px,
+  2: 16px,
+  3: 24px,
+  4: 32px,
+  5: 40px,
+  6: 48px,
+  7: 56px,
+  8: 64px,
+  9: 72px,
+  10: 80px,
+  11: 88px,
+  12: 96px,
+  13: 104px,
+  14: 112px,
+  15: 120px,
+);
+
+// ---------- Corner radius ----------
+$corner-radii: (
+  extra-small: 4px,
+  small: 8px,
+  medium: 12px,
+  large: 16px,
+  extra-large: 24px,
+  full: 9999px,
+);
+
+// ---------- Button sizes ----------
+// Padding is in CSS order (vertical horizontal). The style guide lists it the
+// other way round (btn-large is "24px 16px"); measuring its PDF export shows
+// that the first number is the horizontal padding.
+$button-sizes: (
+  large: (
+    padding: 16px 24px,
+  ),
+  medium: (
+    padding: 10px 20px,
+  ),
+  small: (
+    padding: 8px 16px,
+  ),
+  icon: (
+    padding: 8px,
+  ),
+);
+
+// ---------- Shadows ----------
+// Hard offset shadows in the on-primary color, no blur.
+$shadow-color: map.get($colors, on-primary);
+// The two soft shadows are not in the style guide: they belong to the game
+// developer section and were measured from its mockup (black at 4%, 8% and 10%).
+$soft-shadow-color: map.get($colors, black);
+// The auth dialog's hard shadow is near black (measured from its mockup), so it
+// shows against the dark backdrop.
+$dialog-shadow-color: #111111;
+$shadows: (
+  level-1: 4px 4px $shadow-color,
+  level-2: 6px 6px $shadow-color,
+  level-3: 8px 8px $shadow-color,
+  dialog: 8px 8px $dialog-shadow-color,
+  // a hard shadow under a button and nowhere else
+  button-edge: 0 4px $shadow-color,
+  // a tight shadow with a wide one under it
+  soft-card: (
+      0 2px 8px rgba($soft-shadow-color, 0.04),
+      0 14px 30px rgba($soft-shadow-color, 0.08),
+    ),
+  soft-button: 0 10px 20px rgba($soft-shadow-color, 0.1),
+);
+
+// ---------- Breakpoints ----------
+// The widest screen of each layout. The mockups are drawn at 375px, 768px and
+// 1920px, and each layout must also work on the widths up to the next bound:
+// - mobile: the 375px layout holds up to 560px, where the tablet hero card
+//   (480px) and its two 40px margins start to fit
+// - tablet: the width of the tablet mockup
+// - laptop: the desktop header needs about 970px at full spacing, so below
+//   laptop it switches to a compact version
+// - desktop: the width of the desktop mockup, where the content stops growing
+// Media queries never repeat these numbers: they go through the media-up and
+// media-down mixins.
+$breakpoints: (
+  mobile: 560px,
+  tablet: 768px,
+  laptop: 1024px,
+  desktop: 1920px,
+);
+
+// ---------- Border width ----------
+// Not a style guide variable: every button, tile and divider in the mockups
+// uses a 2px line.
+$border-width: 2px;
+// The thin outline of the small shapes: avatars, tags and the marker of a
+// section title. It is drawn as an inset shadow, because a border this thin
+// would be rounded down to a whole device pixel.
+$border-width-thin: 1.5px;
+// The 1px rules, where the 2px line would be too heavy: the line above the
+// footer's bottom bar, the lines between leaderboard rows, the rule beside "or"
+// in the auth dialog and the underline of its links.
+$border-width-hairline: 1px;
+
+// ---------- Durations ----------
+// Not a style guide variable: shared timing for hover and open/close transitions.
+$durations: (
+  fast: 200ms,
+  medium: 300ms,
+);

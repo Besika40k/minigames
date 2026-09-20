@@ -1,0 +1,125 @@
+@use 'abstracts' as *;
+
+.header {
+  // 85px in the mockup: size-10 plus 5px, which no size token covers
+  height: get-size(10) + 5px;
+  border-bottom: $border-width solid get-color(on-primary);
+  background-color: get-color(bg);
+
+  @include media-down(tablet) {
+    height: get-size(9);
+  }
+
+  @include media-down(mobile) {
+    height: get-size(8);
+  }
+}
+
+.header__inner {
+  display: flex;
+  align-items: center;
+  gap: get-size(4);
+  max-width: get-breakpoint(desktop);
+  height: 100%;
+  margin-inline: auto;
+  padding-inline: get-size(10);
+
+  @include media-down(laptop) {
+    gap: get-size(2);
+    padding-inline: get-size(3);
+  }
+
+  @include media-down(tablet) {
+    padding-inline: get-size(5);
+  }
+
+  @include media-down(mobile) {
+    padding-inline: get-size(2);
+  }
+}
+
+.header__logo {
+  margin-inline-end: auto;
+}
+
+.header__nav {
+  @include media-down(tablet) {
+    display: none;
+  }
+}
+
+.header__nav-list {
+  display: flex;
+  gap: get-size(5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include media-down(laptop) {
+    gap: get-size(2);
+  }
+}
+
+.header__nav-link {
+  color: get-color(on-bg);
+  font-size: get-font-size(label-extra-large);
+  font-weight: get-font-weight(medium);
+  text-decoration: none;
+
+  @include hover {
+    color: get-color(on-primary);
+    text-decoration: underline;
+    text-underline-offset: get-size(0.5);
+  }
+
+  &--current {
+    color: get-color(on-primary);
+    font-weight: get-font-weight(bold);
+  }
+}
+
+.header__actions {
+  display: flex;
+  align-items: center;
+  gap: get-size(2);
+
+  @include media-down(laptop) {
+    gap: get-size(1);
+  }
+
+  @include media-down(tablet) {
+    gap: get-size(2);
+  }
+
+  // Below laptop the auth buttons switch to the small size
+  .button--medium {
+    @include media-down(laptop) {
+      @include button-size(small);
+    }
+  }
+}
+
+.header__auth-button--log-in {
+  @include media-down(tablet) {
+    display: none;
+  }
+}
+
+.header__auth-button--sign-up {
+  @include media-down(mobile) {
+    display: none;
+  }
+}
+
+.button.header__burger {
+  display: none;
+  background-color: get-color(white);
+
+  @include media-down(tablet) {
+    display: inline-flex;
+  }
+
+  @include hover {
+    background-color: get-color(surface);
+  }
+}

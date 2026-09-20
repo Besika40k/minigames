@@ -1,0 +1,68 @@
+@use 'abstracts' as *;
+
+// A pressed button shrinks a little, and a disabled one is half see-through
+$pressed-scale: 0.98;
+$disabled-opacity: 0.5;
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: $border-width solid get-color(on-primary);
+  border-radius: get-radius(small);
+  color: get-color(on-primary);
+  font-size: get-font-size(label-large);
+  font-weight: get-font-weight(bold);
+  cursor: pointer;
+  transition:
+    background-color get-duration(fast),
+    border-color get-duration(fast),
+    transform get-duration(fast);
+
+  &:active {
+    transform: scale($pressed-scale);
+  }
+
+  &:disabled {
+    opacity: $disabled-opacity;
+    cursor: not-allowed;
+  }
+}
+
+.button--large {
+  @include button-size(large);
+  font-size: get-font-size(body-large);
+}
+
+.button--medium {
+  @include button-size(medium);
+}
+
+.button--small {
+  @include button-size(small);
+}
+
+.button--icon {
+  @include button-size(icon);
+
+  svg {
+    width: get-size(2);
+    height: get-size(2);
+  }
+}
+
+.button--outlined {
+  background-color: transparent;
+
+  @include hover {
+    background-color: get-color(surface);
+  }
+}
+
+.button--filled {
+  background-color: get-color(primary);
+
+  @include hover {
+    background-color: get-color(primary-high);
+  }
+}

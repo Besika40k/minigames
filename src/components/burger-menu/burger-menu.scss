@@ -1,0 +1,127 @@
+@use 'abstracts' as *;
+
+.mobile-menu {
+  // Full screen: undo the dialog defaults (a centered box with a size limit)
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: get-size(3);
+  overflow-y: auto;
+  border: 0;
+  background-color: get-color(bg-footer);
+  color: get-color(white);
+
+  @include animated-dialog(translateX(100%));
+
+  &[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &::backdrop {
+    background-color: transparent;
+  }
+
+  // The focus ring is dark by default, which disappears on this background
+  :focus-visible {
+    outline-color: get-color(primary);
+  }
+}
+
+// The page behind the open menu must not scroll
+body:has(.mobile-menu[open]) {
+  overflow: hidden;
+}
+
+.mobile-menu__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo.mobile-menu__logo {
+  color: get-color(white);
+}
+
+.mobile-menu__close {
+  display: grid;
+  place-items: center;
+  width: get-size(4);
+  height: get-size(4);
+  padding: 0;
+  border: $border-width solid transparent;
+  border-radius: get-radius(small);
+  background-color: get-color(bg-footer-low);
+  color: get-color(white);
+  cursor: pointer;
+  transition:
+    background-color get-duration(fast),
+    border-color get-duration(fast);
+
+  svg {
+    // the 10px cross of the mockup: size-1 plus the border width
+    width: get-size(1) + $border-width;
+    height: get-size(1) + $border-width;
+  }
+
+  @include hover {
+    border-color: get-color(primary);
+    background-color: get-color(bg-footer-lowest);
+  }
+}
+
+.mobile-menu__nav {
+  margin-block-start: get-size(4);
+}
+
+.mobile-menu__list {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mobile-menu__link {
+  color: get-color(on-bg-footer);
+  font-size: get-font-size(body-large);
+  font-weight: get-font-weight(medium);
+  text-decoration: none;
+
+  @include hover {
+    color: get-color(primary);
+    text-decoration: underline;
+    text-underline-offset: get-size(0.5);
+  }
+
+  &--current {
+    color: get-color(primary);
+    font-weight: get-font-weight(bold);
+  }
+}
+
+.mobile-menu__actions {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(2);
+  margin-block-start: auto;
+  padding-block-start: get-size(4);
+
+  .button {
+    width: 100%;
+  }
+
+  // On the dark background the outlined button is white and turns yellow on hover
+  .button--outlined {
+    border-color: get-color(white);
+    color: get-color(white);
+
+    @include hover {
+      border-color: get-color(primary);
+      background-color: transparent;
+    }
+  }
+}

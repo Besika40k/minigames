@@ -1,0 +1,384 @@
+@use 'sass:color';
+@use 'abstracts' as *;
+
+// Sizes measured from the mockup
+$dialog-width: 420px;
+// The dialog's outline is thicker than the 2px line of the other boxes
+$dialog-border: 3px;
+$dialog-margin: get-size(2);
+
+// The backdrop is the footer's navy over the page. The color of the page under
+// it is worked out too, to fill the strip a scrollbar leaves (see below).
+$backdrop-opacity: 0.75;
+$backdrop-color: rgba(get-color(bg-footer), $backdrop-opacity);
+$dimmed-page-color: color.mix(get-color(bg-footer), get-color(bg), $backdrop-opacity * 100%);
+
+// The 20px box of an icon and the tab bar and eye button around it
+$icon-size: get-size(2) + get-size(0.5);
+$input-height: get-size(6);
+$tab-height: get-size(5) + get-size(0.5);
+$reveal-size: get-size(5) + get-size(0.5);
+$google-button-height: 50px;
+
+// How far a form slides while it changes places with the other one
+$slide-distance: get-size(2);
+
+// The hovered tab is the warm surface color at this strength, and the rules
+// beside "or" are the dark on-primary color at this one
+$tab-hover-opacity: 0.6;
+$divider-opacity: 0.2;
+
+// The mockup puts a link's underline this far under the baseline
+$link-underline-offset: 3px;
+
+// The text of the submit button: 20px tall for its 16px type in the mockup
+$submit-line-height: 1.25;
+
+// ---------- Dialog ----------
+// A modal dialog is centered by the browser. The animation comes from the
+// animated-dialog mixin, and the backdrop fades on its own below.
+.auth-dialog {
+  width: $dialog-width;
+  max-width: calc(100% - #{2 * $dialog-margin});
+  max-height: calc(100% - #{2 * $dialog-margin});
+  padding: get-size(4) - $dialog-border;
+  // The forms slide sideways while they change: the dialog must not scroll for that
+  overflow: hidden auto;
+  border: $dialog-border solid get-color(on-primary);
+  border-radius: get-radius(extra-large);
+  background-color: get-color(bg);
+  box-shadow: get-shadow(dialog);
+  color: get-color(on-bg);
+
+  @include animated-dialog(translateY(get-size(3)));
+
+  @include media-down(mobile) {
+    padding: get-size(3) - $dialog-border;
+  }
+
+  &::backdrop {
+    background-color: transparent;
+    transition:
+      background-color get-duration(medium),
+      overlay get-duration(medium) allow-discrete,
+      display get-duration(medium) allow-discrete;
+  }
+
+  &[open]::backdrop {
+    background-color: $backdrop-color;
+
+    @starting-style {
+      background-color: transparent;
+    }
+  }
+}
+
+// The page behind the dialog must not scroll. The reserved gutter keeps the page
+// from shifting sideways when the scrollbar goes away, and it is painted in the
+// color of the dimmed page, because the backdrop does not reach into it.
+html:has(.auth-dialog[open]) {
+  overflow: hidden;
+  scrollbar-gutter: stable;
+  background-color: $dimmed-page-color;
+}
+
+// ---------- Tabs ----------
+.auth-dialog__tabs {
+  display: flex;
+  border: $border-width solid get-color(on-primary);
+  border-radius: get-radius(medium);
+  background-color: get-color(white);
+}
+
+.auth-dialog__tab {
+  flex: 1;
+  height: $tab-height;
+  padding: 0;
+  border: 0;
+  border-radius: get-radius(small);
+  background-color: transparent;
+  color: get-color(on-bg);
+  font-size: get-font-size(body-medium);
+  font-weight: get-font-weight(bold);
+  cursor: pointer;
+  transition:
+    background-color get-duration(fast),
+    color get-duration(fast);
+
+  @include hover {
+    background-color: rgba(get-color(surface), $tab-hover-opacity);
+    color: get-color(on-primary);
+  }
+
+  &[aria-selected='true'] {
+    background-color: get-color(bg-footer-low);
+    color: get-color(white);
+    cursor: default;
+  }
+
+  // The tab sits right against the bar's border, so its ring goes inside
+  &:focus-visible {
+    outline-offset: (-1 * get-size(0.5));
+  }
+}
+
+// ---------- Forms ----------
+.auth-dialog__panels {
+  position: relative;
+  margin-block-start: get-size(3);
+}
+
+.auth-dialog__header {
+  margin-block-end: get-size(3);
+}
+
+.auth-dialog__title {
+  color: get-color(on-primary);
+  font-size: get-font-size(headline-medium);
+  font-weight: get-font-weight(bold);
+}
+
+.auth-dialog__description {
+  margin-block-start: get-size(1);
+  font-size: get-font-size(body-small);
+}
+
+.auth-dialog__form {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(3);
+  margin-block-end: get-size(2);
+}
+
+.auth-dialog__fields {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(2);
+
+  // The link under the password sits at the right edge
+  > .auth-dialog__link {
+    align-self: flex-end;
+  }
+}
+
+.auth-dialog__field {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(1);
+}
+
+.auth-dialog__label {
+  color: get-color(on-primary);
+  font-size: get-font-size(body-small);
+  font-weight: get-font-weight(bold);
+}
+
+.auth-dialog__control {
+  position: relative;
+}
+
+// The text starts after the icon: 16px, the icon and 16px again, measured from
+// the outer edge of the input, so the border comes off the padding
+.auth-dialog__input {
+  display: block;
+  width: 100%;
+  height: $input-height;
+  padding: 0 (get-size(2) - $border-width);
+  padding-inline-start: get-size(2) + $icon-size + get-size(2) - $border-width;
+  border: $border-width solid get-color(on-primary);
+  border-radius: get-radius(small);
+  background-color: get-color(white);
+  color: get-color(on-primary);
+  font-size: get-font-size(body-small);
+  font-weight: get-font-weight(regular);
+
+  &::placeholder {
+    color: get-color(on-bg);
+    opacity: 1;
+  }
+
+  &:focus {
+    background-color: get-color(surface-low);
+  }
+
+  // Room for the eye button
+  &--revealable {
+    padding-inline-end: get-size(2) + $icon-size + get-size(2) - $border-width;
+  }
+}
+
+.auth-dialog__icon {
+  position: absolute;
+  top: 50%;
+  left: get-size(2);
+  width: $icon-size;
+  height: $icon-size;
+  translate: 0 -50%;
+  color: get-color(on-bg);
+  pointer-events: none;
+}
+
+// The icon darkens once the field is focused or has text
+.auth-dialog__input:focus ~ .auth-dialog__icon,
+.auth-dialog__input:not(:placeholder-shown) ~ .auth-dialog__icon {
+  color: get-color(on-primary);
+}
+
+// The button is bigger than its icon to be easy to hit, and sits so that the
+// icon is where the mockup has it
+.auth-dialog__reveal {
+  position: absolute;
+  top: 50%;
+  right: get-size(0.5);
+  display: grid;
+  place-items: center;
+  width: $reveal-size;
+  height: $reveal-size;
+  padding: 0;
+  border: 0;
+  border-radius: get-radius(small);
+  background-color: transparent;
+  color: get-color(on-bg);
+  cursor: pointer;
+  translate: 0 -50%;
+  transition: color get-duration(fast);
+
+  svg {
+    width: $icon-size;
+    height: $icon-size;
+  }
+
+  @include hover {
+    color: get-color(on-primary);
+  }
+}
+
+// The link style of the style guide: bold and underlined, blue on hover
+.auth-dialog__link {
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  color: get-color(on-primary);
+  font-family: inherit;
+  font-size: get-font-size(body-small);
+  font-weight: get-font-weight(bold);
+  text-decoration: underline;
+  text-decoration-thickness: $border-width-hairline;
+  text-underline-offset: $link-underline-offset;
+  cursor: pointer;
+  transition: color get-duration(fast);
+
+  @include hover {
+    color: get-color(tertiary);
+  }
+}
+
+.button.auth-dialog__submit {
+  width: 100%;
+  border-radius: get-radius(medium);
+  box-shadow: get-shadow(button-edge);
+  font-size: get-font-size(body-medium);
+  line-height: $submit-line-height;
+}
+
+.auth-dialog__divider {
+  display: flex;
+  align-items: center;
+  gap: get-size(2);
+  margin-block-end: get-size(2);
+  color: get-color(on-bg);
+  font-size: get-font-size(label-medium);
+  font-weight: get-font-weight(bold);
+  text-transform: uppercase;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: $border-width-hairline;
+    background-color: rgba(get-color(on-primary), $divider-opacity);
+  }
+}
+
+// No button size is 50px tall: it is the mockup's height for the logo and the
+// text between two borders
+.button.auth-dialog__google {
+  gap: get-size(2);
+  width: 100%;
+  height: $google-button-height;
+  padding-block: 0;
+  border-radius: get-radius(medium);
+  background-color: get-color(white);
+  font-size: get-font-size(body-medium);
+
+  @include hover {
+    background-color: get-color(surface);
+  }
+}
+
+.auth-dialog__switch {
+  margin-block-start: get-size(3);
+  font-size: get-font-size(body-small);
+  text-align: center;
+}
+
+// ---------- Change of form ----------
+// While the forms cross-fade the leaving one is taken out of the flow, and the
+// box around them eases to the new height (see crossFade). --auth-direction is
+// 1 when the new form comes from the right and -1 when it comes from the left.
+.auth-dialog__panels--resizing {
+  overflow: hidden;
+  transition: height get-duration(medium) ease;
+}
+
+.auth-dialog__panel--leaving {
+  position: absolute;
+  inset: 0 0 auto;
+  pointer-events: none;
+  animation: auth-panel-leave get-duration(medium) ease forwards;
+}
+
+.auth-dialog__panel--entering {
+  animation: auth-panel-enter get-duration(medium) ease;
+}
+
+@keyframes auth-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--auth-direction) * #{$slide-distance}));
+  }
+}
+
+@keyframes auth-panel-leave {
+  to {
+    opacity: 0;
+    transform: translateX(calc(var(--auth-direction) * -#{$slide-distance}));
+  }
+}
+
+@keyframes auth-panel-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes auth-panel-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+// Without movement the forms only fade, and the box does not resize slowly
+@include reduced-motion {
+  .auth-dialog__panels--resizing {
+    transition: none;
+  }
+
+  .auth-dialog__panel--leaving {
+    animation-name: auth-panel-fade-out;
+  }
+
+  .auth-dialog__panel--entering {
+    animation-name: auth-panel-fade-in;
+  }
+}

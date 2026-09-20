@@ -1,0 +1,293 @@
+@use 'abstracts' as *;
+
+// Card heights measured from the mockups
+$card-height-desktop: 384px;
+$card-height-tablet: 280px;
+$card-height-mobile: 200px;
+
+// On desktop the row is 120, 288, 816, 288 and 120px wide at 1920px, with 8px
+// between the cards. The outer sizes are a cap plus a share of the row, so when
+// the row gets a little narrower (1903px where a scrollbar takes 17px) the near
+// cards keep the 288px they need to show their text, and only the active card,
+// which takes the rest, shrinks.
+$far-card-width: 120px;
+$far-card-share: 7.5%;
+$near-card-width: 288px;
+$near-card-share: 18%;
+
+// A card at least 288px wide shows its title, rating and likes. A container
+// query measures what is inside the border, which is 2px on each side.
+$info-min-width: 288px - 2 * $border-width;
+
+// Tablet and mobile show three cards, in the proportions of their mockups (105,
+// 448 and 104px, and 56, 218 and 56px). Every card has its 4px of border on top
+// of its share of the row, so the shares are the widths without the border.
+$near-card-tablet: 100;
+$active-card-tablet: 444;
+$near-card-mobile: 52;
+$active-card-mobile: 214;
+$card-gap-mobile: 5.5px;
+
+// The dark fade under the text is 16px above the title and 14px under the
+// stats row (the mockup's 16px minus the border). Without text it is as high as
+// the padding and one 24px row.
+$overlay-min-height: get-size(2) + get-size(3) + get-size(2) - $border-width;
+$fade-opacity: 0.85;
+// The fade is at full strength from this point of the overlay down
+$fade-solid-share: 50%;
+
+// Sizes that fall between two size tokens. The heart icon is 20 by 19px, the
+// size of its picture.
+$heart-gap: 6px;
+$heart-width: 20px;
+$heart-height: 19px;
+$arrow-icon-tablet: 18px;
+
+// The section owns the space above it, down from the hero. Under the cards it
+// leaves a little more than their 4px shadow.
+.games-carousel {
+  padding-block: get-size(5) get-size(0.5);
+
+  @include media-down(laptop) {
+    padding-block: get-size(3) get-size(1);
+  }
+
+  @include media-down(mobile) {
+    padding-block: get-size(2) get-size(0.5);
+  }
+}
+
+.games-carousel__inner {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(5);
+  max-width: get-breakpoint(desktop);
+  margin-inline: auto;
+  padding-inline: get-size(15);
+
+  @include media-down(laptop) {
+    gap: get-size(3);
+    padding-inline: get-size(5);
+  }
+
+  @include media-down(mobile) {
+    gap: get-size(2);
+    padding-inline: get-size(2);
+  }
+}
+
+// ---------- Heading and arrows ----------
+.games-carousel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+// The mobile mockup has no arrows
+.games-carousel__arrows {
+  display: flex;
+  gap: get-size(2);
+
+  @include media-down(mobile) {
+    display: none;
+  }
+}
+
+.button.games-carousel__arrow {
+  width: get-size(6);
+  height: get-size(6);
+  padding: 0;
+  border-radius: get-radius(full);
+
+  svg {
+    width: get-size(3);
+    height: get-size(3);
+  }
+
+  @include media-down(laptop) {
+    width: get-size(5);
+    height: get-size(5);
+
+    svg {
+      width: $arrow-icon-tablet;
+      height: $arrow-icon-tablet;
+    }
+  }
+}
+
+// The outlined button is white here instead of see-through
+.button.button--outlined.games-carousel__arrow {
+  background-color: get-color(white);
+
+  @include hover {
+    background-color: get-color(surface);
+  }
+}
+
+// ---------- Cards ----------
+// The track starts 8px inside the section's margin (4px on mobile, and there it
+// runs up to the margin on the right): the mockups leave room there for the
+// cards' 4px shadow
+.games-carousel__track {
+  display: flex;
+  gap: get-size(1);
+  margin: 0;
+  padding: 0 get-size(1);
+  list-style: none;
+
+  @include media-down(mobile) {
+    gap: $card-gap-mobile;
+    padding-inline: get-size(0.5) 0;
+  }
+}
+
+// Each card is a container, so it can ask how wide it is (see the end of the
+// file)
+.games-carousel__card {
+  position: relative;
+  flex: none;
+  height: $card-height-desktop;
+  overflow: hidden;
+  border: $border-width solid get-color(on-primary);
+  border-radius: get-radius(extra-large);
+  box-shadow: get-shadow(level-1);
+  container: games-carousel-card / inline-size;
+
+  @include media-down(laptop) {
+    height: $card-height-tablet;
+    border-radius: get-radius(large);
+  }
+
+  @include media-down(mobile) {
+    height: $card-height-mobile;
+  }
+}
+
+.games-carousel__card--far {
+  width: min($far-card-width, $far-card-share);
+
+  // Tablet and mobile show only the active card and its two neighbors
+  @include media-down(laptop) {
+    display: none;
+  }
+}
+
+.games-carousel__card--near {
+  width: min($near-card-width, $near-card-share);
+
+  @include media-down(laptop) {
+    flex: $near-card-tablet 1 0;
+    min-width: 0;
+  }
+
+  @include media-down(mobile) {
+    flex-grow: $near-card-mobile;
+  }
+}
+
+.games-carousel__card--active {
+  flex: 1 1 0;
+  min-width: 0;
+
+  @include media-down(laptop) {
+    flex-grow: $active-card-tablet;
+  }
+
+  @include media-down(mobile) {
+    flex-grow: $active-card-mobile;
+  }
+}
+
+// The photo is cropped and centered like the mockup's. It covers the card's
+// whole box, so the scale is the mockup's, and the border goes over its edge
+// (the card clips what is outside its border).
+.games-carousel__image {
+  position: absolute;
+  inset: (-$border-width);
+  // wider than its container, so it must not keep the default cap of 100%
+  width: calc(100% + #{2 * $border-width});
+  max-width: none;
+  height: calc(100% + #{2 * $border-width});
+  object-fit: cover;
+}
+
+.games-carousel__overlay {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: get-size(1);
+  min-height: $overlay-min-height;
+  padding: get-size(2) (get-size(2) - $border-width) (get-size(2) - $border-width);
+  background-image: linear-gradient(
+    to top,
+    rgba(get-color(black), $fade-opacity) $fade-solid-share,
+    transparent
+  );
+  color: get-color(white);
+}
+
+.games-carousel__title {
+  overflow: hidden;
+  font-size: get-font-size(body-large);
+  font-weight: get-font-weight(bold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.games-carousel__stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: get-font-size(body-medium);
+  font-weight: get-font-weight(semi-bold);
+
+  @include media-down(laptop) {
+    font-size: get-font-size(body-small);
+  }
+
+  @include media-down(mobile) {
+    font-size: get-font-size(label-medium);
+  }
+}
+
+.games-carousel__rating,
+.games-carousel__likes {
+  display: flex;
+  align-items: center;
+}
+
+.games-carousel__rating {
+  gap: get-size(0.5);
+
+  svg {
+    width: get-size(3);
+    height: get-size(3);
+    color: get-color(primary);
+  }
+}
+
+.games-carousel__likes {
+  gap: $heart-gap;
+
+  svg {
+    width: $heart-width;
+    height: $heart-height;
+    color: get-color(like);
+  }
+}
+
+.games-carousel__hidden {
+  @include visually-hidden;
+}
+
+// The 288px rule: a card narrower than that shows only its photo (and the fade
+// at the bottom). The title, rating and likes stay in the page for screen
+// readers. The active card is the exception: the mobile mockup gives its 218px
+// a title, a rating and likes.
+@container games-carousel-card (width < #{$info-min-width}) {
+  .games-carousel__card:not(.games-carousel__card--active) .games-carousel__title,
+  .games-carousel__card:not(.games-carousel__card--active) .games-carousel__stats {
+    @include visually-hidden;
+  }
+}
