@@ -201,9 +201,9 @@ $avatar-colors: (
     background-color: get-color(white);
   }
 
-  // A 1px line between two rows, drawn inside the row so it adds no height
+  // A hairline between two rows, drawn inside the row so it adds no height
   & + & .leaderboard__cell {
-    box-shadow: inset 0 1px 0 get-color(outline);
+    box-shadow: inset 0 $border-width-hairline 0 get-color(outline);
   }
 
   // Tablet and mobile show the top three players
