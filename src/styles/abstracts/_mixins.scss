@@ -31,3 +31,46 @@
 @mixin button-size($name) {
   padding: map.get(get-button-size($name), padding);
 }
+
+// Styles for people who asked their system to reduce motion.
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+// Open and close animation for a modal <dialog>: it fades and moves in from
+// $closed-transform, and back out again. `allow-discrete` on display and
+// overlay keeps the dialog visible and in the top layer until the exit
+// animation has finished. For people who prefer reduced motion the movement
+// is dropped and only the fade remains, so the animation is still visible.
+@mixin animated-dialog($closed-transform) {
+  transform: $closed-transform;
+  opacity: 0;
+  transition:
+    transform get-duration(medium),
+    opacity get-duration(medium),
+    overlay get-duration(medium) allow-discrete,
+    display get-duration(medium) allow-discrete;
+
+  &[open] {
+    transform: none;
+    opacity: 1;
+
+    @starting-style {
+      transform: $closed-transform;
+      opacity: 0;
+    }
+  }
+
+  @include reduced-motion {
+    transform: none;
+
+    &[open] {
+      @starting-style {
+        transform: none;
+        opacity: 0;
+      }
+    }
+  }
+}
