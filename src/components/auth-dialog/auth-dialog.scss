@@ -23,6 +23,17 @@ $google-button-height: 50px;
 // How far a form slides while it changes places with the other one
 $slide-distance: get-size(2);
 
+// The hovered tab is the warm surface color at this strength, and the rules
+// beside "or" are the dark on-primary color at this one
+$tab-hover-opacity: 0.6;
+$divider-opacity: 0.2;
+
+// The mockup puts a link's underline this far under the baseline
+$link-underline-offset: 3px;
+
+// The text of the submit button: 20px tall for its 16px type in the mockup
+$submit-line-height: 1.25;
+
 // ---------- Dialog ----------
 // A modal dialog is centered by the browser. The animation comes from the
 // animated-dialog mixin, and the backdrop fades on its own below.
@@ -95,7 +106,7 @@ html:has(.auth-dialog[open]) {
     color get-duration(fast);
 
   @include hover {
-    background-color: rgba(get-color(surface), 0.6);
+    background-color: rgba(get-color(surface), $tab-hover-opacity);
     color: get-color(on-primary);
   }
 
@@ -252,9 +263,8 @@ html:has(.auth-dialog[open]) {
   font-size: get-font-size(body-small);
   font-weight: get-font-weight(bold);
   text-decoration: underline;
-  // the mockup's line: 1px thick, 3px under the baseline
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
+  text-decoration-thickness: $border-width-hairline;
+  text-underline-offset: $link-underline-offset;
   cursor: pointer;
   transition: color get-duration(fast);
 
@@ -268,7 +278,7 @@ html:has(.auth-dialog[open]) {
   border-radius: get-radius(medium);
   box-shadow: get-shadow(button-edge);
   font-size: get-font-size(body-medium);
-  line-height: 1.25;
+  line-height: $submit-line-height;
 }
 
 .auth-dialog__divider {
@@ -285,8 +295,8 @@ html:has(.auth-dialog[open]) {
   &::after {
     content: '';
     flex: 1;
-    height: 1px;
-    background-color: rgba(get-color(on-primary), 0.2);
+    height: $border-width-hairline;
+    background-color: rgba(get-color(on-primary), $divider-opacity);
   }
 }
 
