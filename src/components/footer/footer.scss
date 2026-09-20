@@ -1,16 +1,19 @@
 @use 'abstracts' as *;
 
-// The mockup's rule above the bottom bar is 1px, and the border width token is 2px
-$divider-width: 1px;
-
 // The tagline breaks after "curated" in the mockup; wider, "casual" would fit
-// on the first line
+// on the first line. Its line is half as tall again as its type.
 $tagline-width: 400px;
+$tagline-line-height: 1.5;
 
 // The UI guide makes a hovered link bold, but a real bold is about 4px wider
 // and would move the whole column. A text stroke thickens the letters and keeps
-// their width; 0.6px looks closest to the bold weight.
+// their width; 0.6px looks closest to the bold weight. The line under a hovered
+// link is the 1.5px of the UI guide.
 $hover-stroke: 0.6px;
+$hover-underline-thickness: 1.5px;
+
+// The mockup's code glyph is 14px on tablet and mobile, which no size token has
+$code-glyph-size: 14px;
 
 .footer {
   background-color: get-color(bg-footer);
@@ -69,7 +72,7 @@ $hover-stroke: 0.6px;
 
 .footer__tagline {
   max-width: $tagline-width;
-  line-height: 1.5;
+  line-height: $tagline-line-height;
 
   @include media-down(laptop) {
     max-width: none;
@@ -134,8 +137,7 @@ $hover-stroke: 0.6px;
     color: get-color(primary);
     -webkit-text-stroke: $hover-stroke currentcolor;
     text-decoration: underline;
-    // the 1.5px line of the UI guide
-    text-decoration-thickness: 1.5px;
+    text-decoration-thickness: $hover-underline-thickness;
     text-underline-offset: get-size(0.5);
   }
 }
@@ -182,7 +184,7 @@ $hover-stroke: 0.6px;
   // Only the smallest gap between items: space-between shares out the rest
   gap: get-size(1);
   padding-block-start: get-size(3);
-  border-block-start: $divider-width solid get-color(bg-footer-low);
+  border-block-start: $border-width-hairline solid get-color(bg-footer-low);
 
   @include media-down(laptop) {
     padding-block-start: get-size(2);
@@ -256,11 +258,10 @@ $hover-stroke: 0.6px;
       height: get-size(2);
     }
 
-    // The mockup's code glyph is 14px on tablet and mobile
     @include media-down(laptop) {
       svg {
-        width: 14px;
-        height: 14px;
+        width: $code-glyph-size;
+        height: $code-glyph-size;
       }
     }
   }
