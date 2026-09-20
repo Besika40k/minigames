@@ -191,6 +191,10 @@ $breakpoints: (
 // Not a style guide variable: every button, tile and divider in the mockups
 // uses a 2px line.
 $border-width: 2px;
+// The thin outline of the small shapes: avatars, tags and the marker of a
+// section title. It is drawn as an inset shadow, because a border this thin
+// would be rounded down to a whole device pixel.
+$border-width-thin: 1.5px;
 
 // ---------- Durations ----------
 // Not a style guide variable: shared timing for hover and open/close transitions.
