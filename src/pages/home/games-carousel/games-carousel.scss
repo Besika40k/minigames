@@ -33,9 +33,14 @@ $card-gap-mobile: 5.5px;
 // the padding and one 24px row.
 $overlay-min-height: get-size(2) + get-size(3) + get-size(2) - $border-width;
 $fade-opacity: 0.85;
+// The fade is at full strength from this point of the overlay down
+$fade-solid-share: 50%;
 
-// Sizes that fall between two size tokens
+// Sizes that fall between two size tokens. The heart icon is 20 by 19px, the
+// size of its picture.
 $heart-gap: 6px;
+$heart-width: 20px;
+$heart-height: 19px;
 $arrow-icon-tablet: 18px;
 
 // The section owns the space above it, down from the hero. Under the cards it
@@ -214,7 +219,11 @@ $arrow-icon-tablet: 18px;
   gap: get-size(1);
   min-height: $overlay-min-height;
   padding: get-size(2) (get-size(2) - $border-width) (get-size(2) - $border-width);
-  background-image: linear-gradient(to top, rgba(get-color(black), $fade-opacity) 50%, transparent);
+  background-image: linear-gradient(
+    to top,
+    rgba(get-color(black), $fade-opacity) $fade-solid-share,
+    transparent
+  );
   color: get-color(white);
 }
 
@@ -262,8 +271,8 @@ $arrow-icon-tablet: 18px;
   gap: $heart-gap;
 
   svg {
-    width: get-size(2) + get-size(0.5);
-    height: get-size(2) + get-size(0.5) - 1px;
+    width: $heart-width;
+    height: $heart-height;
     color: get-color(like);
   }
 }
