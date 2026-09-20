@@ -1,9 +1,5 @@
 @use 'abstracts' as *;
 
-// 12px between the button edges in the mockup: the 16px between the boxes
-// minus the two 2px strokes that sit outside them there
-$actions-gap: get-size(1) + get-size(0.5);
-
 .header {
   // 85px in the mockup: size-10 plus 5px, which no size token covers
   height: get-size(10) + 5px;
@@ -67,6 +63,7 @@ $actions-gap: get-size(1) + get-size(0.5);
 .header__nav-link {
   color: get-color(on-bg);
   font-size: get-font-size(label-extra-large);
+  font-weight: get-font-weight(medium);
   text-decoration: none;
 
   @include hover {
@@ -84,14 +81,14 @@ $actions-gap: get-size(1) + get-size(0.5);
 .header__actions {
   display: flex;
   align-items: center;
-  gap: $actions-gap;
+  gap: get-size(2);
 
   @include media-down(laptop) {
     gap: get-size(1);
   }
 
   @include media-down(tablet) {
-    gap: $actions-gap;
+    gap: get-size(2);
   }
 
   // Below laptop the auth buttons switch to the small size
