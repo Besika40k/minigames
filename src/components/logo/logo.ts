@@ -11,7 +11,7 @@ export interface LogoOptions {
 export function createLogo(options: LogoOptions = {}): HTMLAnchorElement {
   const image: HTMLImageElement = createElement('img', {
     className: 'logo__image',
-    attributes: { src: logoImageUrl, alt: '', width: '32', height: '32' },
+    attributes: { src: logoImageUrl, alt: '', width: '28', height: '28' },
   });
 
   const tile: HTMLSpanElement = createElement('span', {
