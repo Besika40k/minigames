@@ -46,6 +46,20 @@
   padding: ($vertical - tokens.$border-width) ($horizontal - tokens.$border-width);
 }
 
+// Takes an element off the screen but leaves it to screen readers, for a text
+// that a sighted person does not need (or that does not fit)
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 // Styles for people who asked their system to reduce motion.
 @mixin reduced-motion {
   @media (prefers-reduced-motion: reduce) {
