@@ -17,10 +17,10 @@ The layout is responsive and follows the Figma design at three breakpoints: 375p
 Requires Node.js 22 or newer.
 
 ```bash
-    git clone https://github.com/Besika40k/minigames.git
-    cd minigames
-    npm install
-    npm run dev
+git clone https://github.com/Besika40k/minigames.git
+cd minigames
+npm install
+npm run dev
 ```
 
 ## Scripts
@@ -80,12 +80,14 @@ The carousel on the Home page (`src/pages/home/games-carousel`) is a static layo
 
 ## Styling
 
-Design tokens from the style guide live in `src/styles/abstracts/_tokens.scss`: colors, typography, sizes, corner radii, button sizes, shadows and breakpoints. Styles read them through helpers instead of raw values:
+Design tokens live in `src/styles/abstracts/_tokens.scss`: colors, typography, sizes, corner radii, button sizes, shadows, breakpoints, border widths and durations. Styles read them through helpers instead of raw values:
 
 - functions (`_functions.scss`): `get-color`, `get-font-family`, `get-font-size`, `get-font-weight`, `get-size`, `get-radius`, `get-shadow`, `get-button-size`, `get-breakpoint` and `get-duration`. An unknown token name fails the build.
-- mixins (`_mixins.scss`): `media-up` and `media-down` for media queries, `hover` for hover-only styles, `button-size` for button padding (the border is taken off it, because the mockups draw a button's stroke inside its box), `reduced-motion` for styles that respect that system setting, and `animated-dialog` for the open and close animation of a modal `<dialog>`.
+- mixins (`_mixins.scss`): `media-up` and `media-down` for media queries, `hover` for hover-only styles, `button-size` for button padding (the border is taken off it, because the mockups draw a button's stroke inside its box), `reduced-motion` for styles that respect that system setting, `visually-hidden` for a text that screen readers keep and the eye does not need, and `animated-dialog` for the open and close animation of a modal `<dialog>`.
 
 Every stylesheet starts with `@use 'abstracts' as *;` (Vite adds `src/styles` to Sass's load path). Media queries always go through `media-up` and `media-down`, so the breakpoints stay in one place. Both count whole pixels (`media-down(tablet)` is everything below 769px), so a fractional width from browser zoom or display scaling, such as 375.2px at 125%, still lands in the right layout. The mobile layout holds from 375px up to 560px.
+
+A number that no token covers (a size measured from a mockup, a line height the style guide does not give) becomes a named constant at the top of the stylesheet that uses it, with a comment saying where it comes from.
 
 ## Deployment
 
