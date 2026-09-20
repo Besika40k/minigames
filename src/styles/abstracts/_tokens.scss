@@ -203,6 +203,10 @@ $border-width: 2px;
 // section title. It is drawn as an inset shadow, because a border this thin
 // would be rounded down to a whole device pixel.
 $border-width-thin: 1.5px;
+// The 1px rules, where the 2px line would be too heavy: the line above the
+// footer's bottom bar, the lines between leaderboard rows, the rule beside "or"
+// in the auth dialog and the underline of its links.
+$border-width-hairline: 1px;
 
 // ---------- Durations ----------
 // Not a style guide variable: shared timing for hover and open/close transitions.
