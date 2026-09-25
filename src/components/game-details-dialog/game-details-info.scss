@@ -1,0 +1,163 @@
+@use 'abstracts' as *;
+
+// The style guide gives no line height: this one is measured from the mockups
+$description-line-height: 20px;
+
+// On mobile the spec boxes are 150px wide at most, centered in two columns
+$spec-width-mobile: 150px;
+
+// Sizes that fall between two size tokens. The heart icon is 20 by 19px, the
+// size of its picture.
+$heart-width: 20px;
+$heart-height: 19px;
+$heart-gap: 6px;
+
+// The title with the rating and likes beside it. When they no longer fit side
+// by side (on mobile), the rating and likes move under the title.
+.game-details__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: get-size(1) get-size(2);
+}
+
+.game-details__title {
+  margin: 0;
+  color: get-color(on-primary);
+  font-size: get-font-size(display-medium);
+  font-weight: get-font-weight(bold);
+}
+
+.game-details__stats {
+  display: flex;
+  align-items: center;
+  gap: get-size(2);
+  margin: 0;
+  color: get-color(on-primary);
+  font-size: get-font-size(label-large);
+  font-weight: get-font-weight(semi-bold);
+}
+
+.game-details__rating,
+.game-details__likes {
+  display: flex;
+  align-items: center;
+}
+
+.game-details__rating {
+  gap: get-size(0.5);
+
+  svg {
+    width: get-size(3);
+    height: get-size(3);
+    color: get-color(primary);
+  }
+}
+
+.game-details__likes {
+  gap: $heart-gap;
+
+  svg {
+    width: $heart-width;
+    height: $heart-height;
+    color: get-color(like);
+  }
+}
+
+.game-details__description {
+  margin: get-size(3) 0 0;
+  color: get-color(on-bg);
+  font-size: get-font-size(body-medium);
+  line-height: $description-line-height;
+}
+
+// Four boxes in a row, two by two on mobile
+.game-details__specs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: get-size(2);
+  margin: get-size(3) 0 0;
+
+  @include media-down(mobile) {
+    grid-template-columns: repeat(2, minmax(0, $spec-width-mobile));
+    justify-content: center;
+  }
+}
+
+.game-details__spec {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: get-size(1);
+  min-height: get-size(7);
+  padding: 0 get-size(2);
+  border: $border-width-hairline solid get-color(outline-variant);
+  border-radius: get-radius(small);
+  background-color: get-color(white);
+  box-shadow: get-shadow(spec);
+}
+
+.game-details__spec-name {
+  color: get-color(on-bg);
+  font-size: get-font-size(label-medium);
+}
+
+.game-details__spec-value {
+  margin: 0;
+  color: get-color(on-primary);
+  font-size: get-font-size(label-large);
+  font-weight: get-font-weight(semi-bold);
+}
+
+// Play Now and Favorites share the row. On mobile Favorites is a square with
+// only its heart, and Play Now takes the rest.
+.game-details__actions {
+  display: flex;
+  gap: get-size(2);
+  margin-block-start: get-size(3);
+}
+
+.button.game-details__play,
+.button.game-details__favorite {
+  flex: 1 1 0;
+  height: get-size(6);
+  padding-block: 0;
+  border-radius: get-radius(medium);
+  box-shadow: get-shadow(level-1);
+  font-size: get-font-size(label-extra-large);
+}
+
+.button.game-details__favorite {
+  gap: get-size(1);
+  border: $border-width-hairline solid get-color(outline-variant);
+  background-color: get-color(white);
+
+  svg {
+    flex: none;
+    width: $heart-width;
+    height: $heart-height;
+  }
+
+  @include hover {
+    background-color: get-color(surface);
+  }
+
+  @include media-down(mobile) {
+    flex: none;
+    width: get-size(6);
+    padding: 0;
+  }
+}
+
+// A favorite game has a red heart
+.button.game-details__favorite--active svg {
+  color: get-color(like);
+}
+
+// On mobile the words are read out but not shown
+.game-details__favorite-text {
+  @include media-down(mobile) {
+    @include visually-hidden;
+  }
+}
