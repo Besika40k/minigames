@@ -26,9 +26,15 @@ $disabled-opacity: 0.5;
   }
 }
 
-// Page buttons outside the window
+// Page buttons outside the window of the current layout
 .pagination__item--hidden {
   display: none;
+}
+
+.pagination__item--hidden-mobile {
+  @include media-down(mobile) {
+    display: none;
+  }
 }
 
 .pagination__page,
