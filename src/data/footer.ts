@@ -2,8 +2,8 @@ import { Route } from '../types/route.ts';
 import type { FooterContent } from '../types/footer.ts';
 import { IconName } from '../utils/create-icon.ts';
 
-// Only the Home page exists in Story 1, so every footer and social link
-// points to it.
+// Home and Library are real pages. The other links have no page in the
+// mockup yet, so they lead to Home.
 export const FOOTER_CONTENT: FooterContent = {
   tagline:
     'Take a short break and have fun. Hundreds of curated casual mini-games right in your web browser. No download required.',
@@ -12,7 +12,7 @@ export const FOOTER_CONTENT: FooterContent = {
       title: 'Explore',
       links: [
         { label: 'Home', route: Route.Home },
-        { label: 'Library', route: Route.Home },
+        { label: 'Library', route: Route.Library },
         { label: 'Categories', route: Route.Home },
         { label: 'Tournaments', route: Route.Home },
       ],
