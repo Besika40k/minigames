@@ -1,4 +1,3 @@
-@use 'sass:color';
 @use 'abstracts' as *;
 
 // Sizes measured from the mockup
@@ -6,12 +5,6 @@ $dialog-width: 420px;
 // The dialog's outline is thicker than the 2px line of the other boxes
 $dialog-border: 3px;
 $dialog-margin: get-size(2);
-
-// The backdrop is the footer's navy over the page. The color of the page under
-// it is worked out too, to fill the strip a scrollbar leaves (see below).
-$backdrop-opacity: 0.75;
-$backdrop-color: rgba(get-color(bg-footer), $backdrop-opacity);
-$dimmed-page-color: color.mix(get-color(bg-footer), get-color(bg), $backdrop-opacity * 100%);
 
 // The 20px box of an icon and the tab bar and eye button around it
 $icon-size: get-size(2) + get-size(0.5);
@@ -36,7 +29,7 @@ $submit-line-height: 1.25;
 
 // ---------- Dialog ----------
 // A modal dialog is centered by the browser. The animation comes from the
-// animated-dialog mixin, and the backdrop fades on its own below.
+// animated-dialog mixin, and the backdrop from the modal-backdrop mixin.
 .auth-dialog {
   width: $dialog-width;
   max-width: calc(100% - #{2 * $dialog-margin});
@@ -56,30 +49,7 @@ $submit-line-height: 1.25;
     padding: get-size(3) - $dialog-border;
   }
 
-  &::backdrop {
-    background-color: transparent;
-    transition:
-      background-color get-duration(medium),
-      overlay get-duration(medium) allow-discrete,
-      display get-duration(medium) allow-discrete;
-  }
-
-  &[open]::backdrop {
-    background-color: $backdrop-color;
-
-    @starting-style {
-      background-color: transparent;
-    }
-  }
-}
-
-// The page behind the dialog must not scroll. The reserved gutter keeps the page
-// from shifting sideways when the scrollbar goes away, and it is painted in the
-// color of the dimmed page, because the backdrop does not reach into it.
-html:has(.auth-dialog[open]) {
-  overflow: hidden;
-  scrollbar-gutter: stable;
-  background-color: $dimmed-page-color;
+  @include modal-backdrop;
 }
 
 // ---------- Tabs ----------
