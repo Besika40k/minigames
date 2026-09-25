@@ -1,0 +1,78 @@
+@use 'abstracts' as *;
+
+// A disabled arrow is half see-through, like a disabled button
+$disabled-opacity: 0.5;
+
+// The pagination is the last section of the page: it owns the space above it
+// and the space below it, down to the footer
+.pagination {
+  padding: get-size(5) get-size(2);
+
+  @include media-down(mobile) {
+    padding-block: get-size(3);
+  }
+}
+
+.pagination__list {
+  display: flex;
+  justify-content: center;
+  gap: get-size(2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include media-down(laptop) {
+    gap: get-size(1);
+  }
+}
+
+// Page buttons outside the window
+.pagination__item--hidden {
+  display: none;
+}
+
+.pagination__page,
+.pagination__arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: get-size(5);
+  height: get-size(5);
+  padding: 0;
+  border: $border-width solid get-color(on-primary);
+  border-radius: get-radius(full);
+  background-color: get-color(white);
+  color: get-color(on-primary);
+  font-size: get-font-size(label-large);
+  font-weight: get-font-weight(bold);
+  cursor: pointer;
+  transition: background-color get-duration(fast);
+
+  svg {
+    width: get-size(3);
+    height: get-size(3);
+  }
+
+  @include hover {
+    background-color: get-color(surface);
+  }
+}
+
+// After the hover rule, so the current page keeps its color under the pointer
+.pagination__page[aria-current='page'] {
+  background-color: get-color(bg-footer-low);
+  color: get-color(white);
+  cursor: default;
+}
+
+.pagination__arrow:disabled {
+  border-color: get-color(outline-variant);
+  background-color: transparent;
+  color: get-color(on-bg);
+  opacity: $disabled-opacity;
+  cursor: not-allowed;
+}
+
+.pagination__hidden {
+  @include visually-hidden;
+}
