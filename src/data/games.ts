@@ -1,7 +1,10 @@
 import catMailCoImage from '../assets/images/games/cat-mail-co-card.jpg';
 import heartopiaImage from '../assets/images/games/heartopia-card.jpg';
+import islandersNewShoresImage from '../assets/images/games/islanders-new-shores-card.jpg';
 import paliaImage from '../assets/images/games/palia-card.jpg';
 import shelveThePotionsImage from '../assets/images/games/shelve-the-potions-card.jpg';
+import tailsideCozyCafeSimImage from '../assets/images/games/tailside-cozy-cafe-sim-card.jpg';
+import tinyGladeImage from '../assets/images/games/tiny-glade-card.jpg';
 import vacationCafeSimulatorImage from '../assets/images/games/vacation-cafe-simulator-card.jpg';
 import winterBurrowImage from '../assets/images/games/winter-burrow-card.jpg';
 import type { Game } from '../types/game.ts';
@@ -79,3 +82,44 @@ export const LIBRARY_GAMES: readonly Game[] = [
     cardImage: catMailCoImage,
   },
 ];
+
+// The other games the course's mock data marks as featured
+const MORE_FEATURED_GAMES: readonly Game[] = [
+  {
+    slug: 'tiny-glade',
+    name: 'Tiny Glade',
+    category: 'arcade',
+    price: '$3.99',
+    shortDescription:
+      'A small diorama builder where you doodle whimsical castles, cozy cottages & romantic ruins. No management, combat or goals — just lovable dioramas.',
+    rating: 4.9,
+    likesCount: 67_300,
+    cardImage: tinyGladeImage,
+  },
+  {
+    slug: 'tailside-cozy-cafe-sim',
+    name: 'Tailside: Cozy Cafe Sim',
+    category: 'strategy',
+    price: 'Free',
+    shortDescription:
+      'Run your own cozy café in Tailside! Brew coffee, decorate your café, follow small stories in the daily newspaper. Unlock new items, skills, villagers, and creature visitors.',
+    rating: 4.8,
+    likesCount: 35_600,
+    cardImage: tailsideCozyCafeSimImage,
+  },
+  {
+    slug: 'islanders-new-shores',
+    name: 'ISLANDERS: New Shores',
+    category: 'strategy',
+    price: 'Free',
+    shortDescription:
+      'Build your island retreat in a calm, minimalist world with exciting new features that keep the classic charm while inspiring fresh creativity.',
+    rating: 4.9,
+    likesCount: 54_200,
+    cardImage: islandersNewShoresImage,
+  },
+];
+
+// The nine games marked `featured` in the mock data, in its order: the cards of
+// the Home page slider. The six Library games are all featured.
+export const FEATURED_GAMES: readonly Game[] = [...LIBRARY_GAMES, ...MORE_FEATURED_GAMES];
