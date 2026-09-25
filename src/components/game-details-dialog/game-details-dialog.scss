@@ -1,0 +1,74 @@
+@use 'abstracts' as *;
+
+// Sizes measured from the mockups: the dialog is 600px wide on desktop and
+// tablet and as wide as the screen on mobile, and the hero is 220px high
+$dialog-width: 600px;
+$dialog-margin: get-size(2);
+$hero-height: 220px;
+
+// A modal dialog is centered by the browser. It is taller than most screens,
+// so it scrolls inside, without a visible scrollbar that would narrow it.
+.game-details {
+  width: $dialog-width;
+  max-width: 100%;
+  max-height: calc(100% - #{2 * $dialog-margin});
+  padding: 0;
+  overflow: hidden auto;
+  border: $border-width-hairline solid get-color(outline-variant);
+  border-radius: get-radius(extra-large);
+  background-color: get-color(bg);
+  box-shadow: get-shadow(dialog);
+  color: get-color(on-bg);
+  scrollbar-width: none;
+
+  @include animated-dialog(translateY(get-size(3)));
+  @include modal-backdrop;
+
+  @include media-down(mobile) {
+    width: 100%;
+  }
+}
+
+.game-details__hero {
+  position: relative;
+  height: $hero-height;
+}
+
+.game-details__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.game-details__close {
+  position: absolute;
+  inset-block-start: get-size(2);
+  inset-inline-end: get-size(2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: get-size(5);
+  height: get-size(5);
+  padding: 0;
+  border: $border-width solid get-color(on-primary);
+  border-radius: get-radius(full);
+  background-color: get-color(white);
+  box-shadow: get-shadow(close-button);
+  color: get-color(on-primary);
+  cursor: pointer;
+  transition: background-color get-duration(fast);
+
+  svg {
+    width: get-size(3);
+    height: get-size(3);
+  }
+
+  @include hover {
+    background-color: get-color(surface);
+  }
+
+  @include media-down(mobile) {
+    width: get-size(4);
+    height: get-size(4);
+  }
+}
