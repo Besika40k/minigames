@@ -1,24 +1,11 @@
 // How a card sits in the row: the active card is the big one in the middle,
-// the near cards are its neighbors and the far cards are the outer ones
+// the near cards are its neighbors, the far cards are the outer ones, and the
+// hidden cards wait off the row until the slider brings them in
 export enum SlideRole {
-  Far = 'far',
-  Near = 'near',
   Active = 'active',
-}
-
-// The part of a game that the carousel shows, with the field names of the
-// course's mock dataset
-export interface CarouselGame {
-  readonly slug: string;
-  readonly name: string;
-  readonly rating: number;
-  readonly likesCount: number;
-  readonly image: string;
-}
-
-export interface CarouselSlide {
-  readonly game: CarouselGame;
-  readonly role: SlideRole;
+  Near = 'near',
+  Far = 'far',
+  Hidden = 'hidden',
 }
 
 export interface CarouselContent {
@@ -28,4 +15,6 @@ export interface CarouselContent {
   // Read out before the numbers, which show only an icon on the screen
   readonly ratingLabel: string;
   readonly likesLabel: string;
+  // Read out with each card's place in the slider: "Palia, 5 of 9"
+  readonly positionSeparator: string;
 }

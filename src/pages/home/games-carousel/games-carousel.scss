@@ -6,26 +6,23 @@ $card-height-tablet: 280px;
 $card-height-mobile: 200px;
 
 // On desktop the row is 120, 288, 816, 288 and 120px wide at 1920px, with 8px
-// between the cards. The outer sizes are a cap plus a share of the row, so when
-// the row gets a little narrower (1903px where a scrollbar takes 17px) the near
-// cards keep the 288px they need to show their text, and only the active card,
-// which takes the rest, shrinks.
+// between the cards. The far cards are a cap or a share of the row. The near
+// cards keep the 288px they need for their text as long as the active card can
+// stay at least as wide; only below that do they share what is left.
 $far-card-width: 120px;
 $far-card-share: 7.5%;
 $near-card-width: 288px;
-$near-card-share: 18%;
+$active-card-min-width: 288px;
 
 // A card at least 288px wide shows its title, rating and likes. A container
 // query measures what is inside the border, which is 2px on each side.
 $info-min-width: 288px - 2 * $border-width;
 
-// Tablet and mobile show three cards, in the proportions of their mockups (105,
-// 448 and 104px, and 56, 218 and 56px). Every card has its 4px of border on top
-// of its share of the row, so the shares are the widths without the border.
-$near-card-tablet: 100;
-$active-card-tablet: 444;
-$near-card-mobile: 52;
-$active-card-mobile: 214;
+// Tablet and mobile show three cards, in the proportions of their mockups (104,
+// 448 and 104px, and 56, 218 and 56px): the near cards take this share of the
+// row, and the active card takes the rest.
+$near-card-share-tablet: 0.1585;
+$near-card-share-mobile: 0.17;
 $card-gap-mobile: 5.5px;
 
 // The dark fade under the text is 16px above the title and 14px under the
@@ -127,22 +124,44 @@ $arrow-icon-tablet: 18px;
 // ---------- Cards ----------
 // The track starts 8px inside the section's margin (4px on mobile, and there it
 // runs up to the margin on the right): the mockups leave room there for the
-// cards' 4px shadow
+// cards' 4px shadow. It works out the width of each kind of card from its own
+// width, and the cards take them by their role (see below).
 .games-carousel__track {
+  --card-gap: #{get-size(1)};
+  --far-width: min(#{$far-card-width}, #{$far-card-share});
+  --near-width: min(
+    #{$near-card-width},
+    (100% - 2 * var(--far-width) - 4 * var(--card-gap) - #{$active-card-min-width}) / 2
+  );
+  --active-width: calc(100% - 2 * var(--far-width) - 2 * var(--near-width) - 4 * var(--card-gap));
+
   display: flex;
-  gap: get-size(1);
+  gap: var(--card-gap);
   margin: 0;
   padding: 0 get-size(1);
+  overflow: hidden;
   list-style: none;
+  // Vertical swipes still scroll the page; sideways ones move the slider
+  touch-action: pan-y;
+  user-select: none;
+
+  // Tablet and mobile have no far cards, and two gaps
+  @include media-down(laptop) {
+    --far-width: 0px;
+    --near-width: calc((100% - 2 * var(--card-gap)) * #{$near-card-share-tablet});
+    --active-width: calc(100% - 2 * var(--near-width) - 2 * var(--card-gap));
+  }
 
   @include media-down(mobile) {
-    gap: $card-gap-mobile;
+    --card-gap: #{$card-gap-mobile};
+    --near-width: calc((100% - 2 * var(--card-gap)) * #{$near-card-share-mobile});
+
     padding-inline: get-size(0.5) 0;
   }
 }
 
 // Each card is a container, so it can ask how wide it is (see the end of the
-// file)
+// file). Its width follows its role.
 .games-carousel__card {
   position: relative;
   flex: none;
@@ -163,39 +182,34 @@ $arrow-icon-tablet: 18px;
   }
 }
 
-.games-carousel__card--far {
-  width: min($far-card-width, $far-card-share);
-
-  // Tablet and mobile show only the active card and its two neighbors
-  @include media-down(laptop) {
-    display: none;
-  }
+.games-carousel__card--active {
+  width: var(--active-width);
 }
 
 .games-carousel__card--near {
-  width: min($near-card-width, $near-card-share);
+  width: var(--near-width);
+}
+
+// A hidden card waits off the row: no width, no border, and a negative margin
+// that takes back its gap. It cannot be reached while it is out of sight.
+@mixin hidden-card {
+  width: 0;
+  margin-inline-start: calc(-1 * var(--card-gap));
+  border-width: 0;
+  box-shadow: none;
+  visibility: hidden;
+}
+
+.games-carousel__card--far {
+  width: var(--far-width);
 
   @include media-down(laptop) {
-    flex: $near-card-tablet 1 0;
-    min-width: 0;
-  }
-
-  @include media-down(mobile) {
-    flex-grow: $near-card-mobile;
+    @include hidden-card;
   }
 }
 
-.games-carousel__card--active {
-  flex: 1 1 0;
-  min-width: 0;
-
-  @include media-down(laptop) {
-    flex-grow: $active-card-tablet;
-  }
-
-  @include media-down(mobile) {
-    flex-grow: $active-card-mobile;
-  }
+.games-carousel__card--hidden {
+  @include hidden-card;
 }
 
 // The photo is cropped and centered like the mockup's. It covers the card's
@@ -283,11 +297,10 @@ $arrow-icon-tablet: 18px;
 
 // The 288px rule: a card narrower than that shows only its photo (and the fade
 // at the bottom). The title, rating and likes stay in the page for screen
-// readers. The active card is the exception: the mobile mockup gives its 218px
-// a title, a rating and likes.
+// readers.
 @container games-carousel-card (width < #{$info-min-width}) {
-  .games-carousel__card:not(.games-carousel__card--active) .games-carousel__title,
-  .games-carousel__card:not(.games-carousel__card--active) .games-carousel__stats {
+  .games-carousel__title,
+  .games-carousel__stats {
     @include visually-hidden;
   }
 }
