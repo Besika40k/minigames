@@ -161,7 +161,10 @@ $arrow-icon-tablet: 18px;
 }
 
 // Each card is a container, so it can ask how wide it is (see the end of the
-// file). Its width follows its role.
+// file). Its width follows its role, and changes of role are animated, so the
+// cards grow on their way to the middle and shrink on their way out. The task
+// asks for this animation, and it only resizes cards in place, so it stays for
+// people who prefer reduced motion too.
 .games-carousel__card {
   position: relative;
   flex: none;
@@ -171,6 +174,12 @@ $arrow-icon-tablet: 18px;
   border-radius: get-radius(extra-large);
   box-shadow: get-shadow(level-1);
   container: games-carousel-card / inline-size;
+  transition:
+    width get-duration(medium),
+    margin get-duration(medium),
+    border-width get-duration(medium),
+    box-shadow get-duration(medium),
+    visibility get-duration(medium);
 
   @include media-down(laptop) {
     height: $card-height-tablet;
