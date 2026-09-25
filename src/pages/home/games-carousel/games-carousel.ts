@@ -57,9 +57,10 @@ function createStats(game: Game): HTMLParagraphElement {
   return createElement('p', { className: 'games-carousel__stats', children: [rating, likes] });
 }
 
-// A card: the photo, the title, rating and likes. The photo is decoration: the
-// title names the game.
-function createCard(game: Game): HTMLLIElement {
+// A card: the photo, the title, rating and likes, and a button over the whole
+// card that opens the game's details. The photo is decoration: the button and
+// the title name the game.
+function createCard(game: Game, position: number, onOpen?: (game: Game) => void): HTMLLIElement {
   const image: HTMLImageElement = createElement('img', {
     className: 'games-carousel__image',
     attributes: {
@@ -79,9 +80,20 @@ function createCard(game: Game): HTMLLIElement {
     ],
   });
 
+  const openButton: HTMLButtonElement = createElement('button', {
+    className: 'games-carousel__open',
+    attributes: {
+      type: 'button',
+      'aria-label': `${game.name}, ${position} ${CAROUSEL_CONTENT.positionSeparator} ${FEATURED_GAMES.length}`,
+    },
+  });
+  openButton.addEventListener('click', (): void => {
+    onOpen?.(game);
+  });
+
   return createElement('li', {
     className: 'games-carousel__card',
-    children: [image, overlay],
+    children: [image, overlay, openButton],
   });
 }
 
@@ -113,15 +125,20 @@ function createArrow(variant: ButtonVariant, label: string, icon: IconName): HTM
   });
 }
 
+export interface GamesCarouselOptions {
+  // Opens the details of a game (a click on its card)
+  readonly onGameOpen?: (game: Game) => void;
+}
+
 // The slider of the featured games. Every card stays in the row: the order and
 // width of each one follow its distance from the active card, so the cards
 // slide and grow or shrink with CSS transitions, and a card that goes round the
 // loop does it while it is hidden.
-export function createGamesCarousel(): HTMLElement {
+export function createGamesCarousel(options: GamesCarouselOptions = {}): HTMLElement {
   let activeIndex = 0;
 
-  const cards: HTMLLIElement[] = FEATURED_GAMES.map((game: Game): HTMLLIElement =>
-    createCard(game),
+  const cards: HTMLLIElement[] = FEATURED_GAMES.map((game: Game, index: number): HTMLLIElement =>
+    createCard(game, index + 1, options.onGameOpen),
   );
 
   const render = (): void => {

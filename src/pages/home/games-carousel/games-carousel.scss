@@ -304,6 +304,21 @@ $arrow-icon-tablet: 18px;
   @include visually-hidden;
 }
 
+// A button over the whole card opens the game's details. Its focus ring is
+// drawn inside, because the card clips what is outside its border.
+.games-carousel__open {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline-offset: -(get-size(0.5) + $border-width);
+  }
+}
+
 // The 288px rule: a card narrower than that shows only its photo (and the fade
 // at the bottom). The title, rating and likes stay in the page for screen
 // readers.

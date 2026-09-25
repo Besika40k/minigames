@@ -32,7 +32,10 @@ export function startApp(): void {
   );
 
   const routes: readonly RouteDefinition[] = [
-    { path: Route.Home, render: renderHomePage },
+    {
+      path: Route.Home,
+      render: (): readonly HTMLElement[] => renderHomePage({ onGameOpen: gameDetails.open }),
+    },
     {
       path: Route.Library,
       render: (): readonly HTMLElement[] => renderLibraryPage({ onGameOpen: gameDetails.open }),
