@@ -11,6 +11,11 @@ export const LIBRARY_CONTENT: LibraryContent = {
   categoriesLabel: 'Categories',
   sortPrefix: 'Sort by:',
   sortListLabel: 'Sort games by',
+  gamesTitle: 'Games',
+  detailsText: 'Details',
+  categoryLabel: 'Category',
+  ratingLabel: 'Rating',
+  likesLabel: 'Likes',
 };
 
 // The categories of the course's mock data (`categories.json`), in the order of

@@ -27,4 +27,11 @@ export interface LibraryContent {
   readonly categoriesLabel: string;
   readonly sortPrefix: string;
   readonly sortListLabel: string;
+  // The heading of the card list, for screen readers only
+  readonly gamesTitle: string;
+  readonly detailsText: string;
+  // Read out before the numbers and the tag, which show no words on the screen
+  readonly categoryLabel: string;
+  readonly ratingLabel: string;
+  readonly likesLabel: string;
 }
