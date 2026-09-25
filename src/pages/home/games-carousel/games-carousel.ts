@@ -109,9 +109,11 @@ function createArrow(variant: ButtonVariant, label: string, icon: IconName): HTM
 }
 
 // The slider of the featured games. Every card stays in the row: the order and
-// width of each one follow its distance from the active card.
+// width of each one follow its distance from the active card, so the cards
+// slide and grow or shrink with CSS transitions, and a card that goes round the
+// loop does it while it is hidden.
 export function createGamesCarousel(): HTMLElement {
-  const activeIndex = 0;
+  let activeIndex = 0;
 
   const cards: HTMLLIElement[] = FEATURED_GAMES.map((game: Game): HTMLLIElement =>
     createCard(game),
@@ -126,6 +128,11 @@ export function createGamesCarousel(): HTMLElement {
         card.classList.toggle(`games-carousel__card--${candidate}`, candidate === role);
       }
     }
+  };
+
+  const move = (step: number): void => {
+    activeIndex = (activeIndex + step + cards.length) % cards.length;
+    render();
   };
 
   const track: HTMLUListElement = createElement('ul', {
@@ -158,6 +165,13 @@ export function createGamesCarousel(): HTMLElement {
     children: [
       createElement('div', { className: 'games-carousel__inner', children: [header, track] }),
     ],
+  });
+
+  previous.addEventListener('click', (): void => {
+    move(-1);
+  });
+  next.addEventListener('click', (): void => {
+    move(1);
   });
 
   render();
