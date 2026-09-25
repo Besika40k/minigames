@@ -1,3 +1,4 @@
+@use 'sass:list';
 @use 'abstracts' as *;
 
 // The mockups draw the card's stroke 2.5px wide, over the edge of the photo
@@ -9,6 +10,12 @@ $image-width-tablet: 270px;
 $card-height-desktop: 200px;
 $card-height-tablet: 152px;
 
+// A card narrower than the tablet mockup's card stacks the photo above the
+// text, as on mobile: beside the photo its title row would not fit. The stacked
+// photo keeps the shape of the picture.
+$stacked-below: 688px;
+$image-ratio: list.slash(460, 215);
+
 // The style guide gives no line heights: these are measured from the mockups
 $description-line-height-desktop: 22px;
 $description-line-height-tablet: 20px;
@@ -17,10 +24,11 @@ $description-lines-desktop: 3;
 $description-lines-tablet: 2;
 
 // Sizes that fall between two size tokens. The heart icon is 20 by 19px, the
-// size of its picture.
+// size of its picture; the stacked tag is 19px high instead of 23px.
 $heart-width: 20px;
 $heart-height: 19px;
 $heart-gap: 6px;
+$tag-padding-block-stacked: 2px;
 
 .game-card {
   position: relative;
@@ -46,16 +54,27 @@ $heart-gap: 6px;
     grid-template-columns: $image-width-tablet minmax(0, 1fr);
     height: $card-height-tablet;
   }
+
+  @container game-card (width < #{$stacked-below}) {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+  }
 }
 
 .game-card__image {
   width: 100%;
   height: 100%;
   object-fit: cover;
+
+  @container game-card (width < #{$stacked-below}) {
+    height: auto;
+    aspect-ratio: $image-ratio;
+  }
 }
 
 // Beside the photo: the title, tag and price in one row, the description under
-// them, and the footer (stats and button) at the bottom
+// them, and the footer (stats and button) at the bottom. Stacked: everything
+// in its own row, with the price beside the stats.
 .game-card__body {
   display: grid;
   grid-template:
@@ -67,6 +86,16 @@ $heart-gap: 6px;
   align-items: center;
   column-gap: get-size(2);
   padding: get-size(2);
+
+  @container game-card (width < #{$stacked-below}) {
+    grid-template:
+      'title title' auto
+      'tag tag' auto
+      'description description' auto
+      'stats price' auto
+      'details details' auto
+      / minmax(0, 1fr) max-content;
+  }
 }
 
 .game-card__title {
@@ -96,6 +125,11 @@ $heart-gap: 6px;
   font-size: get-font-size(label-medium);
   font-weight: get-font-weight(bold);
   white-space: nowrap;
+
+  @container game-card (width < #{$stacked-below}) {
+    margin-block-start: get-size(1);
+    padding-block: $tag-padding-block-stacked;
+  }
 }
 
 .game-card__price {
@@ -113,6 +147,10 @@ $heart-gap: 6px;
 
   @include media-down(laptop) {
     font-size: get-font-size(headline-small);
+  }
+
+  @container game-card (width < #{$stacked-below}) {
+    margin-block-start: get-size(2);
   }
 }
 
@@ -134,6 +172,10 @@ $heart-gap: 6px;
     line-height: $description-line-height-tablet;
     -webkit-line-clamp: $description-lines-tablet;
   }
+
+  @container game-card (width < #{$stacked-below}) {
+    margin-block-start: get-size(2);
+  }
 }
 
 .game-card__footer {
@@ -142,6 +184,11 @@ $heart-gap: 6px;
   align-items: center;
   justify-content: space-between;
   gap: get-size(2);
+
+  // Stacked, the stats and the button take their own places in the card's grid
+  @container game-card (width < #{$stacked-below}) {
+    display: contents;
+  }
 }
 
 .game-card__stats {
@@ -157,6 +204,10 @@ $heart-gap: 6px;
   @include media-down(laptop) {
     gap: get-size(2);
     font-size: get-font-size(label-medium);
+  }
+
+  @container game-card (width < #{$stacked-below}) {
+    margin-block-start: get-size(2);
   }
 }
 
@@ -186,12 +237,19 @@ $heart-gap: 6px;
   }
 }
 
-// Medium on desktop, small beside the tablet photo
+// Medium on desktop, small beside the tablet photo, and as wide as the card
+// when stacked
 .button.game-card__details {
   grid-area: details;
 
   @include media-down(laptop) {
     @include button-size(small);
+  }
+
+  @container game-card (width < #{$stacked-below}) {
+    @include button-size(medium);
+    justify-self: stretch;
+    margin-block-start: get-size(2);
   }
 }
 
