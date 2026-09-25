@@ -20,6 +20,11 @@ $illustration-ratio-desktop: 1;
 $illustration-ratio-tablet: list.slash(688, 300);
 $illustration-ratio-mobile: list.slash(343, 227);
 
+// The width of the description's longest line (the first one) in Chrome, at
+// the desktop and at the tablet font size
+$description-longest-line-desktop: 584px;
+$description-longest-line-tablet: 455px;
+
 // The style guide gives no line heights: these are measured from the mockup
 $title-line-height: 1.2;
 $description-line-height: 1.5;
@@ -89,7 +94,8 @@ $illustration-position-desktop: center top;
 }
 
 // The stroke sits inside the card box, so the padding is the mockup's padding
-// minus the border
+// minus the border. The card is a container, so the description can ask how
+// much room it has (see the end of the file).
 .game-developers__card {
   display: flex;
   flex-direction: column;
@@ -100,6 +106,7 @@ $illustration-position-desktop: center top;
   border-radius: get-radius(extra-large);
   background-color: get-color(white);
   box-shadow: get-shadow(soft-card);
+  container-type: inline-size;
 
   @include media-down(laptop) {
     gap: get-size(2);
@@ -169,5 +176,27 @@ $illustration-position-desktop: center top;
 
   @include media-down(laptop) {
     font-size: get-font-size(label-medium);
+  }
+}
+
+// The description keeps the mockup's line breaks while its longest line fits.
+// In a narrower card each line would wrap on its own and leave short ragged
+// lines, so the breaks are dropped and the text flows as one paragraph. The
+// mobile mockup wraps inside the lines itself, so there the breaks stay.
+@include media-up(laptop) {
+  @container (width < #{$description-longest-line-desktop}) {
+    .game-developers__description br {
+      display: none;
+    }
+  }
+}
+
+@include media-up(mobile) {
+  @include media-down(laptop) {
+    @container (width < #{$description-longest-line-tablet}) {
+      .game-developers__description br {
+        display: none;
+      }
+    }
   }
 }
