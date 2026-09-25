@@ -159,14 +159,16 @@ $shadow-color: map.get($colors, on-primary);
 // The two soft shadows are not in the style guide: they belong to the game
 // developer section and were measured from its mockup (black at 4%, 8% and 10%).
 $soft-shadow-color: map.get($colors, black);
-// The auth dialog's hard shadow is near black (measured from its mockup), so it
-// shows against the dark backdrop.
+// The dialogs' hard shadows are near black (measured from their mockups), so
+// they show against the dark backdrop.
 $dialog-shadow-color: #111111;
 $shadows: (
   level-1: 4px 4px $shadow-color,
   level-2: 6px 6px $shadow-color,
   level-3: 8px 8px $shadow-color,
   dialog: 8px 8px $dialog-shadow-color,
+  // the close button of the game details dialog
+  close-button: 2px 2px $dialog-shadow-color,
   // a hard shadow under a button and nowhere else
   button-edge: 0 4px $shadow-color,
   // a tight shadow with a wide one under it
