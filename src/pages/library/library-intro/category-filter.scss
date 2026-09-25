@@ -14,13 +14,18 @@ $focus-room: get-size(1);
   padding: $focus-room;
   overflow-x: auto;
   list-style: none;
-  // Swiped, but without a visible scrollbar
+  // Swiped or dragged, but without a visible scrollbar
   scrollbar-width: none;
   overscroll-behavior-x: contain;
 
   @include media-down(laptop) {
     gap: get-size(1);
   }
+}
+
+.category-filter--dragging {
+  cursor: grabbing;
+  user-select: none;
 }
 
 // The chips never shrink or wrap: the row clips them instead
@@ -47,6 +52,10 @@ $focus-room: get-size(1);
   // After the hover rule, so the picked chip stays yellow under the pointer
   &[aria-pressed='true'] {
     background-color: get-color(primary);
+  }
+
+  .category-filter--dragging & {
+    cursor: grabbing;
   }
 
   @include media-down(mobile) {
