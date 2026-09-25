@@ -1,0 +1,52 @@
+@use 'abstracts' as *;
+
+// Two cards share a row while each can be at least this wide, which is where
+// the longest title still fits beside the photo (from about 1840px). On smaller
+// desktop screens every card takes the whole row.
+$card-min-width: 790px;
+
+// The section owns the space above it, down from the sort control
+.game-list {
+  padding-block-start: get-size(2);
+}
+
+.game-list__inner {
+  max-width: get-breakpoint(desktop);
+  margin-inline: auto;
+  padding-inline: get-size(15);
+
+  @include media-down(laptop) {
+    padding-inline: get-size(5);
+  }
+
+  @include media-down(mobile) {
+    padding-inline: get-size(2);
+  }
+}
+
+.game-list__title {
+  @include visually-hidden;
+}
+
+.game-list__items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, $card-min-width), 1fr));
+  gap: get-size(3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include media-down(laptop) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  @include media-down(mobile) {
+    gap: get-size(2);
+  }
+}
+
+// Each item is a container, so a card lays itself out by its own width (see
+// game-card.scss)
+.game-list__item {
+  container: game-card / inline-size;
+}
