@@ -1,0 +1,55 @@
+@use 'abstracts' as *;
+
+// The row scrolls sideways inside its own box, which also clips the focus ring
+// of a chip. The padding makes room for the ring, and the negative margin gives
+// that room back, so the chips stay where the mockup has them.
+$focus-room: get-size(1);
+
+.category-filter {
+  display: flex;
+  gap: get-size(2);
+  min-width: 0;
+  max-width: calc(100% + #{2 * $focus-room});
+  margin: (-$focus-room);
+  padding: $focus-room;
+  overflow-x: auto;
+  list-style: none;
+  // Swiped, but without a visible scrollbar
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+
+  @include media-down(laptop) {
+    gap: get-size(1);
+  }
+}
+
+// The chips never shrink or wrap: the row clips them instead
+.category-filter__item {
+  flex: none;
+}
+
+.category-filter__chip {
+  @include button-size(small);
+  border: $border-width solid get-color(on-primary);
+  border-radius: get-radius(full);
+  background-color: get-color(white);
+  color: get-color(on-primary);
+  font-size: get-font-size(label-large);
+  font-weight: get-font-weight(semi-bold);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color get-duration(fast);
+
+  @include hover {
+    background-color: get-color(surface);
+  }
+
+  // After the hover rule, so the picked chip stays yellow under the pointer
+  &[aria-pressed='true'] {
+    background-color: get-color(primary);
+  }
+
+  @include media-down(mobile) {
+    font-size: get-font-size(label-medium);
+  }
+}
