@@ -1,0 +1,138 @@
+@use 'abstracts' as *;
+
+// The open list is 200px wide in the style guide, a little wider than the
+// control above it. On mobile the control is wider, and the list takes its width.
+$list-width: 200px;
+// The tick in front of the selected option
+$check-size: 14px;
+// The caret turns upside down while the list is open
+$open-caret-rotation: 180deg;
+
+.sort-select {
+  position: relative;
+  flex: none;
+}
+
+.sort-select__trigger {
+  @include button-size(medium);
+  display: flex;
+  align-items: center;
+  gap: get-size(1);
+  width: 100%;
+  border: $border-width solid get-color(on-primary);
+  border-radius: get-radius(full);
+  background-color: get-color(white);
+  color: get-color(on-primary);
+  font-size: get-font-size(label-large);
+  font-weight: get-font-weight(semi-bold);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color get-duration(fast);
+
+  svg {
+    flex: none;
+    width: get-size(3);
+    height: get-size(3);
+    margin-inline-start: auto;
+    transition: transform get-duration(fast);
+  }
+
+  @include hover {
+    background-color: get-color(surface);
+  }
+
+  &[aria-expanded='true'] {
+    background-color: get-color(surface);
+
+    svg {
+      transform: rotate($open-caret-rotation);
+    }
+  }
+
+  @include media-down(laptop) {
+    @include button-size(small);
+  }
+
+  @include media-down(mobile) {
+    font-size: get-font-size(label-medium);
+  }
+}
+
+// The list opens under the control, over the content below. On desktop it
+// lines up with the control's right edge, on tablet and mobile with its left.
+.sort-select__list {
+  position: absolute;
+  inset-block-start: calc(100% + #{get-size(0.5)});
+  inset-inline-end: 0;
+  z-index: 1;
+  width: max(100%, $list-width);
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: get-radius(medium);
+  background-color: get-color(white);
+  box-shadow: get-shadow(level-1);
+  list-style: none;
+
+  // The highlighted option shows where the keyboard is
+  &:focus-visible {
+    outline: none;
+  }
+
+  // The frame is drawn over the rows, as in the style guide, so it takes no
+  // room from them
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: $border-width solid get-color(on-primary);
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  @include media-down(laptop) {
+    inset-inline: 0 auto;
+  }
+}
+
+.sort-select__option {
+  display: flex;
+  align-items: center;
+  gap: get-size(1);
+  padding: get-size(2);
+  color: get-color(on-primary);
+  font-size: get-font-size(label-large);
+  font-weight: get-font-weight(medium);
+  white-space: nowrap;
+  cursor: pointer;
+
+  & + & {
+    border-block-start: $border-width-hairline solid get-color(outline);
+  }
+
+  svg {
+    flex: none;
+    width: $check-size;
+    height: $check-size;
+    color: get-color(tertiary);
+    visibility: hidden;
+  }
+
+  // The option under the pointer or reached with the arrow keys
+  &--active {
+    background-color: get-color(surface);
+  }
+
+  // A thin dark line runs along the top and the bottom of the selected row
+  &[aria-selected='true'] {
+    background-color: get-color(primary-low);
+    box-shadow:
+      inset 0 $border-width-hairline get-color(on-primary),
+      inset 0 (-$border-width-hairline) get-color(on-primary);
+    font-weight: get-font-weight(bold);
+
+    svg {
+      visibility: visible;
+    }
+  }
+}
