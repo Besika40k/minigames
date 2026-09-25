@@ -1,31 +1,38 @@
 import type { AuthMode } from '../../types/auth.ts';
-import type { BurgerMenuOptions } from '../../types/burger-menu.ts';
+import type { BurgerMenu, BurgerMenuOptions } from '../../types/burger-menu.ts';
+import type { Route } from '../../types/route.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { isDisplayed } from '../../utils/is-displayed.ts';
+import { PageLinks } from '../../utils/page-links.ts';
 import { createMenuContent } from './burger-menu-content.ts';
 import './burger-menu.scss';
 
 const MENU_ID = 'mobile-menu';
 
-export function createBurgerMenu(options: BurgerMenuOptions): HTMLDialogElement {
+export function createBurgerMenu(options: BurgerMenuOptions): BurgerMenu {
   const dialog: HTMLDialogElement = createElement('dialog', {
     className: 'mobile-menu',
     attributes: { id: MENU_ID, 'aria-label': 'Main menu' },
   });
+
+  const pageLinks: PageLinks = new PageLinks();
 
   const closeMenu = (): void => {
     dialog.close();
   };
 
   dialog.append(
-    ...createMenuContent({
-      onClose: closeMenu,
-      onLinkClick: closeMenu,
-      onAuthClick: (mode: AuthMode): void => {
-        closeMenu();
-        options.onAuthClick?.(mode);
+    ...createMenuContent(
+      {
+        onClose: closeMenu,
+        onLinkClick: closeMenu,
+        onAuthClick: (mode: AuthMode): void => {
+          closeMenu();
+          options.onAuthClick?.(mode);
+        },
       },
-    }),
+      pageLinks,
+    ),
   );
 
   options.trigger.setAttribute('aria-haspopup', 'dialog');
@@ -58,5 +65,10 @@ export function createBurgerMenu(options: BurgerMenuOptions): HTMLDialogElement 
     }
   });
 
-  return dialog;
+  return {
+    element: dialog,
+    setCurrentPage: (page: Route | undefined): void => {
+      pageLinks.markCurrent(page);
+    },
+  };
 }
