@@ -14,7 +14,11 @@ $hero-height: 220px;
   max-height: calc(100% - #{2 * $dialog-margin});
   padding: 0;
   overflow: hidden auto;
-  border: $border-width-hairline solid get-color(outline-variant);
+  border: 0;
+  // The mockups draw the 1px outline over the edge of the hero picture, so it
+  // takes no room: an inner outline, painted on top of the content
+  outline: $border-width-hairline solid get-color(outline-variant);
+  outline-offset: -$border-width-hairline;
   border-radius: get-radius(extra-large);
   background-color: get-color(bg);
   box-shadow: get-shadow(dialog);
