@@ -19,6 +19,8 @@ export enum IconName {
   ArrowForward = 'arrow-forward',
   ArrowDropDown = 'arrow-drop-down',
   Check = 'check',
+  ChevronLeft = 'chevron-left',
+  ChevronRight = 'chevron-right',
 }
 
 interface IconDefinition {
@@ -26,7 +28,7 @@ interface IconDefinition {
   readonly path: string;
 }
 
-// Shapes measured from the mockups: three 2px bars, a 1.5px cross, and sixteen
+// Shapes measured from the mockups: three 2px bars, a 1.5px cross, and eighteen
 // glyphs of the mockup's icon font, drawn on the box they sit in there (20px
 // for the social and form icons, 16px for code, 24px for upload, arrows and
 // star; the heart is 20px by 19px). The crossed eye is the eye with a slash
@@ -105,6 +107,15 @@ const ICONS: Readonly<Record<IconName, IconDefinition>> = {
   [IconName.Check]: {
     viewBox: '0 0 14 14',
     path: 'M12.73 4.56C13.31 3.97 13.31 3.03 12.73 2.44C12.14 1.85 11.19 1.85 10.61 2.44L11.67 3.5L12.73 4.56ZM5.25 9.92L4.19 10.98L5.25 12.04L6.31 10.98L5.25 9.92ZM3.39 5.94C2.81 5.35 1.86 5.35 1.27 5.94C0.69 6.52 0.69 7.47 1.27 8.06L2.33 7L3.39 5.94ZM11.67 3.5L10.61 2.44L4.19 8.86L5.25 9.92L6.31 10.98L12.73 4.56L11.67 3.5ZM5.25 9.92L6.31 8.86L3.39 5.94L2.33 7L1.27 8.06L4.19 10.98L5.25 9.92Z',
+  },
+  // The arrows of the pagination, from the mockup's chevron icons
+  [IconName.ChevronLeft]: {
+    viewBox: '0 0 24 24',
+    path: 'M14 18L8 12L14 6L15.4 7.4L10.8 12L15.4 16.6L14 18Z',
+  },
+  [IconName.ChevronRight]: {
+    viewBox: '0 0 24 24',
+    path: 'M12.6 12L8 7.4L9.4 6L15.4 12L9.4 18L8 16.6L12.6 12Z',
   },
 };
 
