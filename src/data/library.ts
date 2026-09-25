@@ -2,6 +2,7 @@ import {
   SortOrder,
   type Category,
   type LibraryContent,
+  type PaginationContent,
   type SortOption,
 } from '../types/library.ts';
 
@@ -40,3 +41,14 @@ export const SORT_OPTIONS: readonly SortOption[] = [
 ];
 
 export const DEFAULT_SORT_ORDER: SortOrder = SortOrder.RatingDescending;
+
+export const PAGINATION_CONTENT: PaginationContent = {
+  label: 'Pages',
+  previousLabel: 'Previous page',
+  nextLabel: 'Next page',
+  pageLabel: 'Page',
+};
+
+// The course's mock data has 24 games and the mockup shows six on a page. The
+// pagination only marks the page for now: the cards do not change.
+export const LIBRARY_PAGE_COUNT = 4;

@@ -35,3 +35,11 @@ export interface LibraryContent {
   readonly ratingLabel: string;
   readonly likesLabel: string;
 }
+
+export interface PaginationContent {
+  readonly label: string;
+  readonly previousLabel: string;
+  readonly nextLabel: string;
+  // Read out before each page number
+  readonly pageLabel: string;
+}
