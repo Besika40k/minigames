@@ -3,9 +3,10 @@ import { createElement } from '../../../utils/create-element.ts';
 import { createIcon, IconName } from '../../../utils/create-icon.ts';
 import './pagination.scss';
 
-// The mockups show at most four page buttons. The styles hide the buttons
-// outside the window.
+// The mockups show at most four page buttons, and three on mobile. The styles
+// hide the buttons outside the window of the current layout.
 const VISIBLE_PAGES = 4;
+const VISIBLE_PAGES_MOBILE = 3;
 
 // Whether a page is in the window of `size` pages around the current one. The
 // window stays as centered as it can without passing the first or last page.
@@ -68,6 +69,10 @@ export function createPagination(): HTMLElement {
       button.parentElement?.classList.toggle(
         'pagination__item--hidden',
         !isInWindow(page, current, VISIBLE_PAGES),
+      );
+      button.parentElement?.classList.toggle(
+        'pagination__item--hidden-mobile',
+        !isInWindow(page, current, VISIBLE_PAGES_MOBILE),
       );
     }
     previous.disabled = current === 1;
