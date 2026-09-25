@@ -8,6 +8,7 @@ import type { Game } from '../../../types/game.ts';
 import { createElement } from '../../../utils/create-element.ts';
 import { createIcon, IconName } from '../../../utils/create-icon.ts';
 import { formatCompactNumber } from '../../../utils/format-number.ts';
+import { enableSwipe, SwipeDirection } from './carousel-swipe.ts';
 import './games-carousel.scss';
 
 const TITLE_ID = 'games-carousel-title';
@@ -172,6 +173,16 @@ export function createGamesCarousel(): HTMLElement {
   });
   next.addEventListener('click', (): void => {
     move(1);
+  });
+
+  // A swipe moves one card, like the arrows
+  enableSwipe(track, {
+    onRelease: (direction: SwipeDirection | undefined): void => {
+      if (direction === undefined) {
+        return;
+      }
+      move(direction === SwipeDirection.Next ? 1 : -1);
+    },
   });
 
   render();
