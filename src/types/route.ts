@@ -1,5 +1,6 @@
 export enum Route {
   Home = '/',
+  Library = '/library',
 }
 
 export interface RouteDefinition {
