@@ -12,12 +12,14 @@ const TITLE_ID = 'game-developers-title';
 const ILLUSTRATION_WIDTH = '719';
 const ILLUSTRATION_HEIGHT = '517';
 
+// The lines are joined by a space and a line break: the styles drop the breaks
+// when the card is too narrow, and the space keeps the words apart then
 function createDescription(): HTMLParagraphElement {
   const lines: Node[] = GAME_DEVELOPERS_CONTENT.descriptionLines.flatMap(
     (line: string, index: number): Node[] =>
       index === 0
         ? [document.createTextNode(line)]
-        : [createElement('br'), document.createTextNode(line)],
+        : [document.createTextNode(' '), createElement('br'), document.createTextNode(line)],
   );
 
   return createElement('p', { className: 'game-developers__description', children: lines });
