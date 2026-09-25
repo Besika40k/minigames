@@ -1,0 +1,77 @@
+@use 'abstracts' as *;
+
+// The rows of the mockups are 49px high
+$record-height: 49px;
+
+.game-details__records {
+  margin-block-start: get-size(3);
+}
+
+.game-details__subtitle {
+  display: flex;
+  align-items: center;
+  gap: get-size(1);
+  margin: 0;
+  color: get-color(on-primary);
+  font-size: get-font-size(body-medium);
+  font-weight: get-font-weight(semi-bold);
+}
+
+.game-details__subtitle-icon {
+  font-size: get-font-size(body-large);
+}
+
+.game-details__records-list {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(1);
+  margin: get-size(1) + get-size(0.5) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+// The medal, the name, then the score and the date on the right
+.game-details__record {
+  display: flex;
+  align-items: center;
+  gap: get-size(2);
+  min-height: $record-height;
+  padding: 0 get-size(2);
+  border-radius: get-radius(small);
+  background-color: get-color(white);
+  color: get-color(on-primary);
+  font-size: get-font-size(label-large);
+  font-weight: get-font-weight(bold);
+
+  @include media-down(mobile) {
+    gap: get-size(1);
+  }
+}
+
+// The emoji is drawn a little wider than its 16px, so its box keeps the
+// mockup's width and the names line up with the mockup
+.game-details__medal {
+  flex: none;
+  width: get-size(2);
+  font-size: get-font-size(body-medium);
+  text-align: center;
+}
+
+.game-details__player {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-details__score {
+  white-space: nowrap;
+}
+
+.game-details__date {
+  color: get-color(on-bg);
+  font-size: get-font-size(label-medium);
+  font-weight: get-font-weight(regular);
+  white-space: nowrap;
+}
