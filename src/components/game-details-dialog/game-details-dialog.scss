@@ -76,3 +76,12 @@ $hero-height: 220px;
     height: get-size(4);
   }
 }
+
+// Everything under the hero
+.game-details__content {
+  padding: get-size(3);
+}
+
+.game-details__hidden {
+  @include visually-hidden;
+}
