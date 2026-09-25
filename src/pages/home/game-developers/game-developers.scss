@@ -6,10 +6,17 @@
 $illustration-column: 682fr;
 $card-column: 958fr;
 
-// The illustration's box keeps the shape it has in each mockup (682 by 480 on
-// desktop, 688 by 300 on tablet, 343 by 227 on mobile) instead of a fixed
-// height, so the picture is cropped by the same amount at every width
-$illustration-ratio-desktop: list.slash(682, 480);
+// On desktop the illustration keeps the mockup's 480px height while its column
+// is wider than that, so the section stays as high as in the mockup on smaller
+// desktop screens too (down to about 1470px, which includes 1920px at 125%
+// zoom). Only the empty sides of the picture are cropped. On narrower screens
+// it becomes a square, so the crop never reaches the drawing.
+$illustration-height-desktop: 480px;
+$illustration-ratio-desktop: 1;
+
+// Tablet and mobile stack the columns: there the box keeps the shape it has in
+// each mockup (688 by 300 and 343 by 227) instead of a fixed height, so the
+// picture is cropped by the same amount at every width
 $illustration-ratio-tablet: list.slash(688, 300);
 $illustration-ratio-mobile: list.slash(343, 227);
 
@@ -59,17 +66,19 @@ $illustration-position-desktop: center top;
   }
 }
 
-// A fixed height would crop far too much between the widths of the mockups.
-// `height: auto` replaces the height attribute of the image.
+// The height follows the aspect ratio up to the cap. `height: auto` replaces
+// the height attribute of the image.
 .game-developers__illustration {
   width: 100%;
   height: auto;
+  max-height: $illustration-height-desktop;
   aspect-ratio: $illustration-ratio-desktop;
   border-radius: get-radius(extra-large);
   object-fit: cover;
   object-position: $illustration-position-desktop;
 
   @include media-down(laptop) {
+    max-height: none;
     aspect-ratio: $illustration-ratio-tablet;
     object-position: center;
   }
