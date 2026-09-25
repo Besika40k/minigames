@@ -192,16 +192,35 @@ export function createGamesCarousel(): HTMLElement {
     timer.reset();
   });
 
-  // A swipe starts a new countdown, as the arrows do
+  // Holding the slider stops the countdown. Letting go without a swipe goes on
+  // with the time that was left; a swipe starts a new countdown.
   enableSwipe(track, {
+    onPress: (): void => {
+      timer.pause();
+    },
     onRelease: (direction: SwipeDirection | undefined): void => {
       if (direction === undefined) {
+        timer.resume();
         return;
       }
       move(direction === SwipeDirection.Next ? 1 : -1);
       timer.reset();
     },
   });
+
+  // A hidden browser tab would pile the steps up, so the slider waits for it
+  const onVisibilityChange = (): void => {
+    if (!section.isConnected) {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      return;
+    }
+    if (document.hidden) {
+      timer.pause();
+      return;
+    }
+    timer.resume();
+  };
+  document.addEventListener('visibilitychange', onVisibilityChange);
 
   render();
   timer.reset();
