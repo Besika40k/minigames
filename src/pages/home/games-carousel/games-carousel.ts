@@ -5,6 +5,7 @@ import { FEATURED_GAMES } from '../../../data/games.ts';
 import { ButtonSize, ButtonVariant } from '../../../types/button.ts';
 import { SlideRole } from '../../../types/carousel.ts';
 import type { Game } from '../../../types/game.ts';
+import { AutoplayTimer } from '../../../utils/autoplay-timer.ts';
 import { createElement } from '../../../utils/create-element.ts';
 import { createIcon, IconName } from '../../../utils/create-icon.ts';
 import { formatCompactNumber } from '../../../utils/format-number.ts';
@@ -18,6 +19,9 @@ const IMAGE_WIDTH = '460';
 const IMAGE_HEIGHT = '215';
 
 const RATING_FRACTION_DIGITS = 1;
+
+// The slider moves one card to the left every four seconds
+const AUTOPLAY_INTERVAL = 4000;
 
 const ROLES: readonly SlideRole[] = [
   SlideRole.Active,
@@ -168,24 +172,39 @@ export function createGamesCarousel(): HTMLElement {
     ],
   });
 
-  previous.addEventListener('click', (): void => {
-    move(-1);
-  });
-  next.addEventListener('click', (): void => {
+  // The timer stops for good once the page has left the screen
+  const timer: AutoplayTimer = new AutoplayTimer(AUTOPLAY_INTERVAL, (): void => {
+    if (!section.isConnected) {
+      timer.stop();
+      return;
+    }
     move(1);
   });
 
-  // A swipe moves one card, like the arrows
+  // A manual step starts a new countdown, so the next automatic step does not
+  // follow it too soon
+  previous.addEventListener('click', (): void => {
+    move(-1);
+    timer.reset();
+  });
+  next.addEventListener('click', (): void => {
+    move(1);
+    timer.reset();
+  });
+
+  // A swipe starts a new countdown, as the arrows do
   enableSwipe(track, {
     onRelease: (direction: SwipeDirection | undefined): void => {
       if (direction === undefined) {
         return;
       }
       move(direction === SwipeDirection.Next ? 1 : -1);
+      timer.reset();
     },
   });
 
   render();
+  timer.reset();
 
   return section;
 }
