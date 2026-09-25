@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use 'sass:list';
 @use 'sass:map';
 @use 'functions' as *;
@@ -100,5 +101,39 @@
         opacity: 0;
       }
     }
+  }
+}
+
+// The backdrop of a modal dialog: the footer's navy over the page, fading in
+// and out with the dialog. While the dialog is open the page behind it does not
+// scroll. The reserved gutter keeps the page from shifting sideways when the
+// scrollbar goes away, and it is painted in the color of the dimmed page,
+// because the backdrop does not reach into it.
+$backdrop-opacity: 0.75;
+
+@mixin modal-backdrop {
+  $backdrop-color: rgba(get-color(bg-footer), $backdrop-opacity);
+  $dimmed-page-color: color.mix(get-color(bg-footer), get-color(bg), $backdrop-opacity * 100%);
+
+  &::backdrop {
+    background-color: transparent;
+    transition:
+      background-color get-duration(medium),
+      overlay get-duration(medium) allow-discrete,
+      display get-duration(medium) allow-discrete;
+  }
+
+  &[open]::backdrop {
+    background-color: $backdrop-color;
+
+    @starting-style {
+      background-color: transparent;
+    }
+  }
+
+  @at-root html:has(#{&}[open]) {
+    overflow: hidden;
+    scrollbar-gutter: stable;
+    background-color: $dimmed-page-color;
   }
 }
