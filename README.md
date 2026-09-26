@@ -96,12 +96,24 @@ The Library page (`src/pages/library`) has three sections:
 
 The chips, the sort order and the pagination change only their own state for now: the list of cards stays the same.
 
+## Game details dialog
+
+The game details dialog (`src/components/game-details-dialog`) opens from the Details button of a Library card and from a click on a slider card. Like the auth dialog, it is a native `<dialog>` opened with `showModal()` and animated with the `animated-dialog` mixin. It closes with its close button, with Esc and with a click on the backdrop (`enableDialogDismiss` in `src/utils/dismiss-dialog.ts`, shared with the auth dialog), and the page behind it does not scroll while it is open.
+
+Every card opens the same static game for now (`src/data/game-details.ts`, shaped like the course's mock data). Under the hero picture come the game info (title, rating and likes, description, the four spec boxes, Play Now and Add to Favorites), the top records and the comments:
+
+- Add to Favorites switches between its two states, and its text says what a click will do.
+- The comment textarea grows with its text from 48px to 88px and scrolls after that (CSS `field-sizing: content`). The send button is disabled while the text is empty, and sending is not implemented yet.
+- Each like button toggles on its own and changes its count by one.
+
+Nothing is saved yet, so every opening puts the dialog back to its first state and scrolls it to the top.
+
 ## Styling
 
 Design tokens live in `src/styles/abstracts/_tokens.scss`: colors, typography, sizes, corner radii, button sizes, shadows, breakpoints, border widths and durations. Styles read them through helpers instead of raw values:
 
 - functions (`_functions.scss`): `get-color`, `get-font-family`, `get-font-size`, `get-font-weight`, `get-size`, `get-radius`, `get-shadow`, `get-button-size`, `get-breakpoint` and `get-duration`. An unknown token name fails the build.
-- mixins (`_mixins.scss`): `media-up` and `media-down` for media queries, `hover` for hover-only styles, `button-size` for button padding (the border is taken off it, because the mockups draw a button's stroke inside its box), `reduced-motion` for styles that respect that system setting, `visually-hidden` for a text that screen readers keep and the eye does not need, and `animated-dialog` for the open and close animation of a modal `<dialog>`.
+- mixins (`_mixins.scss`): `media-up` and `media-down` for media queries, `hover` for hover-only styles, `button-size` for button padding (the border is taken off it, because the mockups draw a button's stroke inside its box), `reduced-motion` for styles that respect that system setting, `visually-hidden` for a text that screen readers keep and the eye does not need, `animated-dialog` for the open and close animation of a modal `<dialog>`, and `modal-backdrop` for its dimmed backdrop, which also keeps the page behind it from scrolling.
 
 Every stylesheet starts with `@use 'abstracts' as *;` (Vite adds `src/styles` to Sass's load path). Media queries always go through `media-up` and `media-down`, so the breakpoints stay in one place. Both count whole pixels (`media-down(tablet)` is everything below 769px), so a fractional width from browser zoom or display scaling, such as 375.2px at 125%, still lands in the right layout. The mobile layout holds from 375px up to 560px.
 
