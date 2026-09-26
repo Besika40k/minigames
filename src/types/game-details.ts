@@ -14,6 +14,19 @@ export interface TopRecord {
   readonly achievedAt: string;
 }
 
+// A comment on a game, with the field names of the course's mock data
+// (`comments-tukoni-forest-keepers.json`)
+export interface GameComment {
+  readonly commentId: string;
+  readonly authorName: string;
+  readonly text: string;
+  // Includes the current user's like when they liked the comment
+  readonly likesCount: number;
+  readonly isLikedByCurrentUser: boolean;
+  // An ISO date, such as "2026-08-30T07:00:00Z"
+  readonly createdAt: string;
+}
+
 // The details of a game, with the field names of the course's mock data
 // (`game-tukoni-forest-keepers.json`). The hero image is the imported file
 // instead of the mock's server path.
@@ -43,6 +56,12 @@ export interface GameDetailsContent {
   // The medals of the first, second and third places
   readonly medals: readonly string[];
   readonly pointsSuffix: string;
+  readonly commentsTitle: string;
+  // The initial shown in the comment form's avatar until users can sign in
+  readonly currentUserInitial: string;
+  readonly commentLabel: string;
+  readonly commentPlaceholder: string;
+  readonly sendLabel: string;
 }
 
 // A part of the dialog. `reset` puts it back the way it looks when the dialog

@@ -1,5 +1,5 @@
 import tukoniHeroImage from '../assets/images/games/tukoni-forest-keepers-hero.jpg';
-import type { GameDetails, GameDetailsContent } from '../types/game-details.ts';
+import type { GameComment, GameDetails, GameDetailsContent } from '../types/game-details.ts';
 
 export const GAME_DETAILS_CONTENT: GameDetailsContent = {
   closeLabel: 'Close',
@@ -18,6 +18,11 @@ export const GAME_DETAILS_CONTENT: GameDetailsContent = {
   recordsIcon: '🏆',
   medals: ['🥇', '🥈', '🥉'],
   pointsSuffix: 'pts',
+  commentsTitle: 'Comments',
+  currentUserInitial: 'U',
+  commentLabel: 'Your comment',
+  commentPlaceholder: 'Write a comment...',
+  sendLabel: 'Send comment',
 };
 
 // The dialog shows this game for every card at this stage, whichever card opens
@@ -57,3 +62,33 @@ export const STATIC_GAME_DETAILS: GameDetails = {
     },
   ],
 };
+
+// The comments of the static game (the course's mock data
+// `comments-tukoni-forest-keepers.json`). The mockup shows the last one liked
+// by the current user, so it starts liked here too.
+export const STATIC_COMMENTS: readonly GameComment[] = [
+  {
+    commentId: 'c5d9f2a1-7c3b-4e8f-9a0d-000000000001',
+    authorName: 'ForestDweller',
+    text: "The hand-drawn art is absolutely magical 🍄 Every location feels like a page from a children's storybook. The mushroom village made me cry happy tears!",
+    likesCount: 12,
+    isLikedByCurrentUser: false,
+    createdAt: '2026-08-30T07:00:00Z',
+  },
+  {
+    commentId: 'c5d9f2a1-7c3b-4e8f-9a0d-000000000002',
+    authorName: 'HerbalTeaLover',
+    text: 'Perfect cozy evening game — brew a cup of chamomile, wrap in a blanket and help the little Tukoni prepare for winter. The puzzles are gentle but satisfying.',
+    likesCount: 5,
+    isLikedByCurrentUser: false,
+    createdAt: '2026-08-29T15:30:00Z',
+  },
+  {
+    commentId: 'c5d9f2a1-7c3b-4e8f-9a0d-000000000003',
+    authorName: 'CottageCoreMia',
+    text: 'I want to live inside this game forever 🌿 The NPCs are so charming, the tea recipes are real, and the atmosphere is pure warmth and calm.',
+    likesCount: 8,
+    isLikedByCurrentUser: true,
+    createdAt: '2026-08-27T20:10:00Z',
+  },
+];
