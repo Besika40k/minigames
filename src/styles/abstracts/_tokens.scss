@@ -164,8 +164,8 @@ $soft-shadow-color: map.get($colors, black);
 $dialog-shadow-color: #111111;
 $shadows: (
   level-1: 4px 4px $shadow-color,
-  // the boxes of a game's specs in the game details dialog
-  spec: 3px 3px $shadow-color,
+  // the spec boxes and the comment cards of the game details dialog
+  small-card: 3px 3px $shadow-color,
   level-2: 6px 6px $shadow-color,
   level-3: 8px 8px $shadow-color,
   dialog: 8px 8px $dialog-shadow-color,
