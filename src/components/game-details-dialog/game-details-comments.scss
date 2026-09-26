@@ -1,8 +1,21 @@
+@use 'sass:list';
 @use 'abstracts' as *;
 
 // The task's limit: the textarea grows with its text up to this height, then
 // it scrolls inside
 $input-max-height: 88px;
+
+// The style guide gives no line height: this one is measured from the mockups
+$comment-line-height: 18px;
+
+// Sizes that fall between two size tokens: the avatar of a comment is 28px,
+// and the heart of the like button is 14 by 13px
+$avatar-size: get-size(3) + get-size(0.5);
+$heart-width: 14px;
+$heart-height: 13px;
+
+// The avatars take these colors in turn, as in the mockup
+$avatar-colors: (get-color(avatar-random-3), get-color(primary), get-color(avatar-random-1));
 
 .game-details__comments {
   margin-block-start: get-size(3);
@@ -90,5 +103,109 @@ $input-max-height: 88px;
     background-color: get-color(outline-variant);
     color: get-color(on-bg);
     cursor: not-allowed;
+  }
+}
+
+// ---------- Comments ----------
+.game-details__comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(2);
+  margin: get-size(2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.game-details__comment {
+  padding: get-size(2);
+  border-radius: get-radius(medium);
+  background-color: get-color(white);
+  box-shadow: get-shadow(small-card);
+}
+
+.game-details__comment-header {
+  display: flex;
+  align-items: center;
+  gap: get-size(1);
+}
+
+.game-details__avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: $avatar-size;
+  height: $avatar-size;
+  border-radius: get-radius(full);
+  box-shadow: inset 0 0 0 $border-width-hairline get-color(on-primary);
+  color: get-color(on-primary);
+  font-size: get-font-size(label-medium);
+  font-weight: get-font-weight(bold);
+}
+
+$avatar-count: list.length($avatar-colors);
+
+@for $index from 1 through $avatar-count {
+  .game-details__comments-list > li:nth-child(#{$avatar-count}n + #{$index}) .game-details__avatar {
+    background-color: list.nth($avatar-colors, $index);
+  }
+}
+
+.game-details__author {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: get-color(on-primary);
+  font-size: get-font-size(body-small);
+  font-weight: get-font-weight(bold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-details__comment-date {
+  color: get-color(on-bg);
+  font-size: get-font-size(label-medium);
+  white-space: nowrap;
+}
+
+.game-details__comment-text {
+  margin-block-start: get-size(1);
+  color: get-color(on-primary);
+  font-size: get-font-size(body-small);
+  line-height: $comment-line-height;
+}
+
+// The heart and the count. The pill around them shows on hover; it reaches
+// into the card's padding, so the heart lines up with the text above.
+// It is a block, not an inline box, so no line of text adds height around it
+.game-details__like {
+  display: flex;
+  align-items: center;
+  gap: get-size(0.5);
+  width: fit-content;
+  margin: get-size(0.5) 0 (-(get-size(0.5))) (-(get-size(1)));
+  padding: get-size(0.5) get-size(1);
+  border: 0;
+  border-radius: get-radius(full);
+  background-color: transparent;
+  color: get-color(on-primary);
+  font-size: get-font-size(label-medium);
+  font-weight: get-font-weight(bold);
+  cursor: pointer;
+  transition: background-color get-duration(fast);
+
+  svg {
+    width: $heart-width;
+    height: $heart-height;
+    color: get-color(on-bg);
+  }
+
+  @include hover {
+    background-color: get-color(surface);
+  }
+
+  // A liked comment has a red heart and a red count
+  &[aria-pressed='true'],
+  &[aria-pressed='true'] svg {
+    color: get-color(like);
   }
 }
