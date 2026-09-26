@@ -95,7 +95,7 @@ $heart-gap: 6px;
   border: $border-width-hairline solid get-color(outline-variant);
   border-radius: get-radius(small);
   background-color: get-color(white);
-  box-shadow: get-shadow(spec);
+  box-shadow: get-shadow(small-card);
 }
 
 .game-details__spec-name {
