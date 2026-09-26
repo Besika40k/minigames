@@ -41,9 +41,20 @@ export function startApp(): void {
       render: (): readonly HTMLElement[] => renderLibraryPage({ onGameOpen: gameDetails.open }),
     },
   ];
+  // A dialog belongs to the page it was opened on, so it closes when the page
+  // changes under it (for example with the browser's Back button)
+  const dialogs: readonly HTMLDialogElement[] = [
+    menu.element,
+    authDialog.element,
+    gameDetails.element,
+  ];
+
   const router: Router = new Router(routes, main, renderNotFoundPage);
   router.start((page: Route | undefined): void => {
     header.setCurrentPage(page);
     menu.setCurrentPage(page);
+    for (const dialog of dialogs) {
+      dialog.close();
+    }
   });
 }
