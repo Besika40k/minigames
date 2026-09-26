@@ -1,6 +1,6 @@
 # MiniGames
 
-MiniGames is a single-page web app for browsing and playing small browser games. The home page features a game carousel, a leaderboard of top players, and a section inviting game developers to publish their games. Users can sign in or register through an auth dialog.
+MiniGames is a single-page web app for browsing and playing small browser games. The Home page features a slider of featured games, a leaderboard of top players, and a section inviting game developers to publish their games. The Library page lists the games with category filters, sorting and pagination, and the details of a game open in a dialog. Users can sign in or register through an auth dialog.
 
 The layout is responsive and follows the Figma design at three breakpoints: 375px, 768px and 1920px.
 
@@ -47,12 +47,14 @@ npm run dev
 src/
 ├── main.ts            # entry point
 ├── app/               # app bootstrap and SPA router
-├── components/        # UI reused across pages (button, logo, header, burger menu, footer, section title, auth dialog)
+├── components/        # UI reused across pages (button, logo, header, burger menu, footer, section title, auth dialog, game details dialog)
 ├── pages/             # one folder per page, each section in its own subfolder
-│   └── home/          # hero, games carousel, leaderboard, game developers section
-├── data/              # static data (navigation links, footer content, mock games and leaderboard)
+│   ├── home/          # hero, games slider, leaderboard, game developers section
+│   ├── library/       # title with filters and sorting, game cards, pagination
+│   └── not-found/     # the page for an unknown address
+├── data/              # static data (navigation links, footer content, library categories and sort orders, mock games, game details, leaderboard)
 ├── types/             # shared interfaces and enums
-├── utils/             # DOM and formatting helpers
+├── utils/             # DOM, navigation, dialog, timer and formatting helpers
 ├── assets/            # fonts, icons, images
 └── styles/
     ├── main.scss      # global styles entry point
@@ -64,7 +66,9 @@ Each component and page section keeps its TypeScript and SCSS files together in 
 
 ## Architecture
 
-The app is a single-page application: `index.html` has an empty `body` and one script tag, and every element is created from TypeScript with the typed `createElement` helper (`src/utils/create-element.ts`). Routes live in the URL hash (`#/`), so the app works on any static host without server rules.
+The app is a single-page application: `index.html` has an empty `body` and one script tag, and every element is created from TypeScript with the typed `createElement` helper (`src/utils/create-element.ts`). Routes live in the URL hash (`#/` for Home, `#/library` for the Library), so the app works on any static host without server rules.
+
+The header, the footer and the dialogs are created once, in `src/app/app.ts`. When the address changes, the router (`src/app/router.ts`) renders the new page into `main` and scrolls to the top. After every page change, a dialog that was open over the old page closes, and the header and the mobile menu mark the link of the open page with `aria-current="page"` (`src/utils/page-links.ts`), which also styles it. An unknown address shows the not-found page.
 
 To add a page, add a value to the `Route` enum (`src/types/route.ts`), write a function that returns the page's elements, and register both in `src/app/app.ts`.
 
@@ -77,6 +81,16 @@ Inside, a tab bar (ARIA tabs, arrow keys move between the tabs) switches between
 ## Games carousel
 
 The carousel on the Home page (`src/pages/home/games-carousel`) is a static layout for now: five cards with the numbers of the mock dataset (`src/data/carousel.ts`), and arrows that do nothing. Each card asks its own width through a container query: a card that is 288px wide or wider shows its title, rating and likes, and a narrower card shows only its photo. The active card in the middle is the exception, because the mobile mockup shows its text at 218px. The text of a narrow card stays in the page for screen readers.
+
+## Library page
+
+The Library page (`src/pages/library`) has three sections:
+
+- The title with the category chips and the sort control. One chip is pressed at a time (`aria-pressed`); the row of chips never wraps, and the chips that do not fit can be swiped into view, or dragged with a mouse. The sort control opens a list of orders that follows the ARIA listbox pattern: the arrow keys, Home and End move through it, Enter or Space picks an order and Esc closes it.
+- The game cards (`src/data/games.ts`). Each list item is a CSS container, so a card lays itself out by its own width: the photo sits beside the text while the card is at least 688px wide, and above it on narrower cards. Details opens the game in the details dialog.
+- The pagination, with the previous and next arrows and a window of page buttons around the current page.
+
+The chips, the sort order and the pagination change only their own state for now: the list of cards stays the same.
 
 ## Styling
 
