@@ -1,0 +1,94 @@
+@use 'abstracts' as *;
+
+// The task's limit: the textarea grows with its text up to this height, then
+// it scrolls inside
+$input-max-height: 88px;
+
+.game-details__comments {
+  margin-block-start: get-size(3);
+}
+
+// ---------- Form ----------
+.game-details__comment-form {
+  display: flex;
+  align-items: center;
+  gap: get-size(2);
+  margin-block-start: get-size(2);
+}
+
+.game-details__user {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: get-size(5);
+  height: get-size(5);
+  border-radius: get-radius(full);
+  background-color: get-color(primary);
+  box-shadow: inset 0 0 0 $border-width-thin get-color(on-primary);
+  color: get-color(on-primary);
+  font-size: get-font-size(label-large);
+  font-weight: get-font-weight(bold);
+}
+
+// The textarea is as high as its text (field-sizing), from 48px up to the
+// task's 88px, and scrolls inside after that. The text starts 8px and 16px from
+// its outer edge, so the border comes off the padding. The focused textarea
+// gets a second pixel of border, drawn inside so nothing moves.
+.game-details__comment-input {
+  flex: 1;
+  min-width: 0;
+  min-height: get-size(6);
+  max-height: $input-max-height;
+  padding: (get-size(1) - $border-width-hairline) (get-size(2) - $border-width-hairline);
+  overflow-y: auto;
+  border: $border-width-hairline solid get-color(on-primary);
+  border-radius: get-radius(small);
+  background-color: get-color(white);
+  color: get-color(on-primary);
+  font-size: get-font-size(body-small);
+  resize: none;
+  scrollbar-color: get-color(outline-variant) transparent;
+  scrollbar-width: thin;
+  field-sizing: content;
+
+  &::placeholder {
+    color: get-color(on-bg-low);
+    opacity: 1;
+  }
+
+  &:focus {
+    box-shadow: inset 0 0 0 $border-width-hairline get-color(on-primary);
+  }
+}
+
+.game-details__send {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: get-size(5);
+  height: get-size(5);
+  padding: 0;
+  border: 0;
+  border-radius: get-radius(small);
+  background-color: get-color(bg-footer-low);
+  color: get-color(white);
+  cursor: pointer;
+  transition: background-color get-duration(fast);
+
+  svg {
+    width: get-size(3);
+    height: get-size(3);
+  }
+
+  @include hover {
+    background-color: get-color(tertiary);
+  }
+
+  // After the hover rule: an empty form has nothing to send
+  &:disabled {
+    background-color: get-color(outline-variant);
+    color: get-color(on-bg);
+    cursor: not-allowed;
+  }
+}
