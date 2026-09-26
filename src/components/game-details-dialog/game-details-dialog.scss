@@ -82,6 +82,17 @@ $hero-height: 220px;
   padding: get-size(3);
 }
 
+// The heading of the Top Records and Comments sections
+.game-details__subtitle {
+  display: flex;
+  align-items: center;
+  gap: get-size(1);
+  margin: 0;
+  color: get-color(on-primary);
+  font-size: get-font-size(body-medium);
+  font-weight: get-font-weight(semi-bold);
+}
+
 .game-details__hidden {
   @include visually-hidden;
 }
