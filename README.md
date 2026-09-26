@@ -78,9 +78,13 @@ The auth dialog (`src/components/auth-dialog`) is a native `<dialog>` opened wit
 
 Inside, a tab bar (ARIA tabs, arrow keys move between the tabs) switches between the two forms. The forms cross-fade while the box around them eases to the new height. The dialog closes with Esc or a click on the backdrop, and both the opening and the closing are animated (only a fade when the system asks for reduced motion). The content of the forms lives in `src/data/auth.ts`. Checking the fields and sending them are not implemented yet, so a form only stays on the page when it is submitted.
 
-## Games carousel
+## Home slider
 
-The carousel on the Home page (`src/pages/home/games-carousel`) is a static layout for now: five cards with the numbers of the mock dataset (`src/data/carousel.ts`), and arrows that do nothing. Each card asks its own width through a container query: a card that is 288px wide or wider shows its title, rating and likes, and a narrower card shows only its photo. The active card in the middle is the exception, because the mobile mockup shows its text at 218px. The text of a narrow card stays in the page for screen readers.
+The slider on the Home page (`src/pages/home/games-carousel`) shows the nine featured games (`FEATURED_GAMES` in `src/data/games.ts`) in a loop: the active card in the middle, a near card and a far card on each side, and the other cards hidden off the row. All nine cards stay in the list: the script gives each card a role class and a CSS `order` from its distance to the active card, and CSS transitions slide the cards and change their widths.
+
+- The arrows move one card back or forward. The slider also moves forward by itself every four seconds (`AutoplayTimer`, `src/utils/autoplay-timer.ts`), and a manual step starts a new countdown.
+- A swipe, by touch or with a mouse drag (`carousel-swipe.ts`), moves one card. Holding the slider pauses the countdown, and the slider also waits while the browser tab is hidden.
+- A click on a card opens the game in the details dialog. A card 288px wide or wider shows its title, rating and likes, a narrower card shows only its photo, and the text of a narrow card stays in the page for screen readers.
 
 ## Library page
 
