@@ -3,8 +3,10 @@ import { NAVIGATION_LINKS } from '../../data/navigation.ts';
 import { AuthMode } from '../../types/auth.ts';
 import { ButtonSize, ButtonVariant } from '../../types/button.ts';
 import type { NavigationLink } from '../../types/navigation.ts';
+import { Route } from '../../types/route.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { createIcon, IconName } from '../../utils/create-icon.ts';
+import { PageLinks } from '../../utils/page-links.ts';
 import { createButton } from '../button/button.ts';
 import { createLogo } from '../logo/logo.ts';
 import './header.scss';
@@ -17,26 +19,26 @@ export interface HeaderOptions {
 export interface Header {
   readonly element: HTMLElement;
   readonly menuButton: HTMLButtonElement;
+  // Marks the navigation link of the open page
+  readonly setCurrentPage: (page: Route | undefined) => void;
 }
 
-function createNavigationItem(link: NavigationLink): HTMLLIElement {
-  const classNames: string[] = ['header__nav-link'];
-  const attributes: Record<string, string> = { href: getRouteHref(link.route) };
-  if (link.isCurrent) {
-    classNames.push('header__nav-link--current');
-    attributes['aria-current'] = 'page';
+function createNavigationItem(link: NavigationLink, pageLinks: PageLinks): HTMLLIElement {
+  const anchor: HTMLAnchorElement = createElement('a', {
+    className: 'header__nav-link',
+    text: link.label,
+    attributes: { href: getRouteHref(link.page ?? Route.Home) },
+  });
+  if (link.page !== undefined) {
+    pageLinks.add(anchor, link.page);
   }
 
-  return createElement('li', {
-    children: [
-      createElement('a', { className: classNames.join(' '), text: link.label, attributes }),
-    ],
-  });
+  return createElement('li', { children: [anchor] });
 }
 
-function createNavigation(): HTMLElement {
+function createNavigation(pageLinks: PageLinks): HTMLElement {
   const items: HTMLLIElement[] = NAVIGATION_LINKS.map((link: NavigationLink): HTMLLIElement =>
-    createNavigationItem(link),
+    createNavigationItem(link, pageLinks),
   );
 
   return createElement('nav', {
@@ -85,6 +87,7 @@ function createActions(options: HeaderOptions, menuButton: HTMLButtonElement): H
 
 export function createHeader(options: HeaderOptions = {}): Header {
   const menuButton: HTMLButtonElement = createMenuButton();
+  const pageLinks: PageLinks = new PageLinks();
 
   const element: HTMLElement = createElement('header', {
     className: 'header',
@@ -93,12 +96,18 @@ export function createHeader(options: HeaderOptions = {}): Header {
         className: 'header__inner',
         children: [
           createLogo({ className: 'header__logo' }),
-          createNavigation(),
+          createNavigation(pageLinks),
           createActions(options, menuButton),
         ],
       }),
     ],
   });
 
-  return { element, menuButton };
+  return {
+    element,
+    menuButton,
+    setCurrentPage: (page: Route | undefined): void => {
+      pageLinks.markCurrent(page);
+    },
+  };
 }

@@ -1,6 +1,6 @@
 # MiniGames
 
-MiniGames is a single-page web app for browsing and playing small browser games. The home page features a game carousel, a leaderboard of top players, and a section inviting game developers to publish their games. Users can sign in or register through an auth dialog.
+MiniGames is a single-page web app for browsing and playing small browser games. The Home page features a slider of featured games, a leaderboard of top players, and a section inviting game developers to publish their games. The Library page lists the games with category filters, sorting and pagination, and the details of a game open in a dialog. Users can sign in or register through an auth dialog.
 
 The layout is responsive and follows the Figma design at three breakpoints: 375px, 768px and 1920px.
 
@@ -47,12 +47,14 @@ npm run dev
 src/
 ├── main.ts            # entry point
 ├── app/               # app bootstrap and SPA router
-├── components/        # UI reused across pages (button, logo, header, burger menu, footer, section title, auth dialog)
+├── components/        # UI reused across pages (button, logo, header, burger menu, footer, section title, auth dialog, game details dialog)
 ├── pages/             # one folder per page, each section in its own subfolder
-│   └── home/          # hero, games carousel, leaderboard, game developers section
-├── data/              # static data (navigation links, footer content, mock games and leaderboard)
+│   ├── home/          # hero, games slider, leaderboard, game developers section
+│   ├── library/       # title with filters and sorting, game cards, pagination
+│   └── not-found/     # the page for an unknown address
+├── data/              # static data (navigation links, footer content, library categories and sort orders, mock games, game details, leaderboard)
 ├── types/             # shared interfaces and enums
-├── utils/             # DOM and formatting helpers
+├── utils/             # DOM, navigation, dialog, timer and formatting helpers
 ├── assets/            # fonts, icons, images
 └── styles/
     ├── main.scss      # global styles entry point
@@ -64,7 +66,9 @@ Each component and page section keeps its TypeScript and SCSS files together in 
 
 ## Architecture
 
-The app is a single-page application: `index.html` has an empty `body` and one script tag, and every element is created from TypeScript with the typed `createElement` helper (`src/utils/create-element.ts`). Routes live in the URL hash (`#/`), so the app works on any static host without server rules.
+The app is a single-page application: `index.html` has an empty `body` and one script tag, and every element is created from TypeScript with the typed `createElement` helper (`src/utils/create-element.ts`). Routes live in the URL hash (`#/` for Home, `#/library` for the Library), so the app works on any static host without server rules.
+
+The header, the footer and the dialogs are created once, in `src/app/app.ts`. When the address changes, the router (`src/app/router.ts`) renders the new page into `main` and scrolls to the top. After every page change, a dialog that was open over the old page closes, and the header and the mobile menu mark the link of the open page with `aria-current="page"` (`src/utils/page-links.ts`), which also styles it. An unknown address shows the not-found page.
 
 To add a page, add a value to the `Route` enum (`src/types/route.ts`), write a function that returns the page's elements, and register both in `src/app/app.ts`.
 
@@ -74,16 +78,42 @@ The auth dialog (`src/components/auth-dialog`) is a native `<dialog>` opened wit
 
 Inside, a tab bar (ARIA tabs, arrow keys move between the tabs) switches between the two forms. The forms cross-fade while the box around them eases to the new height. The dialog closes with Esc or a click on the backdrop, and both the opening and the closing are animated (only a fade when the system asks for reduced motion). The content of the forms lives in `src/data/auth.ts`. Checking the fields and sending them are not implemented yet, so a form only stays on the page when it is submitted.
 
-## Games carousel
+## Home slider
 
-The carousel on the Home page (`src/pages/home/games-carousel`) is a static layout for now: five cards with the numbers of the mock dataset (`src/data/carousel.ts`), and arrows that do nothing. Each card asks its own width through a container query: a card that is 288px wide or wider shows its title, rating and likes, and a narrower card shows only its photo. The active card in the middle is the exception, because the mobile mockup shows its text at 218px. The text of a narrow card stays in the page for screen readers.
+The slider on the Home page (`src/pages/home/games-carousel`) shows the nine featured games (`FEATURED_GAMES` in `src/data/games.ts`) in a loop: the active card in the middle, a near card and a far card on each side, and the other cards hidden off the row. All nine cards stay in the list: the script gives each card a role class and a CSS `order` from its distance to the active card, and CSS transitions slide the cards and change their widths.
+
+- The arrows move one card back or forward. The slider also moves forward by itself every four seconds (`AutoplayTimer`, `src/utils/autoplay-timer.ts`), and a manual step starts a new countdown.
+- A swipe, by touch or with a mouse drag (`carousel-swipe.ts`), moves one card. Holding the slider pauses the countdown, and the slider also waits while the browser tab is hidden.
+- A click on a card opens the game in the details dialog. A card 288px wide or wider shows its title, rating and likes, a narrower card shows only its photo, and the text of a narrow card stays in the page for screen readers.
+
+## Library page
+
+The Library page (`src/pages/library`) has three sections:
+
+- The title with the category chips and the sort control. One chip is pressed at a time (`aria-pressed`); the row of chips never wraps, and the chips that do not fit can be swiped into view, or dragged with a mouse. The sort control opens a list of orders that follows the ARIA listbox pattern: the arrow keys, Home and End move through it, Enter or Space picks an order and Esc closes it.
+- The game cards (`src/data/games.ts`). Each list item is a CSS container, so a card lays itself out by its own width: the photo sits beside the text while the card is at least 688px wide, and above it on narrower cards. Details opens the game in the details dialog.
+- The pagination, with the previous and next arrows and a window of page buttons around the current page.
+
+The chips, the sort order and the pagination change only their own state for now: the list of cards stays the same.
+
+## Game details dialog
+
+The game details dialog (`src/components/game-details-dialog`) opens from the Details button of a Library card and from a click on a slider card. Like the auth dialog, it is a native `<dialog>` opened with `showModal()` and animated with the `animated-dialog` mixin. It closes with its close button, with Esc and with a click on the backdrop (`enableDialogDismiss` in `src/utils/dismiss-dialog.ts`, shared with the auth dialog), and the page behind it does not scroll while it is open.
+
+Every card opens the same static game for now (`src/data/game-details.ts`, shaped like the course's mock data). Under the hero picture come the game info (title, rating and likes, description, the four spec boxes, Play Now and Add to Favorites), the top records and the comments:
+
+- Add to Favorites switches between its two states, and its text says what a click will do.
+- The comment textarea grows with its text from 48px to 88px and scrolls after that (CSS `field-sizing: content`). The send button is disabled while the text is empty, and sending is not implemented yet.
+- Each like button toggles on its own and changes its count by one.
+
+Nothing is saved yet, so every opening puts the dialog back to its first state and scrolls it to the top.
 
 ## Styling
 
 Design tokens live in `src/styles/abstracts/_tokens.scss`: colors, typography, sizes, corner radii, button sizes, shadows, breakpoints, border widths and durations. Styles read them through helpers instead of raw values:
 
 - functions (`_functions.scss`): `get-color`, `get-font-family`, `get-font-size`, `get-font-weight`, `get-size`, `get-radius`, `get-shadow`, `get-button-size`, `get-breakpoint` and `get-duration`. An unknown token name fails the build.
-- mixins (`_mixins.scss`): `media-up` and `media-down` for media queries, `hover` for hover-only styles, `button-size` for button padding (the border is taken off it, because the mockups draw a button's stroke inside its box), `reduced-motion` for styles that respect that system setting, `visually-hidden` for a text that screen readers keep and the eye does not need, and `animated-dialog` for the open and close animation of a modal `<dialog>`.
+- mixins (`_mixins.scss`): `media-up` and `media-down` for media queries, `hover` for hover-only styles, `button-size` for button padding (the border is taken off it, because the mockups draw a button's stroke inside its box), `reduced-motion` for styles that respect that system setting, `visually-hidden` for a text that screen readers keep and the eye does not need, `animated-dialog` for the open and close animation of a modal `<dialog>`, and `modal-backdrop` for its dimmed backdrop, which also keeps the page behind it from scrolling.
 
 Every stylesheet starts with `@use 'abstracts' as *;` (Vite adds `src/styles` to Sass's load path). Media queries always go through `media-up` and `media-down`, so the breakpoints stay in one place. Both count whole pixels (`media-down(tablet)` is everything below 769px), so a fractional width from browser zoom or display scaling, such as 375.2px at 125%, still lands in the right layout. The mobile layout holds from 375px up to 560px.
 
@@ -93,4 +123,4 @@ A number that no token covers (a size measured from a mockup, a line height the 
 
 The app is deployed to GitHub Pages: <https://besika40k.github.io/minigames/>
 
-Every push to `story-1` runs `.github/workflows/deploy.yml`, which builds the project and publishes the `dist` folder. The workflow builds with `--base` set to the Pages base path (`/minigames/`), so `npm run dev` and a plain `npm run build` keep using `/`.
+Every push to `story-2` runs `.github/workflows/deploy.yml`, which builds the project and publishes the `dist` folder. The workflow builds with `--base` set to the Pages base path (`/minigames/`), so `npm run dev` and a plain `npm run build` keep using `/`.

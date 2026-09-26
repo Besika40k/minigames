@@ -2,6 +2,9 @@ import { Route, type RouteDefinition } from '../types/route.ts';
 
 type PageRenderer = () => readonly HTMLElement[];
 
+// Called after each render with the open page (undefined for an unknown address)
+type PageChangeListener = (page: Route | undefined) => void;
+
 // Routes live in the URL hash (#/), so the app works on any static host
 // without server-side fallback rules.
 export function getRouteHref(route: Route): string {
@@ -31,16 +34,19 @@ export class Router {
     return path === '' ? Route.Home : path;
   }
 
-  private render(): void {
+  private render(onPageChange: PageChangeListener): void {
     const route: RouteDefinition | undefined = this.routes.get(this.getCurrentPath());
     const page: readonly HTMLElement[] = route?.render() ?? this.renderNotFound();
     this.outlet.replaceChildren(...page);
+    onPageChange(route?.path);
   }
 
-  public start(): void {
+  public start(onPageChange: PageChangeListener): void {
     globalThis.addEventListener('hashchange', () => {
-      this.render();
+      this.render(onPageChange);
+      // A link at the bottom of one page opens the next one at its top
+      globalThis.scrollTo({ top: 0, behavior: 'instant' });
     });
-    this.render();
+    this.render(onPageChange);
   }
 }

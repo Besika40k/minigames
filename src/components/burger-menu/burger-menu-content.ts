@@ -3,8 +3,10 @@ import { NAVIGATION_LINKS } from '../../data/navigation.ts';
 import { AuthMode } from '../../types/auth.ts';
 import { ButtonSize, ButtonVariant } from '../../types/button.ts';
 import type { NavigationLink } from '../../types/navigation.ts';
+import { Route } from '../../types/route.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { createIcon, IconName } from '../../utils/create-icon.ts';
+import type { PageLinks } from '../../utils/page-links.ts';
 import { createButton } from '../button/button.ts';
 import { createLogo } from '../logo/logo.ts';
 
@@ -28,25 +30,27 @@ function createTop(handlers: MenuContentHandlers): HTMLElement {
   return createElement('div', { className: 'mobile-menu__top', children: [logo, closeButton] });
 }
 
-function createLinkItem(link: NavigationLink, handlers: MenuContentHandlers): HTMLLIElement {
+function createLinkItem(
+  link: NavigationLink,
+  handlers: MenuContentHandlers,
+  pageLinks: PageLinks,
+): HTMLLIElement {
   const anchor: HTMLAnchorElement = createElement('a', {
-    className: link.isCurrent
-      ? 'mobile-menu__link mobile-menu__link--current'
-      : 'mobile-menu__link',
+    className: 'mobile-menu__link',
     text: link.label,
-    attributes: {
-      href: getRouteHref(link.route),
-      ...(link.isCurrent && { 'aria-current': 'page' }),
-    },
+    attributes: { href: getRouteHref(link.page ?? Route.Home) },
   });
   anchor.addEventListener('click', handlers.onLinkClick);
+  if (link.page !== undefined) {
+    pageLinks.add(anchor, link.page);
+  }
 
   return createElement('li', { children: [anchor] });
 }
 
-function createNavigation(handlers: MenuContentHandlers): HTMLElement {
+function createNavigation(handlers: MenuContentHandlers, pageLinks: PageLinks): HTMLElement {
   const items: HTMLLIElement[] = NAVIGATION_LINKS.map((link: NavigationLink): HTMLLIElement =>
-    createLinkItem(link, handlers),
+    createLinkItem(link, handlers, pageLinks),
   );
 
   return createElement('nav', {
@@ -78,6 +82,9 @@ function createActions(handlers: MenuContentHandlers): HTMLElement {
   return createElement('div', { className: 'mobile-menu__actions', children: [logIn, signUp] });
 }
 
-export function createMenuContent(handlers: MenuContentHandlers): readonly HTMLElement[] {
-  return [createTop(handlers), createNavigation(handlers), createActions(handlers)];
+export function createMenuContent(
+  handlers: MenuContentHandlers,
+  pageLinks: PageLinks,
+): readonly HTMLElement[] {
+  return [createTop(handlers), createNavigation(handlers, pageLinks), createActions(handlers)];
 }

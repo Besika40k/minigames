@@ -1,0 +1,87 @@
+@use 'abstracts' as *;
+
+// The style guide gives no line heights: these put the title and the
+// description where the mockups have them
+$title-line-height: 1.15;
+$description-line-height: 1.5;
+
+// The section owns the space above it, down from the header
+.library-intro {
+  padding-block-start: get-size(5);
+
+  @include media-down(laptop) {
+    padding-block-start: get-size(3);
+  }
+
+  @include media-down(mobile) {
+    padding-block-start: get-size(2);
+  }
+}
+
+.library-intro__inner {
+  max-width: get-breakpoint(desktop);
+  margin-inline: auto;
+  padding-inline: get-size(15);
+
+  @include media-down(laptop) {
+    padding-inline: get-size(5);
+  }
+
+  @include media-down(mobile) {
+    padding-inline: get-size(2);
+  }
+}
+
+.library-intro__title {
+  margin: 0;
+  color: get-color(on-primary);
+  font-size: get-font-size(display-large);
+  font-weight: get-font-weight(bold);
+  line-height: $title-line-height;
+
+  @include media-down(laptop) {
+    font-size: get-font-size(display-medium);
+  }
+
+  @include media-down(mobile) {
+    font-size: get-font-size(display-small);
+  }
+}
+
+.library-intro__description {
+  margin: get-size(1) 0 0;
+  color: get-color(on-bg);
+  font-size: get-font-size(body-large);
+  line-height: $description-line-height;
+
+  @include media-down(laptop) {
+    font-size: get-font-size(body-medium);
+  }
+
+  @include media-down(mobile) {
+    font-size: get-font-size(body-small);
+  }
+}
+
+// Desktop has the chips on the left and the sort control on the right, in one
+// row. Tablet and mobile put the sort control under the chips; on mobile it
+// takes the whole width.
+.library-intro__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: get-size(3);
+  margin-block-start: get-size(7);
+
+  @include media-down(laptop) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: get-size(2);
+    margin-block-start: get-size(5);
+  }
+
+  @include media-down(mobile) {
+    align-items: stretch;
+    margin-block-start: get-size(4);
+  }
+}

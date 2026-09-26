@@ -17,6 +17,12 @@ export enum IconName {
   Heart = 'heart',
   ArrowBack = 'arrow-back',
   ArrowForward = 'arrow-forward',
+  ArrowDropDown = 'arrow-drop-down',
+  Check = 'check',
+  ChevronLeft = 'chevron-left',
+  ChevronRight = 'chevron-right',
+  Dismiss = 'dismiss',
+  Send = 'send',
 }
 
 interface IconDefinition {
@@ -24,7 +30,7 @@ interface IconDefinition {
   readonly path: string;
 }
 
-// Shapes measured from the mockups: three 2px bars, a 1.5px cross, and fourteen
+// Shapes measured from the mockups: three 2px bars, a 1.5px cross, and twenty
 // glyphs of the mockup's icon font, drawn on the box they sit in there (20px
 // for the social and form icons, 16px for code, 24px for upload, arrows and
 // star; the heart is 20px by 19px). The crossed eye is the eye with a slash
@@ -93,6 +99,35 @@ const ICONS: Readonly<Record<IconName, IconDefinition>> = {
   [IconName.ArrowForward]: {
     viewBox: '0 0 24 24',
     path: 'M16.18 13L4 13L4 11L16.18 11L10.57 5.4L12 4L20 12L12 20L10.57 18.6L16.18 13Z',
+  },
+  // The 10 by 5px triangle of the sort control, in its 24px box
+  [IconName.ArrowDropDown]: {
+    viewBox: '0 0 24 24',
+    path: 'M7 10L12 15L17 10Z',
+  },
+  // The tick of the selected sort option, in a 14px box
+  [IconName.Check]: {
+    viewBox: '0 0 14 14',
+    path: 'M12.73 4.56C13.31 3.97 13.31 3.03 12.73 2.44C12.14 1.85 11.19 1.85 10.61 2.44L11.67 3.5L12.73 4.56ZM5.25 9.92L4.19 10.98L5.25 12.04L6.31 10.98L5.25 9.92ZM3.39 5.94C2.81 5.35 1.86 5.35 1.27 5.94C0.69 6.52 0.69 7.47 1.27 8.06L2.33 7L3.39 5.94ZM11.67 3.5L10.61 2.44L4.19 8.86L5.25 9.92L6.31 10.98L12.73 4.56L11.67 3.5ZM5.25 9.92L6.31 8.86L3.39 5.94L2.33 7L1.27 8.06L4.19 10.98L5.25 9.92Z',
+  },
+  // The arrows of the pagination, from the mockup's chevron icons
+  [IconName.ChevronLeft]: {
+    viewBox: '0 0 24 24',
+    path: 'M14 18L8 12L14 6L15.4 7.4L10.8 12L15.4 16.6L14 18Z',
+  },
+  [IconName.ChevronRight]: {
+    viewBox: '0 0 24 24',
+    path: 'M12.6 12L8 7.4L9.4 6L15.4 12L9.4 18L8 16.6L12.6 12Z',
+  },
+  // The 14px cross of the game details dialog's close button, in its 24px box
+  [IconName.Dismiss]: {
+    viewBox: '0 0 24 24',
+    path: 'M6.4 19L5 17.6L10.6 12L5 6.4L6.4 5L12 10.6L17.6 5L19 6.4L13.4 12L19 17.6L17.6 19L12 13.4L6.4 19Z',
+  },
+  // The paper plane of the comment form's send button, in its 24px box
+  [IconName.Send]: {
+    viewBox: '0 0 24 24',
+    path: 'M3 20V4L22 12L3 20ZM5 17L16.85 12L5 7V10.5L11 12L5 13.5V17ZM5 17V7V17Z',
   },
 };
 

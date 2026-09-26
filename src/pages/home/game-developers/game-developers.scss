@@ -6,12 +6,24 @@
 $illustration-column: 682fr;
 $card-column: 958fr;
 
-// The illustration's box keeps the shape it has in each mockup (682 by 480 on
-// desktop, 688 by 300 on tablet, 343 by 227 on mobile) instead of a fixed
-// height, so the picture is cropped by the same amount at every width
-$illustration-ratio-desktop: list.slash(682, 480);
+// On desktop the illustration keeps the mockup's 480px height while its column
+// is wider than that, so the section stays as high as in the mockup on smaller
+// desktop screens too (down to about 1470px, which includes 1920px at 125%
+// zoom). Only the empty sides of the picture are cropped. On narrower screens
+// it becomes a square, so the crop never reaches the drawing.
+$illustration-height-desktop: 480px;
+$illustration-ratio-desktop: 1;
+
+// Tablet and mobile stack the columns: there the box keeps the shape it has in
+// each mockup (688 by 300 and 343 by 227) instead of a fixed height, so the
+// picture is cropped by the same amount at every width
 $illustration-ratio-tablet: list.slash(688, 300);
 $illustration-ratio-mobile: list.slash(343, 227);
+
+// The width of the description's longest line (the first one) in Chrome, at
+// the desktop and at the tablet font size
+$description-longest-line-desktop: 584px;
+$description-longest-line-tablet: 455px;
 
 // The style guide gives no line heights: these are measured from the mockup
 $title-line-height: 1.2;
@@ -59,17 +71,19 @@ $illustration-position-desktop: center top;
   }
 }
 
-// A fixed height would crop far too much between the widths of the mockups.
-// `height: auto` replaces the height attribute of the image.
+// The height follows the aspect ratio up to the cap. `height: auto` replaces
+// the height attribute of the image.
 .game-developers__illustration {
   width: 100%;
   height: auto;
+  max-height: $illustration-height-desktop;
   aspect-ratio: $illustration-ratio-desktop;
   border-radius: get-radius(extra-large);
   object-fit: cover;
   object-position: $illustration-position-desktop;
 
   @include media-down(laptop) {
+    max-height: none;
     aspect-ratio: $illustration-ratio-tablet;
     object-position: center;
   }
@@ -80,7 +94,8 @@ $illustration-position-desktop: center top;
 }
 
 // The stroke sits inside the card box, so the padding is the mockup's padding
-// minus the border
+// minus the border. The card is a container, so the description can ask how
+// much room it has (see the end of the file).
 .game-developers__card {
   display: flex;
   flex-direction: column;
@@ -91,6 +106,7 @@ $illustration-position-desktop: center top;
   border-radius: get-radius(extra-large);
   background-color: get-color(white);
   box-shadow: get-shadow(soft-card);
+  container-type: inline-size;
 
   @include media-down(laptop) {
     gap: get-size(2);
@@ -160,5 +176,27 @@ $illustration-position-desktop: center top;
 
   @include media-down(laptop) {
     font-size: get-font-size(label-medium);
+  }
+}
+
+// The description keeps the mockup's line breaks while its longest line fits.
+// In a narrower card each line would wrap on its own and leave short ragged
+// lines, so the breaks are dropped and the text flows as one paragraph. The
+// mobile mockup wraps inside the lines itself, so there the breaks stay.
+@include media-up(laptop) {
+  @container (width < #{$description-longest-line-desktop}) {
+    .game-developers__description br {
+      display: none;
+    }
+  }
+}
+
+@include media-up(mobile) {
+  @include media-down(laptop) {
+    @container (width < #{$description-longest-line-tablet}) {
+      .game-developers__description br {
+        display: none;
+      }
+    }
   }
 }

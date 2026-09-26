@@ -72,7 +72,8 @@
     text-underline-offset: get-size(0.5);
   }
 
-  &--current {
+  // The link of the open page (the script sets aria-current on it)
+  &[aria-current='page'] {
     color: get-color(on-primary);
     font-weight: get-font-weight(bold);
   }
