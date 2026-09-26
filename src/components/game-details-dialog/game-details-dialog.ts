@@ -1,4 +1,8 @@
-import { GAME_DETAILS_CONTENT, STATIC_GAME_DETAILS } from '../../data/game-details.ts';
+import {
+  GAME_DETAILS_CONTENT,
+  STATIC_COMMENTS,
+  STATIC_GAME_DETAILS,
+} from '../../data/game-details.ts';
 import type {
   GameDetails,
   GameDetailsDialog,
@@ -8,6 +12,7 @@ import { createElement } from '../../utils/create-element.ts';
 import { createIcon, IconName } from '../../utils/create-icon.ts';
 import { enableDialogDismiss } from '../../utils/dismiss-dialog.ts';
 import './game-details-dialog.scss';
+import { createGameDetailsComments } from './game-details-comments.ts';
 import { createGameDetailsInfo } from './game-details-info.ts';
 import { createGameDetailsRecords } from './game-details-records.ts';
 
@@ -54,9 +59,10 @@ export function createGameDetailsDialog(): GameDetailsDialog {
   };
 
   const info: GameDetailsSection = createGameDetailsInfo(game, TITLE_ID);
+  const comments: GameDetailsSection = createGameDetailsComments(STATIC_COMMENTS);
   const content: HTMLDivElement = createElement('div', {
     className: 'game-details__content',
-    children: [info.element, createGameDetailsRecords(game)],
+    children: [info.element, createGameDetailsRecords(game), comments.element],
   });
   dialog.append(createHero(game, close), content);
   enableDialogDismiss(dialog);
@@ -64,6 +70,7 @@ export function createGameDetailsDialog(): GameDetailsDialog {
   // Nothing the visitor changed inside is kept: every opening starts afresh
   const open = (): void => {
     info.reset();
+    comments.reset();
     if (!dialog.open) {
       dialog.showModal();
     }
