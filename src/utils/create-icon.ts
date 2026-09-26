@@ -22,6 +22,7 @@ export enum IconName {
   ChevronLeft = 'chevron-left',
   ChevronRight = 'chevron-right',
   Dismiss = 'dismiss',
+  Send = 'send',
 }
 
 interface IconDefinition {
@@ -29,7 +30,7 @@ interface IconDefinition {
   readonly path: string;
 }
 
-// Shapes measured from the mockups: three 2px bars, a 1.5px cross, and nineteen
+// Shapes measured from the mockups: three 2px bars, a 1.5px cross, and twenty
 // glyphs of the mockup's icon font, drawn on the box they sit in there (20px
 // for the social and form icons, 16px for code, 24px for upload, arrows and
 // star; the heart is 20px by 19px). The crossed eye is the eye with a slash
@@ -122,6 +123,11 @@ const ICONS: Readonly<Record<IconName, IconDefinition>> = {
   [IconName.Dismiss]: {
     viewBox: '0 0 24 24',
     path: 'M6.4 19L5 17.6L10.6 12L5 6.4L6.4 5L12 10.6L17.6 5L19 6.4L13.4 12L19 17.6L17.6 19L12 13.4L6.4 19Z',
+  },
+  // The paper plane of the comment form's send button, in its 24px box
+  [IconName.Send]: {
+    viewBox: '0 0 24 24',
+    path: 'M3 20V4L22 12L3 20ZM5 17L16.85 12L5 7V10.5L11 12L5 13.5V17ZM5 17V7V17Z',
   },
 };
 
