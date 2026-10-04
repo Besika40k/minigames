@@ -1,4 +1,7 @@
-import { CATEGORIES, LIBRARY_CONTENT } from '../../../data/library.ts';
+import { fetchCategories } from '../../../api/categories-api.ts';
+import { createAsyncArea, type AsyncArea } from '../../../components/feedback/async-area.ts';
+import { createSkeleton } from '../../../components/skeleton/skeleton.ts';
+import { LIBRARY_CONTENT } from '../../../data/library.ts';
 import type { Category } from '../../../types/library.ts';
 import { createElement } from '../../../utils/create-element.ts';
 import './category-filter.scss';
@@ -7,13 +10,23 @@ import './category-filter.scss';
 // the chip under the pointer
 const DRAG_THRESHOLD = 5;
 
-// Marks one chip as pressed and the others as not. The picked chip slides fully
-// into view when the row clips it.
-function selectChip(chips: readonly HTMLButtonElement[], selected: HTMLButtonElement): void {
-  for (const chip of chips) {
-    chip.setAttribute('aria-pressed', String(chip === selected));
-  }
-  selected.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+// The API has seven categories, and the skeleton holds their place
+const SKELETON_CHIPS = 7;
+
+export interface CategoryFilterOptions {
+  // Called with the slug of the chip the visitor pressed
+  readonly onSelect: (slug: string) => void;
+  // Called with the categories once they are on the screen
+  readonly onLoad: (categories: readonly Category[]) => void;
+  readonly onError: () => void;
+}
+
+export interface CategoryFilter {
+  readonly element: HTMLElement;
+  // Marks the chip of the category the address names
+  readonly setSelected: (slug: string | undefined) => void;
+  // Cancels the request when the page closes
+  readonly abort: () => void;
 }
 
 // Touch screens swipe the row by themselves. This lets a mouse drag it too, and
@@ -73,31 +86,119 @@ function enableMouseDrag(row: HTMLElement): void {
   );
 }
 
-// The category chips. One is pressed at a time; the row never wraps, and what
-// does not fit is clipped and can be swiped or dragged into view.
-export function createCategoryFilter(): HTMLUListElement {
-  const chips: HTMLButtonElement[] = CATEGORIES.map((category: Category): HTMLButtonElement =>
-    createElement('button', {
-      className: 'category-filter__chip',
-      text: category.label,
-      attributes: { type: 'button', 'aria-pressed': String(category.isDefault) },
-    }),
-  );
-
-  for (const chip of chips) {
-    chip.addEventListener('click', (): void => {
-      selectChip(chips, chip);
-    });
+// Slides a chip that the row clips fully into view. Only the row scrolls, so
+// the page stays where it is.
+function revealChip(row: HTMLElement, chip: HTMLElement): void {
+  const rowBox: DOMRect = row.getBoundingClientRect();
+  const chipBox: DOMRect = chip.getBoundingClientRect();
+  if (chipBox.left < rowBox.left) {
+    row.scrollBy({ left: chipBox.left - rowBox.left, behavior: 'smooth' });
+  } else if (chipBox.right > rowBox.right) {
+    row.scrollBy({ left: chipBox.right - rowBox.right, behavior: 'smooth' });
   }
+}
 
-  const row: HTMLUListElement = createElement('ul', {
+function createRow(items: readonly HTMLLIElement[]): HTMLUListElement {
+  return createElement('ul', {
     className: 'category-filter',
     attributes: { 'aria-label': LIBRARY_CONTENT.categoriesLabel },
-    children: chips.map((chip: HTMLButtonElement): HTMLLIElement =>
-      createElement('li', { className: 'category-filter__item', children: [chip] }),
-    ),
+    children: items,
   });
-  enableMouseDrag(row);
+}
+
+function createSkeletonRow(): HTMLUListElement {
+  const items: HTMLLIElement[] = Array.from({ length: SKELETON_CHIPS }, (): HTMLLIElement =>
+    createElement('li', {
+      className: 'category-filter__item',
+      children: [createSkeleton('category-filter__skeleton')],
+    }),
+  );
+  const row: HTMLUListElement = createRow(items);
+  row.setAttribute('aria-hidden', 'true');
 
   return row;
+}
+
+// The category chips, loaded from the API. One chip is pressed at a time: the
+// one of the category in the address, so a press only asks for a new address.
+// The row never wraps; what does not fit is clipped and can be swiped or
+// dragged into view.
+export function createCategoryFilter(options: CategoryFilterOptions): CategoryFilter {
+  let chips: ReadonlyMap<string, HTMLButtonElement> = new Map();
+  let selected: string | undefined;
+  let row: HTMLUListElement | undefined;
+
+  const markSelected = (): void => {
+    for (const [slug, chip] of chips) {
+      chip.setAttribute('aria-pressed', String(slug === selected));
+    }
+    const chip: HTMLButtonElement | undefined =
+      selected === undefined ? undefined : chips.get(selected);
+    if (row !== undefined && chip !== undefined) {
+      revealChip(row, chip);
+    }
+  };
+
+  const showChips = (categories: readonly Category[]): readonly Node[] => {
+    const entries: [string, HTMLButtonElement][] = categories.map(
+      (category: Category): [string, HTMLButtonElement] => {
+        const chip: HTMLButtonElement = createElement('button', {
+          className: 'category-filter__chip',
+          text: category.label,
+          attributes: { type: 'button', 'aria-pressed': 'false' },
+        });
+        chip.addEventListener('click', (): void => {
+          options.onSelect(category.slug);
+        });
+
+        return [category.slug, chip];
+      },
+    );
+    chips = new Map(entries);
+
+    const items: HTMLLIElement[] = entries.map(
+      ([, chip]: [string, HTMLButtonElement]): HTMLLIElement =>
+        createElement('li', { className: 'category-filter__item', children: [chip] }),
+    );
+    row = createRow(items);
+    enableMouseDrag(row);
+
+    return [row];
+  };
+
+  // The chips, or the skeleton, the error banner or a note in their place.
+  // It takes no box of its own, so the chips stay in the row of the controls.
+  const element: HTMLDivElement = createElement('div', { className: 'category-filter__area' });
+
+  const area: AsyncArea = createAsyncArea({
+    container: element,
+    messages: LIBRARY_CONTENT.categoriesMessages,
+    load: fetchCategories,
+    renderSkeleton: (): readonly Node[] => [createSkeletonRow()],
+    renderData: showChips,
+    isEmpty: (categories: readonly Category[]): boolean => categories.length === 0,
+    renderEmpty: (): readonly Node[] => [
+      createElement('p', {
+        className: 'category-filter__note',
+        text: LIBRARY_CONTENT.noCategoriesText,
+      }),
+    ],
+    onLoad: (categories: readonly Category[]): void => {
+      markSelected();
+      options.onLoad(categories);
+    },
+    onError: options.onError,
+  });
+  area.reload();
+
+  return {
+    element,
+    setSelected: (slug: string | undefined): void => {
+      selected = slug;
+      markSelected();
+    },
+    abort: (): void => {
+      area.abort();
+    },
+  };
 }

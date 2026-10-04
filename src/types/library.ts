@@ -59,6 +59,10 @@ export interface LibraryContent {
   readonly notFoundTitle: string;
   readonly notFoundMessage: string;
   readonly showAllText: string;
+  readonly categoriesMessages: LoadMessages;
+  readonly noCategoriesText: string;
+  // The warning for an address whose value the Library cannot use
+  readonly invalidParameterMessages: Readonly<Record<LibraryParameter, string>>;
 }
 
 export interface PaginationContent {
