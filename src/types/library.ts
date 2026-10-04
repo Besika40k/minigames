@@ -1,3 +1,5 @@
+import type { LoadMessages } from './feedback.ts';
+
 // A category of the filter chips, with the field names of the course's mock
 // data (`categories.json`)
 export interface Category {
@@ -45,6 +47,11 @@ export interface LibraryContent {
   readonly categoryLabel: string;
   readonly ratingLabel: string;
   readonly likesLabel: string;
+  readonly gamesMessages: LoadMessages;
+  // The placeholder of a list without games, with a way back to all of them
+  readonly notFoundTitle: string;
+  readonly notFoundMessage: string;
+  readonly showAllText: string;
 }
 
 export interface PaginationContent {
