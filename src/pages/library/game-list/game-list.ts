@@ -21,6 +21,8 @@ const SKELETON_CARDS = 6;
 export interface GameListOptions {
   // Called with the game whose Details button was pressed
   readonly onDetailsClick?: (game: Game) => void;
+  // Called with every answer once it is on the screen, for the pagination
+  readonly onLoad?: (page: GamesPage) => void;
 }
 
 export interface GameList {
@@ -104,6 +106,7 @@ export function createGameList(options: GameListOptions = {}): GameList {
     },
     isEmpty: (page: GamesPage): boolean => page.games.length === 0,
     renderEmpty: (): readonly Node[] => [createNotFound()],
+    onLoad: options.onLoad,
   });
 
   // Until the page knows which games to ask for, the list shows its skeleton
