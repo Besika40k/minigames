@@ -8,13 +8,18 @@ import './auth-dialog.scss';
 export interface AuthDialogOptions {
   // Asks to close the dialog: Esc and the backdrop
   readonly onClose: () => void;
+  // Hears of each form the visitor picks: with a tab, an arrow key or the
+  // link at the bottom of a form
+  readonly onModeChange?: (mode: AuthMode) => void;
 }
 
 // The dialog with the login and registration forms. It closes only through
 // `onClose`, so the owner decides what a close means (the dialog lives in the
 // address).
 export function createAuthDialog(options: AuthDialogOptions): AuthDialog {
-  const switcher: AuthSwitcher = createAuthSwitcher();
+  const switcher: AuthSwitcher = createAuthSwitcher((mode: AuthMode): void => {
+    options.onModeChange?.(mode);
+  });
 
   const dialog: HTMLDialogElement = createElement('dialog', {
     className: 'auth-dialog',
@@ -24,8 +29,12 @@ export function createAuthDialog(options: AuthDialogOptions): AuthDialog {
   enableDialogDismiss(dialog, options.onClose);
 
   const show = (mode: AuthMode): void => {
-    // An open dialog keeps its form
+    // An open dialog only switches to another form, so a switch the visitor
+    // has just started keeps its animation
     if (dialog.open) {
+      if (mode !== switcher.getMode()) {
+        switcher.select(mode, true);
+      }
       return;
     }
     switcher.select(mode, false);
