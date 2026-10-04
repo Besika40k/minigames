@@ -6,11 +6,12 @@ export interface Category {
   readonly isDefault: boolean;
 }
 
+// The sort orders, in the values the API takes
 export enum SortOrder {
-  RatingAscending = 'rating-ascending',
-  RatingDescending = 'rating-descending',
-  NameAscending = 'name-ascending',
-  NameDescending = 'name-descending',
+  RatingAscending = 'rating-asc',
+  RatingDescending = 'rating-desc',
+  NameAscending = 'name-asc',
+  NameDescending = 'name-desc',
 }
 
 export interface SortOption {
