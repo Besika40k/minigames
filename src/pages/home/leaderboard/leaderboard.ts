@@ -1,10 +1,7 @@
+import { fetchLeaderboard } from '../../../api/leaderboard-api.ts';
 import flameUrl from '../../../assets/images/flame.png';
 import { createSectionTitle } from '../../../components/section-title/section-title.ts';
-import {
-  LEADERBOARD_COLUMNS,
-  LEADERBOARD_ENTRIES,
-  LEADERBOARD_TITLE,
-} from '../../../data/leaderboard.ts';
+import { LEADERBOARD_COLUMNS, LEADERBOARD_TITLE } from '../../../data/leaderboard.ts';
 import {
   LeaderboardColumn,
   type LeaderboardColumnContent,
@@ -144,41 +141,66 @@ function createRow(entry: LeaderboardEntry): HTMLTableRowElement {
   });
 }
 
-function createTable(): HTMLTableElement {
-  const rows: HTMLTableRowElement[] = LEADERBOARD_ENTRIES.map(
-    (entry: LeaderboardEntry): HTMLTableRowElement => createRow(entry),
-  );
+// The wrapper draws the table's border, corners and shadow, and clips the
+// header's background to the corners
+function createTable(rows: readonly HTMLTableRowElement[]): HTMLDivElement {
   const body: HTMLTableSectionElement = createElement('tbody', {
     className: 'leaderboard__body',
     children: rows,
   });
-
-  return createElement('table', {
+  const table: HTMLTableElement = createElement('table', {
     className: 'leaderboard__table',
     attributes: { 'aria-labelledby': TITLE_ID },
     children: [createHeader(), body],
   });
+
+  return createElement('div', { className: 'leaderboard__table-wrapper', children: [table] });
 }
 
-export function createLeaderboard(): HTMLElement {
+export interface Leaderboard {
+  readonly element: HTMLElement;
+  // Cancels the request when the page closes
+  readonly destroy: () => void;
+}
+
+// The table of the week's top players, loaded from the API
+export function createLeaderboard(): Leaderboard {
   const title: HTMLHeadingElement = createSectionTitle(
     TITLE_ID,
     createResponsiveText(LEADERBOARD_TITLE, SwitchPoint.Mobile),
   );
-  // The wrapper draws the table's border, corners and shadow, and clips the
-  // header's background to the corners
-  const wrapper: HTMLDivElement = createElement('div', {
-    className: 'leaderboard__table-wrapper',
-    children: [createTable()],
-  });
+  const content: HTMLDivElement = createElement('div', { className: 'leaderboard__content' });
   const inner: HTMLDivElement = createElement('div', {
     className: 'leaderboard__inner',
-    children: [title, wrapper],
+    children: [title, content],
   });
 
-  return createElement('section', {
+  const controller: AbortController = new AbortController();
+  const loadRows = async (): Promise<void> => {
+    try {
+      const entries: readonly LeaderboardEntry[] = await fetchLeaderboard(controller.signal);
+      const rows: HTMLTableRowElement[] = entries.map(
+        (entry: LeaderboardEntry): HTMLTableRowElement => createRow(entry),
+      );
+      content.replaceChildren(createTable(rows));
+    } catch {
+      // The loading, error and empty states come next. Until then a failed
+      // request leaves the section without a table.
+      content.replaceChildren();
+    }
+  };
+  void loadRows();
+
+  const element: HTMLElement = createElement('section', {
     className: 'leaderboard',
     attributes: { 'aria-labelledby': TITLE_ID },
     children: [inner],
   });
+
+  return {
+    element,
+    destroy: (): void => {
+      controller.abort();
+    },
+  };
 }
