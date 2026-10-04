@@ -1,5 +1,5 @@
-// A game with the field names of the course's mock data (`all-games-seed.json`).
-// The card image is the imported file instead of the mock's server path.
+// A game with the field names of the API (`GET /api/games`). The card image is
+// the address the browser loads it from.
 export interface Game {
   readonly slug: string;
   readonly name: string;
@@ -11,4 +11,11 @@ export interface Game {
   readonly rating: number;
   readonly likesCount: number;
   readonly cardImage: string;
+}
+
+// One page of the game list, with the numbers the pagination is built from
+export interface GamesPage {
+  readonly games: readonly Game[];
+  readonly page: number;
+  readonly totalPages: number;
 }
