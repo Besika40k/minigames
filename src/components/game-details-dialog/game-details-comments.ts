@@ -33,7 +33,7 @@ function createAvatar(name: string, className: string): HTMLSpanElement {
 // The heart and the number of likes. A click likes or unlikes the comment and
 // changes the number by one; nothing is sent anywhere yet.
 function createLikeButton(comment: GameComment): GameDetailsSection {
-  // The mock data counts the current user's like in the total
+  // The API counts the current user's like in the total
   const othersLikes: number = comment.likesCount - (comment.isLikedByCurrentUser ? 1 : 0);
   let isLiked: boolean = comment.isLikedByCurrentUser;
 

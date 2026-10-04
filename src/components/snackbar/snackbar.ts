@@ -76,7 +76,7 @@ function createMessageElement(message: SnackbarMessage, onClose: () => void): HT
   });
 }
 
-// Shows a short message at the bottom of the screen that goes away by itself
+// Shows a short message near the top of the screen that goes away by itself
 // and never blocks the page. The same message twice is shown once, with its
 // time started again.
 export function showSnackbar(message: SnackbarMessage): void {
