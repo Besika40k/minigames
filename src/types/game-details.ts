@@ -16,8 +16,8 @@ export interface TopRecord {
   readonly achievedAt: string;
 }
 
-// A comment on a game, with the field names of the course's mock data
-// (`comments-tukoni-forest-keepers.json`)
+// A comment on a game, with the field names of the API
+// (`GET /api/games/{slug}/comments`)
 export interface GameComment {
   readonly commentId: string;
   readonly authorName: string;
@@ -27,6 +27,12 @@ export interface GameComment {
   readonly isLikedByCurrentUser: boolean;
   // An ISO date, such as "2026-08-30T07:00:00Z"
   readonly createdAt: string;
+}
+
+// The latest comments of a game, and how many the game has in all
+export interface GameCommentsPage {
+  readonly comments: readonly GameComment[];
+  readonly totalComments: number;
 }
 
 // The details of a game, with the field names of the API
