@@ -9,6 +9,7 @@ import { renderLibraryPage } from '../pages/library/library-page.ts';
 import { renderNotFoundPage } from '../pages/not-found/not-found-page.ts';
 import type { AuthDialog } from '../types/auth.ts';
 import type { BurgerMenu } from '../types/burger-menu.ts';
+import type { Game } from '../types/game.ts';
 import type { GameDetailsDialog } from '../types/game-details.ts';
 import {
   Route,
@@ -27,7 +28,17 @@ export function startApp(): void {
     trigger: header.menuButton,
     onAuthClick: authDialog.open,
   });
-  const gameDetails: GameDetailsDialog = createGameDetailsDialog();
+
+  const gameDetails: GameDetailsDialog = createGameDetailsDialog({
+    onClose: (): void => {
+      gameDetails.hide();
+    },
+  });
+
+  const openGame = (game: Game): void => {
+    gameDetails.show(game.slug);
+  };
+
   const main: HTMLElement = createElement('main');
   document.body.append(
     header.element,
@@ -42,14 +53,14 @@ export function startApp(): void {
     {
       path: Route.Home,
       title: PAGE_TITLES.home,
-      render: (): PageView => renderHomePage({ onGameOpen: gameDetails.open }),
+      render: (): PageView => renderHomePage({ onGameOpen: openGame }),
     },
     {
       path: Route.Library,
       title: PAGE_TITLES.library,
       render: (location: AppLocation): PageView =>
         renderLibraryPage(location, {
-          onGameOpen: gameDetails.open,
+          onGameOpen: openGame,
           onNavigate: (query: URLSearchParams, isReplace: boolean): void => {
             router.navigate({ query }, { isReplace });
           },
@@ -60,21 +71,15 @@ export function startApp(): void {
     title: PAGE_TITLES.notFound,
     render: (): PageView => ({ elements: renderNotFoundPage() }),
   };
-  // A dialog belongs to the page it was opened on, so it closes when the
-  // address changes under it (for example with the browser's Back button)
-  const dialogs: readonly HTMLDialogElement[] = [
-    menu.element,
-    authDialog.element,
-    gameDetails.element,
-  ];
-
   const router: Router = new Router(routes, notFound, main);
   router.onChange((location: AppLocation): void => {
     header.setCurrentPage(location.route);
     menu.setCurrentPage(location.route);
-    for (const dialog of dialogs) {
-      dialog.close();
-    }
+    // A dialog belongs to the page it was opened on, so it closes when the
+    // address changes under it (for example with the browser's Back button)
+    menu.element.close();
+    authDialog.element.close();
+    gameDetails.hide();
   });
   router.start();
 }

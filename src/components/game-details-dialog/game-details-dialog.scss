@@ -6,6 +6,14 @@ $dialog-width: 600px;
 $dialog-margin: get-size(2);
 $hero-height: 220px;
 
+// The loading blocks: a title, a shorter line, the spec boxes (56px high, as
+// the real ones) and the record rows (49px)
+$skeleton-title-width: 60%;
+$skeleton-short-width: 70%;
+$skeleton-subtitle-width: 30%;
+$skeleton-spec-height: get-size(7);
+$skeleton-record-height: 49px;
+
 // A modal dialog is centered by the browser. It is taller than most screens,
 // so it scrolls inside, without a visible scrollbar that would narrow it.
 .game-details {
@@ -33,9 +41,11 @@ $hero-height: 220px;
   }
 }
 
+// The picture's place keeps a color while the picture loads
 .game-details__hero {
   position: relative;
   height: $hero-height;
+  background-color: get-color(outline);
 }
 
 .game-details__image {
@@ -44,8 +54,10 @@ $hero-height: 220px;
   object-fit: cover;
 }
 
+// The close button stays over the hero in every state of the dialog
 .game-details__close {
   position: absolute;
+  z-index: 1;
   inset-block-start: get-size(2);
   inset-inline-end: get-size(2);
   display: flex;
@@ -77,9 +89,67 @@ $hero-height: 220px;
   }
 }
 
-// Everything under the hero
+// Everything under the hero. The info and records come first and the
+// comments second, so the comments can wait for the game to load.
 .game-details__content {
   padding: get-size(3);
+}
+
+.game-details__content--top {
+  padding-block-end: 0;
+}
+
+.game-details__content--bottom {
+  padding-block-start: 0;
+}
+
+// A message in place of the game leaves room for the close button above it
+.game-details__content--message {
+  padding-block-start: get-size(9);
+}
+
+// So does the error banner, which the loading area puts in place of the game
+.game-details__main > .error-banner {
+  margin: get-size(9) get-size(3) get-size(3);
+}
+
+// ---------- Loading ----------
+.game-details__skeleton-hero {
+  display: block;
+  border-radius: 0;
+}
+
+.game-details__skeleton-line {
+  height: get-size(2);
+  margin-block-start: get-size(1);
+}
+
+.game-details__skeleton-line--title {
+  width: $skeleton-title-width;
+  height: get-size(5);
+  margin-block: 0 get-size(2);
+}
+
+.game-details__skeleton-line--short {
+  width: $skeleton-short-width;
+}
+
+.game-details__skeleton-line--subtitle {
+  width: $skeleton-subtitle-width;
+  margin-block: 0 get-size(2);
+}
+
+.game-details__skeleton-spec {
+  height: $skeleton-spec-height;
+}
+
+.game-details__skeleton-actions {
+  height: get-size(6);
+  margin-block-start: get-size(3);
+}
+
+.game-details__skeleton-record {
+  height: $skeleton-record-height;
 }
 
 // The heading of the Top Records and Comments sections

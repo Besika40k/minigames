@@ -1,8 +1,6 @@
-import {
-  GAME_DETAILS_CONTENT,
-  STATIC_COMMENTS,
-  STATIC_GAME_DETAILS,
-} from '../../data/game-details.ts';
+import { fetchGameDetails } from '../../api/games-api.ts';
+import { GAME_DETAILS_CONTENT, STATIC_COMMENTS } from '../../data/game-details.ts';
+import { ButtonSize, ButtonVariant } from '../../types/button.ts';
 import type {
   GameDetails,
   GameDetailsDialog,
@@ -11,10 +9,14 @@ import type {
 import { createElement } from '../../utils/create-element.ts';
 import { createIcon, IconName } from '../../utils/create-icon.ts';
 import { enableDialogDismiss } from '../../utils/dismiss-dialog.ts';
+import { createButton } from '../button/button.ts';
+import { createAsyncArea, type AsyncArea } from '../feedback/async-area.ts';
+import { createEmptyState } from '../feedback/empty-state.ts';
 import './game-details-dialog.scss';
 import { createGameDetailsComments } from './game-details-comments.ts';
 import { createGameDetailsInfo } from './game-details-info.ts';
 import { createGameDetailsRecords } from './game-details-records.ts';
+import { createGameDetailsSkeleton } from './game-details-skeleton.ts';
 
 // The size of the hero picture, so the browser can reserve its space
 const HERO_WIDTH = '1920';
@@ -22,16 +24,14 @@ const HERO_HEIGHT = '1080';
 
 const TITLE_ID = 'game-details-title';
 
-// The cover picture of the game and the button that closes the dialog. The
-// picture is decoration: the dialog is named by the game's title.
-function createHero(game: GameDetails, onClose: () => void): HTMLElement {
-  const closeButton: HTMLButtonElement = createElement('button', {
-    className: 'game-details__close',
-    attributes: { type: 'button', 'aria-label': GAME_DETAILS_CONTENT.closeLabel },
-    children: [createIcon(IconName.Dismiss)],
-  });
-  closeButton.addEventListener('click', onClose);
+export interface GameDetailsDialogOptions {
+  // Asks to close the dialog: the close button, Esc and the backdrop
+  readonly onClose: () => void;
+}
 
+// The cover picture of the game. It is decoration: the dialog is named by the
+// game's title.
+function createHero(game: GameDetails): HTMLElement {
   return createElement('div', {
     className: 'game-details__hero',
     children: [
@@ -39,38 +39,96 @@ function createHero(game: GameDetails, onClose: () => void): HTMLElement {
         className: 'game-details__image',
         attributes: { src: game.heroImage, alt: '', width: HERO_WIDTH, height: HERO_HEIGHT },
       }),
-      closeButton,
     ],
   });
 }
 
-// The dialog with the details of a game. Every card opens the same static game
-// for now.
-export function createGameDetailsDialog(): GameDetailsDialog {
-  const game: GameDetails = STATIC_GAME_DETAILS;
+// The state of a slug that names no game, with a way out of the dialog
+function createNotFound(slug: string, onClose: () => void): HTMLElement {
+  const notFound: HTMLElement = createEmptyState({
+    title: GAME_DETAILS_CONTENT.notFoundTitle,
+    message: `${GAME_DETAILS_CONTENT.notFoundMessageStart} "${slug}"${GAME_DETAILS_CONTENT.notFoundMessageEnd}`,
+    action: createButton({
+      variant: ButtonVariant.Outlined,
+      size: ButtonSize.Medium,
+      text: GAME_DETAILS_CONTENT.closeLabel,
+      onClick: onClose,
+    }),
+  });
+
+  return createElement('div', {
+    className: 'game-details__content game-details__content--message',
+    children: [notFound],
+  });
+}
+
+// The dialog with the details of a game, loaded from the API for the slug it
+// is shown with. It closes only through `onClose`, so the owner decides what a
+// close means (the dialog lives in the address).
+export function createGameDetailsDialog(options: GameDetailsDialogOptions): GameDetailsDialog {
+  // The slug whose game the dialog shows or loads
+  let slug: string = '';
 
   const dialog: HTMLDialogElement = createElement('dialog', {
     className: 'game-details',
-    attributes: { 'aria-labelledby': TITLE_ID },
+    // The title names the dialog once the game is there
+    attributes: { 'aria-labelledby': TITLE_ID, 'aria-label': GAME_DETAILS_CONTENT.dialogLabel },
   });
 
-  const close = (): void => {
-    dialog.close();
-  };
+  const closeButton: HTMLButtonElement = createElement('button', {
+    className: 'game-details__close',
+    attributes: { type: 'button', 'aria-label': GAME_DETAILS_CONTENT.closeLabel },
+    children: [createIcon(IconName.Dismiss)],
+  });
+  closeButton.addEventListener('click', options.onClose);
 
-  const info: GameDetailsSection = createGameDetailsInfo(game, TITLE_ID);
+  // The hero, the info and the records, or their skeleton, the error banner
+  // or the Game Not Found state
+  const main: HTMLDivElement = createElement('div', { className: 'game-details__main' });
+
+  // The comments wait for the game, and stay away when it fails
   const comments: GameDetailsSection = createGameDetailsComments(STATIC_COMMENTS);
-  const content: HTMLDivElement = createElement('div', {
-    className: 'game-details__content',
-    children: [info.element, createGameDetailsRecords(game), comments.element],
+  const bottom: HTMLDivElement = createElement('div', {
+    className: 'game-details__content game-details__content--bottom',
+    children: [comments.element],
   });
-  dialog.append(createHero(game, close), content);
-  enableDialogDismiss(dialog);
+  bottom.hidden = true;
 
-  // Nothing the visitor changed inside is kept: every opening starts afresh
-  const open = (): void => {
-    info.reset();
+  // The close button comes first, so it is the first stop of the keyboard
+  dialog.append(closeButton, main, bottom);
+  enableDialogDismiss(dialog, options.onClose);
+
+  const area: AsyncArea = createAsyncArea({
+    container: main,
+    messages: GAME_DETAILS_CONTENT.messages,
+    load: (signal: AbortSignal): Promise<GameDetails> => fetchGameDetails(slug, signal),
+    renderSkeleton: createGameDetailsSkeleton,
+    // Each game is drawn anew, so nothing the visitor changed is kept
+    renderData: (game: GameDetails): readonly Node[] => {
+      const content: HTMLDivElement = createElement('div', {
+        className: 'game-details__content game-details__content--top',
+        children: [createGameDetailsInfo(game, TITLE_ID).element, createGameDetailsRecords(game)],
+      });
+
+      return [createHero(game), content];
+    },
+    // The API sends a game or a 404, never an empty answer
+    isEmpty: (): boolean => false,
+    renderEmpty: (): readonly Node[] => [],
+    renderNotFound: (): readonly Node[] => [createNotFound(slug, options.onClose)],
+    onLoad: (): void => {
+      bottom.hidden = false;
+    },
+  });
+
+  const show = (nextSlug: string): void => {
+    if (nextSlug === slug && dialog.open) {
+      return;
+    }
+    slug = nextSlug;
+    bottom.hidden = true;
     comments.reset();
+    area.reload();
     if (!dialog.open) {
       dialog.showModal();
     }
@@ -78,5 +136,12 @@ export function createGameDetailsDialog(): GameDetailsDialog {
     dialog.scrollTop = 0;
   };
 
-  return { element: dialog, open };
+  const hide = (): void => {
+    area.abort();
+    if (dialog.open) {
+      dialog.close();
+    }
+  };
+
+  return { element: dialog, show, hide };
 }
