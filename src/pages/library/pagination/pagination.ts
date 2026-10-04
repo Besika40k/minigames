@@ -1,4 +1,4 @@
-import { LIBRARY_PAGE_COUNT, PAGINATION_CONTENT } from '../../../data/library.ts';
+import { PAGINATION_CONTENT } from '../../../data/library.ts';
 import { createElement } from '../../../utils/create-element.ts';
 import { createIcon, IconName } from '../../../utils/create-icon.ts';
 import './pagination.scss';
@@ -8,12 +8,25 @@ import './pagination.scss';
 const VISIBLE_PAGES = 4;
 const VISIBLE_PAGES_MOBILE = 3;
 
+const FIRST_PAGE = 1;
+
+export interface PaginationOptions {
+  // Called with the page the visitor picked
+  readonly onSelect: (page: number) => void;
+}
+
+export interface Pagination {
+  readonly element: HTMLElement;
+  // Builds the controls for page `page` of `totalPages`, as the API answered
+  readonly render: (page: number, totalPages: number) => void;
+}
+
 // Whether a page is in the window of `size` pages around the current one. The
 // window stays as centered as it can without passing the first or last page.
-function isInWindow(page: number, current: number, size: number): boolean {
-  const visible: number = Math.min(size, LIBRARY_PAGE_COUNT);
+function isInWindow(page: number, current: number, size: number, total: number): boolean {
+  const visible: number = Math.min(size, total);
   const centered: number = current - Math.floor((visible - 1) / 2);
-  const start: number = Math.min(Math.max(centered, 1), LIBRARY_PAGE_COUNT - visible + 1);
+  const start: number = Math.min(Math.max(centered, FIRST_PAGE), total - visible + 1);
 
   return page >= start && page < start + visible;
 }
@@ -40,82 +53,103 @@ function createPageButton(page: number): HTMLButtonElement {
   });
 }
 
-// The page buttons and the previous and next arrows. Only the pagination
-// changes for now: the list of cards stays the same on every page.
-export function createPagination(): HTMLElement {
-  let current = 1;
+// The page buttons and the previous and next arrows, built from each answer of
+// the API: as many buttons as it has pages, and page 1 when it has none. A
+// press only asks for a new address; the buttons follow the answer to it.
+export function createPagination(options: PaginationOptions): Pagination {
+  let current: number = FIRST_PAGE;
+  let total: number = 0;
+  let pageItems: HTMLLIElement[] = [];
 
   const previous: HTMLButtonElement = createArrow(
     IconName.ChevronLeft,
     PAGINATION_CONTENT.previousLabel,
   );
   const next: HTMLButtonElement = createArrow(IconName.ChevronRight, PAGINATION_CONTENT.nextLabel);
-
-  const pages: number[] = Array.from(
-    { length: LIBRARY_PAGE_COUNT },
-    (_value: unknown, index: number): number => index + 1,
-  );
-  const buttons: HTMLButtonElement[] = pages.map((page: number): HTMLButtonElement =>
-    createPageButton(page),
-  );
-  const pageItems: HTMLLIElement[] = buttons.map((button: HTMLButtonElement): HTMLLIElement =>
-    createElement('li', { className: 'pagination__item', children: [button] }),
-  );
-
-  const update = (): void => {
-    for (const [index, button] of buttons.entries()) {
-      const page: number = index + 1;
-      button.setAttribute('aria-current', page === current ? 'page' : 'false');
-      button.parentElement?.classList.toggle(
-        'pagination__item--hidden',
-        !isInWindow(page, current, VISIBLE_PAGES),
-      );
-      button.parentElement?.classList.toggle(
-        'pagination__item--hidden-mobile',
-        !isInWindow(page, current, VISIBLE_PAGES_MOBILE),
-      );
-    }
-    previous.disabled = current === 1;
-    next.disabled = current === LIBRARY_PAGE_COUNT;
-  };
-
-  // An arrow that gets disabled loses the focus, so the focus moves to the
-  // button of the page it led to
-  const goTo = (page: number): void => {
-    const focused: Element | null = document.activeElement;
-    current = page;
-    update();
-    if (focused instanceof HTMLButtonElement && focused.disabled) {
-      buttons[current - 1]?.focus();
-    }
-  };
-
-  for (const [index, button] of buttons.entries()) {
-    button.addEventListener('click', (): void => {
-      goTo(index + 1);
-    });
-  }
+  // From a page past the end, the previous arrow leads back to the last page
   previous.addEventListener('click', (): void => {
-    goTo(current - 1);
+    options.onSelect(Math.min(current - 1, total));
   });
   next.addEventListener('click', (): void => {
-    goTo(current + 1);
+    options.onSelect(current + 1);
   });
 
-  update();
-
+  const nextItem: HTMLLIElement = createElement('li', {
+    className: 'pagination__item',
+    children: [next],
+  });
   const list: HTMLUListElement = createElement('ul', {
     className: 'pagination__list',
     children: [
       createElement('li', { className: 'pagination__item', children: [previous] }),
-      ...pageItems,
-      createElement('li', { className: 'pagination__item', children: [next] }),
+      nextItem,
     ],
   });
 
-  return createElement('nav', {
+  const element: HTMLElement = createElement('nav', {
     className: 'pagination',
     attributes: { 'aria-label': PAGINATION_CONTENT.label },
     children: [list],
   });
+  // Nothing to show until the first answer
+  element.hidden = true;
+
+  const createPageItem = (page: number): HTMLLIElement => {
+    const button: HTMLButtonElement = createPageButton(page);
+    button.setAttribute('aria-current', page === current ? 'page' : 'false');
+    button.addEventListener('click', (): void => {
+      options.onSelect(page);
+    });
+
+    const item: HTMLLIElement = createElement('li', {
+      className: 'pagination__item',
+      children: [button],
+    });
+    const count: number = Math.max(total, FIRST_PAGE);
+    item.classList.toggle(
+      'pagination__item--hidden',
+      !isInWindow(page, current, VISIBLE_PAGES, count),
+    );
+    item.classList.toggle(
+      'pagination__item--hidden-mobile',
+      !isInWindow(page, current, VISIBLE_PAGES_MOBILE, count),
+    );
+
+    return item;
+  };
+
+  const render = (page: number, totalPages: number): void => {
+    const focused: Element | null = document.activeElement;
+    const wasFocused: boolean = focused !== null && element.contains(focused);
+
+    current = page;
+    total = totalPages;
+    const pages: number[] = Array.from(
+      { length: Math.max(total, FIRST_PAGE) },
+      (_value: unknown, index: number): number => index + FIRST_PAGE,
+    );
+    for (const item of pageItems) {
+      item.remove();
+    }
+    pageItems = pages.map((pageNumber: number): HTMLLIElement => createPageItem(pageNumber));
+    nextItem.before(...pageItems);
+
+    previous.disabled = current <= FIRST_PAGE;
+    next.disabled = current >= total;
+    element.hidden = false;
+
+    // A pressed page button is built anew, and an arrow at the end of the
+    // list turns off; either way the focus moves to the current page, without
+    // scrolling, since the list comes into view at the same time
+    const isFocusLost: boolean =
+      wasFocused &&
+      (!(focused instanceof HTMLButtonElement) || focused.disabled || !focused.isConnected);
+    if (!isFocusLost) {
+      return;
+    }
+    const currentButton: HTMLButtonElement | null = list.querySelector('[aria-current="page"]');
+    currentButton?.focus({ preventScroll: true });
+  };
+
+  return { element, render };
 }

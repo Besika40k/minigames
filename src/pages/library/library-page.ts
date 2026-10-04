@@ -1,7 +1,7 @@
 import { showSnackbar } from '../../components/snackbar/snackbar.ts';
 import { LIBRARY_CONTENT } from '../../data/library.ts';
 import { SnackbarVariant } from '../../types/feedback.ts';
-import type { Game } from '../../types/game.ts';
+import type { Game, GamesPage } from '../../types/game.ts';
 import type { Category, LibraryParameter, LibraryQuery, SortOrder } from '../../types/library.ts';
 import type { AppLocation, PageView } from '../../types/route.ts';
 import { createGameList, type GameList } from './game-list/game-list.ts';
@@ -18,7 +18,7 @@ import {
   type ParsedLibraryQuery,
   type ResolvedLibraryQuery,
 } from './library-query.ts';
-import { createPagination } from './pagination/pagination.ts';
+import { createPagination, type Pagination } from './pagination/pagination.ts';
 
 export interface LibraryPageOptions {
   // Opens the details of a game (the Details button of its card)
@@ -38,8 +38,6 @@ export function renderLibraryPage(location: AppLocation, options: LibraryPageOpt
   let categories: readonly Category[] | undefined;
   // The state whose games are on the screen or on their way
   let shown: LibraryQuery | undefined;
-
-  const list: GameList = createGameList({ onDetailsClick: options.onGameOpen });
 
   // The state on the screen, or the address's own while the categories load
   const getCurrentQuery = (): LibraryQuery => {
@@ -72,6 +70,18 @@ export function renderLibraryPage(location: AppLocation, options: LibraryPageOpt
       options.onNavigate(corrected, true);
     });
   };
+
+  const list: GameList = createGameList({
+    onDetailsClick: options.onGameOpen,
+    onLoad: (result: GamesPage): void => {
+      pagination.render(result.page, result.totalPages);
+    },
+  });
+  const pagination: Pagination = createPagination({
+    onSelect: (page: number): void => {
+      goTo({ ...getCurrentQuery(), page });
+    },
+  });
 
   // A change of category or sort starts again from the first page
   const filter: CategoryFilter = createCategoryFilter({
@@ -121,7 +131,7 @@ export function renderLibraryPage(location: AppLocation, options: LibraryPageOpt
     elements: [
       createLibraryIntro([filter.element, sortSelect.element]),
       list.element,
-      createPagination(),
+      pagination.element,
     ],
     update: (next: AppLocation): void => {
       address = next.query;
