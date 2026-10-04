@@ -1,4 +1,5 @@
-import { Route } from '../types/route.ts';
+import { AuthMode } from '../types/auth.ts';
+import { DialogParameter, Route, type OpenDialog } from '../types/route.ts';
 
 // Pure helpers between browser addresses and the app's paths. They read
 // nothing from the page, so they work the same everywhere and are easy to test.
@@ -9,6 +10,8 @@ const ROUTES: ReadonlyMap<string, Route> = new Map([
   ['/home', Route.Home],
   ['/library', Route.Library],
 ]);
+
+const AUTH_MODES: ReadonlySet<string> = new Set<string>(Object.values(AuthMode));
 
 function trimTrailingSlashes(path: string): string {
   return path.replace(/\/+$/, '');
@@ -44,4 +47,43 @@ export function parseRoute(path: string): Route | undefined {
 // old link or bookmark like that is read from there
 export function fromLegacyHash(hash: string): string | undefined {
   return hash.startsWith('#/') ? hash.slice(1) : undefined;
+}
+
+function isAuthMode(value: string): value is AuthMode {
+  return AUTH_MODES.has(value);
+}
+
+// The dialog an address opens over its page. One dialog opens at a time: a
+// game wins over the auth dialog, which also needs a mode it has.
+export function parseDialog(query: URLSearchParams): OpenDialog | undefined {
+  const slug: string = query.get(DialogParameter.Game) ?? '';
+  if (slug !== '') {
+    return { parameter: DialogParameter.Game, slug };
+  }
+  const mode: string = query.get(DialogParameter.Auth) ?? '';
+
+  return isAuthMode(mode) ? { parameter: DialogParameter.Auth, mode } : undefined;
+}
+
+// The query without the dialog parameters that open nothing, such as an
+// unknown auth mode or an auth mode next to a game. Undefined when every
+// dialog parameter of the query is in use.
+export function removeUnusedDialogParameters(
+  query: URLSearchParams,
+  dialog: OpenDialog | undefined,
+): URLSearchParams | undefined {
+  const unused: DialogParameter[] = Object.values(DialogParameter).filter(
+    (parameter: DialogParameter): boolean =>
+      query.has(parameter) && parameter !== dialog?.parameter,
+  );
+  if (unused.length === 0) {
+    return undefined;
+  }
+
+  const corrected: URLSearchParams = new URLSearchParams(query);
+  for (const parameter of unused) {
+    corrected.delete(parameter);
+  }
+
+  return corrected;
 }
