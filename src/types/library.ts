@@ -22,6 +22,16 @@ export interface SortOption {
   readonly spokenLabel: string;
 }
 
+// The state of the Library that lives in the address and in the request for
+// its games
+export interface LibraryQuery {
+  // The slug of a category; "all" means every game
+  readonly category: string;
+  readonly sort: SortOrder;
+  // The page of the list, counted from 1
+  readonly page: number;
+}
+
 export interface LibraryContent {
   readonly title: string;
   readonly description: string;
