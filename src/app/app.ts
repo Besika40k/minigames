@@ -47,7 +47,8 @@ export function startApp(): void {
     {
       path: Route.Library,
       title: PAGE_TITLES.library,
-      render: (): PageView => ({ elements: renderLibraryPage({ onGameOpen: gameDetails.open }) }),
+      render: (location: AppLocation): PageView =>
+        renderLibraryPage(location, { onGameOpen: gameDetails.open }),
     },
   ];
   const notFound: PageDefinition = {

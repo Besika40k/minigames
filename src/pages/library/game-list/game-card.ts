@@ -1,8 +1,7 @@
 import { createButton } from '../../../components/button/button.ts';
 import { FREE_PRICE } from '../../../data/games.ts';
-import { CATEGORIES, LIBRARY_CONTENT } from '../../../data/library.ts';
+import { LIBRARY_CONTENT } from '../../../data/library.ts';
 import { ButtonSize, ButtonVariant } from '../../../types/button.ts';
-import type { Category } from '../../../types/library.ts';
 import type { Game } from '../../../types/game.ts';
 import { createElement } from '../../../utils/create-element.ts';
 import { createIcon, IconName } from '../../../utils/create-icon.ts';
@@ -20,12 +19,10 @@ function createHiddenText(text: string): HTMLSpanElement {
   return createElement('span', { className: 'game-card__hidden', text });
 }
 
+// The API labels a category by its slug with a capital first letter
+// ("puzzle" is "Puzzle"), so the tag needs no list of categories
 function getCategoryLabel(slug: string): string {
-  const category: Category | undefined = CATEGORIES.find(
-    (candidate: Category): boolean => candidate.slug === slug,
-  );
-
-  return category?.label ?? slug;
+  return `${slug.charAt(0).toUpperCase()}${slug.slice(1)}`;
 }
 
 function createStats(game: Game): HTMLParagraphElement {
