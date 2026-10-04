@@ -58,6 +58,14 @@ function createItems(items: readonly HTMLLIElement[], isSkeleton: boolean): HTML
   });
 }
 
+function createSkeletonItems(): readonly Node[] {
+  const items: HTMLLIElement[] = Array.from({ length: SKELETON_CARDS }, (): HTMLLIElement =>
+    createSkeletonCard(),
+  );
+
+  return [createItems(items, true)];
+}
+
 function createNotFound(): HTMLElement {
   return createEmptyState({
     title: LIBRARY_CONTENT.notFoundTitle,
@@ -83,13 +91,7 @@ export function createGameList(options: GameListOptions = {}): GameList {
     container: content,
     messages: LIBRARY_CONTENT.gamesMessages,
     load: (signal: AbortSignal): Promise<GamesPage> => fetchGames(query, signal),
-    renderSkeleton: (): readonly Node[] => {
-      const items: HTMLLIElement[] = Array.from({ length: SKELETON_CARDS }, (): HTMLLIElement =>
-        createSkeletonCard(),
-      );
-
-      return [createItems(items, true)];
-    },
+    renderSkeleton: createSkeletonItems,
     renderData: (page: GamesPage): readonly Node[] => {
       const items: HTMLLIElement[] = page.games.map((game: Game): HTMLLIElement =>
         createElement('li', {
@@ -103,6 +105,10 @@ export function createGameList(options: GameListOptions = {}): GameList {
     isEmpty: (page: GamesPage): boolean => page.games.length === 0,
     renderEmpty: (): readonly Node[] => [createNotFound()],
   });
+
+  // Until the page knows which games to ask for, the list shows its skeleton
+  content.setAttribute('aria-busy', 'true');
+  content.replaceChildren(...createSkeletonItems());
 
   const inner: HTMLDivElement = createElement('div', {
     className: 'game-list__inner',

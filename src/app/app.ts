@@ -48,7 +48,12 @@ export function startApp(): void {
       path: Route.Library,
       title: PAGE_TITLES.library,
       render: (location: AppLocation): PageView =>
-        renderLibraryPage(location, { onGameOpen: gameDetails.open }),
+        renderLibraryPage(location, {
+          onGameOpen: gameDetails.open,
+          onNavigate: (query: URLSearchParams, isReplace: boolean): void => {
+            router.navigate({ query }, { isReplace });
+          },
+        }),
     },
   ];
   const notFound: PageDefinition = {

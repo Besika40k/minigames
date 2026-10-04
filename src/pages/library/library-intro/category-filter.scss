@@ -5,6 +5,16 @@
 // that room back, so the chips stay where the mockup has them.
 $focus-room: get-size(1);
 
+// A loading chip is as high as a real one: a line of its text and the
+// vertical padding of a small button
+$skeleton-chip-height: calc(1lh + #{2 * get-size(1)});
+
+// The chips, the skeleton or the error banner take the place of this area in
+// the row of the controls, as if it were not there
+.category-filter__area {
+  display: contents;
+}
+
 .category-filter {
   display: flex;
   gap: get-size(2);
@@ -61,4 +71,21 @@ $focus-room: get-size(1);
   @include media-down(mobile) {
     font-size: get-font-size(label-medium);
   }
+}
+
+// ---------- Loading ----------
+.category-filter__skeleton {
+  width: get-size(10);
+  height: $skeleton-chip-height;
+  border-radius: get-radius(full);
+  font-size: get-font-size(label-large);
+
+  @include media-down(mobile) {
+    font-size: get-font-size(label-medium);
+  }
+}
+
+.category-filter__note {
+  color: get-color(on-bg-low);
+  font-size: get-font-size(label-large);
 }

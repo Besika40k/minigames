@@ -1,6 +1,6 @@
 import {
+  LibraryParameter,
   SortOrder,
-  type Category,
   type LibraryContent,
   type PaginationContent,
   type SortOption,
@@ -24,22 +24,22 @@ export const LIBRARY_CONTENT: LibraryContent = {
   notFoundTitle: 'Data Not Found',
   notFoundMessage: 'No games match this choice yet. Try another category or see them all.',
   showAllText: 'Show all games',
+  categoriesMessages: {
+    errorTitle: "Couldn't load the categories",
+    successMessage: 'The categories are loaded',
+  },
+  noCategoriesText: 'No categories yet',
+  invalidParameterMessages: {
+    [LibraryParameter.Category]:
+      'The address named an unknown category, so the default one is shown.',
+    [LibraryParameter.Sort]:
+      'The address named an unknown sort order, so the games are sorted by rating.',
+    [LibraryParameter.Page]: 'The address named an invalid page, so the first page is shown.',
+  },
 };
 
-// The categories of the course's mock data (`categories.json`), in the order of
-// the mockup. Picking one only marks it: filtering comes in a later story.
-export const CATEGORIES: readonly Category[] = [
-  { slug: 'all', label: 'All Games', isDefault: true },
-  { slug: 'puzzle', label: 'Puzzle', isDefault: false },
-  { slug: 'card', label: 'Card', isDefault: false },
-  { slug: 'match', label: 'Match', isDefault: false },
-  { slug: 'farm', label: 'Farm', isDefault: false },
-  { slug: 'strategy', label: 'Strategy', isDefault: false },
-  { slug: 'arcade', label: 'Arcade', isDefault: false },
-];
-
-// The options of the style guide's sort menu. Picking one only shows it in the
-// control: sorting comes in a later story.
+// The options of the style guide's sort menu, in its order. The API sorts the
+// games by the picked one.
 export const SORT_OPTIONS: readonly SortOption[] = [
   { order: SortOrder.RatingAscending, label: 'Rating ↑', spokenLabel: 'Rating, lowest first' },
   { order: SortOrder.RatingDescending, label: 'Rating ↓', spokenLabel: 'Rating, highest first' },
