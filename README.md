@@ -1,12 +1,14 @@
 # MiniGames
 
-MiniGames is a single-page web app for browsing and playing small browser games. The Home page features a slider of featured games, a leaderboard of top players, and a section inviting game developers to publish their games. The Library page lists the games with category filters, sorting and pagination, and the details of a game open in a dialog. Users can sign in or register through an auth dialog.
+MiniGames is a single-page web app for browsing and playing small browser games. The Home page features a slider of featured games, a leaderboard of top players, and a section inviting game developers to publish their games. The Library page lists the games with category filters, sorting and pagination, and the details of a game open in a dialog with its top records and latest comments. Users can sign in or register through an auth dialog.
+
+The games, the categories, the leaderboard and the comments come from the course's REST API. Every page, Library filter and open dialog is kept in the URL, so any screen can be bookmarked, shared and reached again with Back and Forward.
 
 The layout is responsive and follows the Figma design at three breakpoints: 375px, 768px and 1920px.
 
 ## Tech stack
 
-- TypeScript (strict mode), no frameworks
+- TypeScript (strict mode), no frameworks and no runtime dependencies
 - Vite
 - Sass (SCSS)
 - ESLint (typescript-eslint, Unicorn) and Prettier
@@ -125,39 +127,39 @@ Snackbars (`src/components/snackbar`) tell what happened: an error when a reques
 
 ## Auth dialog
 
-The auth dialog (`src/components/auth-dialog`) is a native `<dialog>` opened with `showModal()`, so the browser centers it, dims the page behind it, traps the focus and returns the focus to the button that opened it. `createAuthDialog()` returns the dialog element and an `open(mode)` function, and `app.ts` passes that function to the header and to the mobile menu: Log In opens the login form and Sign Up the registration form. The mobile menu closes itself before it opens the dialog.
+The auth dialog (`src/components/auth-dialog`) is a native `<dialog>` opened with `showModal()`, so the browser centers it, dims the page behind it, traps the focus and returns the focus to the button that opened it. It follows the `auth` parameter of the URL: Log In in the header or the mobile menu opens `?auth=login`, Sign Up opens `?auth=register`, and a deep link opens the dialog over its page. `createAuthDialog({ onClose, onModeChange })` returns the dialog with `show(mode)` and `hide()`, which `app.ts` calls when the URL changes.
 
-Inside, a tab bar (ARIA tabs, arrow keys move between the tabs) switches between the two forms. The forms cross-fade while the box around them eases to the new height. The dialog closes with Esc or a click on the backdrop, and both the opening and the closing are animated (only a fade when the system asks for reduced motion). The content of the forms lives in `src/data/auth.ts`. Checking the fields and sending them are not implemented yet, so a form only stays on the page when it is submitted.
+Inside, a tab bar (ARIA tabs, arrow keys move between the tabs) switches between the two forms, and each switch replaces the mode in the URL. The forms cross-fade while the box around them eases to the new height. The dialog closes with Esc or a click on the backdrop, which take `auth` out of the URL, and both the opening and the closing are animated (only a fade when the system asks for reduced motion). The content of the forms lives in `src/data/auth.ts`. Checking the fields and sending them come in Story 4, so a form only stays on the page when it is submitted.
 
 ## Home slider
 
-The slider on the Home page (`src/pages/home/games-carousel`) shows the nine featured games (`FEATURED_GAMES` in `src/data/games.ts`) in a loop: the active card in the middle, a near card and a far card on each side, and the other cards hidden off the row. All nine cards stay in the list: the script gives each card a role class and a CSS `order` from its distance to the active card, and CSS transitions slide the cards and change their widths.
+The slider on the Home page (`src/pages/home/games-carousel`) shows the featured games of the API (nine at the moment) in a loop: the active card in the middle, a near card and a far card on each side, and the other cards hidden off the row. All the cards stay in the list: the script gives each card a role class and a CSS `order` from its distance to the active card, and CSS transitions slide the cards and change their widths. The arrows stay disabled until the games are there.
 
-- The arrows move one card back or forward. The slider also moves forward by itself every four seconds (`AutoplayTimer`, `src/utils/autoplay-timer.ts`), and a manual step starts a new countdown.
+- The arrows move one card back or forward. With more than one game, the slider also moves forward by itself every four seconds (`AutoplayTimer`, `src/utils/autoplay-timer.ts`), and a manual step starts a new countdown.
 - A swipe, by touch or with a mouse drag (`carousel-swipe.ts`), moves one card. Holding the slider pauses the countdown, and the slider also waits while the browser tab is hidden.
-- A click on a card opens the game in the details dialog. A card 288px wide or wider shows its title, rating and likes, a narrower card shows only its photo, and the text of a narrow card stays in the page for screen readers.
+- A click on a card opens the game in the details dialog (`?game=<slug>`). A card 288px wide or wider shows its title, rating and likes, a narrower card shows only its photo, and the text of a narrow card stays in the page for screen readers.
 
 ## Library page
 
 The Library page (`src/pages/library`) has three sections:
 
-- The title with the category chips and the sort control. One chip is pressed at a time (`aria-pressed`); the row of chips never wraps, and the chips that do not fit can be swiped into view, or dragged with a mouse. The sort control opens a list of orders that follows the ARIA listbox pattern: the arrow keys, Home and End move through it, Enter or Space picks an order and Esc closes it.
-- The game cards (`src/data/games.ts`). Each list item is a CSS container, so a card lays itself out by its own width: the photo sits beside the text while the card is at least 688px wide, and above it on narrower cards. Details opens the game in the details dialog.
-- The pagination, with the previous and next arrows and a window of page buttons around the current page.
+- The title with the category chips and the sort control. The chips come from the API, and the chip of the URL's category is pressed (`aria-pressed`); the row of chips never wraps, and the chips that do not fit can be swiped into view, or dragged with a mouse. The sort control opens a list of orders that follows the ARIA listbox pattern: the arrow keys, Home and End move through it, Enter or Space picks an order and Esc closes it.
+- The game cards, six per page, loaded for the URL's category, sort and page. Each list item is a CSS container, so a card lays itself out by its own width: the photo sits beside the text while the card is at least 688px wide, and above it on narrower cards. Details opens the game in the details dialog.
+- The pagination for the number of pages the API reports, with the previous and next arrows and a window of four page buttons around the current page (three on mobile). A page button scrolls the top of the list into view.
 
-The chips, the sort order and the pagination change only their own state for now: the list of cards stays the same.
+The Library's state lives in the URL (see [Router and URL](#router-and-url)): `library-query.ts` reads and corrects it, and `library-page.ts` loads the categories first, so that an unknown category can be corrected, and then the games.
 
 ## Game details dialog
 
-The game details dialog (`src/components/game-details-dialog`) opens from the Details button of a Library card and from a click on a slider card. Like the auth dialog, it is a native `<dialog>` opened with `showModal()` and animated with the `animated-dialog` mixin. It closes with its close button, with Esc and with a click on the backdrop (`enableDialogDismiss` in `src/utils/dismiss-dialog.ts`, shared with the auth dialog), and the page behind it does not scroll while it is open.
+The game details dialog (`src/components/game-details-dialog`) opens for the `game` parameter of the URL: from the Details button of a Library card, a click on a slider card, or a deep link. Like the auth dialog, it is a native `<dialog>` opened with `showModal()` and animated with the `animated-dialog` mixin. It closes with its close button, with Esc and with a click on the backdrop (`enableDialogDismiss` in `src/utils/dismiss-dialog.ts`, shared with the auth dialog), which take `game` out of the URL, and the page behind it does not scroll while it is open.
 
-Every card opens the same static game for now (`src/data/game-details.ts`, shaped like the course's mock data). Under the hero picture come the game info (title, rating and likes, description, the four spec boxes, Play Now and Add to Favorites), the top records and the comments:
+The game is loaded by its slug. Under the hero picture come the game info (title, rating and likes, description, the four spec boxes, Play Now, or Buy Now with the price of a paid game, and Add to Favorites) and the top records. The comments load next to the game, with states of their own: the three newest comments with times such as "5 min ago" (`src/utils/format-relative-time.ts`), and the total number of comments in the heading. An unknown slug shows the "Game Not Found" state with a Close button.
 
 - Add to Favorites switches between its two states, and its text says what a click will do.
-- The comment textarea grows with its text from 48px to 88px and scrolls after that (CSS `field-sizing: content`). The send button is disabled while the text is empty, and sending is not implemented yet.
+- The comment textarea grows with its text from 48px to 88px and scrolls after that (CSS `field-sizing: content`). The send button is disabled while the text is empty.
 - Each like button toggles on its own and changes its count by one.
 
-Nothing is saved yet, so every opening puts the dialog back to its first state and scrolls it to the top.
+Posting a comment and liking need an account, which comes in Story 4, so nothing is sent to the API yet: every opening loads the game again and scrolls the dialog to the top.
 
 ## Styling
 
