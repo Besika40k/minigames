@@ -209,3 +209,17 @@ $avatar-count: list.length($avatar-colors);
     color: get-color(like);
   }
 }
+
+// ---------- Loading and empty ----------
+// A loading comment is about as high as a comment of two lines
+$skeleton-comment-height: get-size(13);
+
+.game-details__skeleton-comment {
+  height: $skeleton-comment-height;
+  border-radius: get-radius(medium);
+}
+
+.game-details__comments-area > .empty-state,
+.game-details__comments-area > .error-banner {
+  margin-block-start: get-size(2);
+}

@@ -80,6 +80,10 @@ export interface GameDetailsContent {
   readonly notFoundTitle: string;
   readonly notFoundMessageStart: string;
   readonly notFoundMessageEnd: string;
+  readonly commentsMessages: LoadMessages;
+  // The placeholder of a game without comments
+  readonly noCommentsTitle: string;
+  readonly noCommentsMessage: string;
 }
 
 // A part of the dialog. `reset` puts it back the way it looks when the dialog
@@ -87,6 +91,15 @@ export interface GameDetailsContent {
 export interface GameDetailsSection {
   readonly element: HTMLElement;
   readonly reset: () => void;
+}
+
+// The comments part of the dialog, loaded for one game at a time
+export interface GameCommentsSection {
+  readonly element: HTMLElement;
+  // Loads the comments of a game, and empties the comment form
+  readonly show: (slug: string) => void;
+  // Cancels the request when the dialog closes
+  readonly abort: () => void;
 }
 
 export interface GameDetailsDialog {

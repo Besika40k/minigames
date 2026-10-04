@@ -1,17 +1,24 @@
+import { fetchGameComments } from '../../api/comments-api.ts';
 import { GAME_DETAILS_CONTENT } from '../../data/game-details.ts';
-import type { GameComment, GameDetailsSection } from '../../types/game-details.ts';
+import type {
+  GameComment,
+  GameCommentsPage,
+  GameCommentsSection,
+  GameDetailsSection,
+} from '../../types/game-details.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { createIcon, IconName } from '../../utils/create-icon.ts';
 import { formatRelativeTime } from '../../utils/format-relative-time.ts';
+import { createAsyncArea, type AsyncArea } from '../feedback/async-area.ts';
+import { createEmptyState } from '../feedback/empty-state.ts';
+import { createSkeleton } from '../skeleton/skeleton.ts';
 import './game-details-comments.scss';
 
 const TITLE_ID = 'game-details-comments-title';
 const INPUT_ID = 'game-details-comment-input';
 
-interface CommentEntry {
-  readonly item: HTMLLIElement;
-  readonly likeButton: GameDetailsSection;
-}
+// The API sends at most three comments, and the skeleton holds their place
+const SKELETON_COMMENTS = 3;
 
 // A round avatar with the first letter of a name. It is decoration: the name
 // is written next to it.
@@ -152,38 +159,81 @@ function createCommentForm(): GameDetailsSection {
   return { element, reset };
 }
 
-// The comments of the game: the form for a new one and the list. The likes
-// and the text in the form go back to how they were whenever the dialog opens.
-export function createGameDetailsComments(comments: readonly GameComment[]): GameDetailsSection {
+function createSkeletonList(): HTMLElement {
+  return createElement('div', {
+    className: 'game-details__comments-list',
+    children: Array.from({ length: SKELETON_COMMENTS }, (): HTMLSpanElement =>
+      createSkeleton('game-details__skeleton-comment'),
+    ),
+  });
+}
+
+function createCommentList(comments: readonly GameComment[]): HTMLUListElement {
+  return createElement('ul', {
+    className: 'game-details__comments-list',
+    children: comments.map((comment: GameComment): HTMLLIElement =>
+      createComment(comment, createLikeButton(comment).element),
+    ),
+  });
+}
+
+// The comments of a game: the form for a new one, and the latest comments
+// from the API with the total count in the heading. Every game starts with an
+// empty form and the likes as the API sends them.
+export function createGameDetailsComments(): GameCommentsSection {
+  // The slug whose comments are on the screen or on their way
+  let slug: string = '';
+
   const form: GameDetailsSection = createCommentForm();
-  const entries: CommentEntry[] = comments.map((comment: GameComment): CommentEntry => {
-    const likeButton: GameDetailsSection = createLikeButton(comment);
-    return { item: createComment(comment, likeButton.element), likeButton };
+  const title: HTMLHeadingElement = createElement('h3', {
+    className: 'game-details__subtitle',
+    text: GAME_DETAILS_CONTENT.commentsTitle,
+    attributes: { id: TITLE_ID },
+  });
+  // The heading counts every comment of the game, not only the shown ones
+  const showCount = (page: GameCommentsPage): void => {
+    title.textContent = `${GAME_DETAILS_CONTENT.commentsTitle} (${String(page.totalComments)})`;
+  };
+
+  // The comments, or their skeleton, the error banner or the empty placeholder
+  const list: HTMLDivElement = createElement('div', { className: 'game-details__comments-area' });
+
+  const area: AsyncArea = createAsyncArea({
+    container: list,
+    messages: GAME_DETAILS_CONTENT.commentsMessages,
+    load: (signal: AbortSignal): Promise<GameCommentsPage> => fetchGameComments(slug, signal),
+    renderSkeleton: (): readonly Node[] => {
+      title.textContent = GAME_DETAILS_CONTENT.commentsTitle;
+      return [createSkeletonList()];
+    },
+    renderData: (page: GameCommentsPage): readonly Node[] => [createCommentList(page.comments)],
+    isEmpty: (page: GameCommentsPage): boolean => page.comments.length === 0,
+    renderEmpty: (): readonly Node[] => [
+      createEmptyState({
+        title: GAME_DETAILS_CONTENT.noCommentsTitle,
+        message: GAME_DETAILS_CONTENT.noCommentsMessage,
+      }),
+    ],
+    // An unknown game hides the whole section (see the dialog)
+    renderNotFound: (): readonly Node[] => [],
+    onLoad: showCount,
   });
 
   const element: HTMLElement = createElement('section', {
     className: 'game-details__comments',
     attributes: { 'aria-labelledby': TITLE_ID },
-    children: [
-      createElement('h3', {
-        className: 'game-details__subtitle',
-        text: `${GAME_DETAILS_CONTENT.commentsTitle} (${String(comments.length)})`,
-        attributes: { id: TITLE_ID },
-      }),
-      form.element,
-      createElement('ul', {
-        className: 'game-details__comments-list',
-        children: entries.map((entry: CommentEntry): HTMLLIElement => entry.item),
-      }),
-    ],
+    children: [title, form.element, list],
   });
 
-  const reset = (): void => {
-    form.reset();
-    for (const entry of entries) {
-      entry.likeButton.reset();
-    }
+  return {
+    element,
+    show: (nextSlug: string): void => {
+      slug = nextSlug;
+      form.reset();
+      area.reload();
+    },
+    abort: (): void => {
+      area.abort();
+    },
   };
-
-  return { element, reset };
 }
