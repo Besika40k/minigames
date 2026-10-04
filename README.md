@@ -46,13 +46,14 @@ npm run dev
 ```text
 src/
 ├── main.ts            # entry point
-├── app/               # app bootstrap and SPA router
-├── components/        # UI reused across pages (button, logo, header, burger menu, footer, section title, auth dialog, game details dialog)
+├── app/               # app bootstrap, the History API router and the URL helpers
+├── api/               # the REST API client: requests, answer checks and errors
+├── components/        # UI reused across pages (button, logo, header, burger menu, footer, section title, auth dialog, game details dialog, skeleton, snackbar, and the loading, error and empty states)
 ├── pages/             # one folder per page, each section in its own subfolder
 │   ├── home/          # hero, games slider, leaderboard, game developers section
-│   ├── library/       # title with filters and sorting, game cards, pagination
-│   └── not-found/     # the page for an unknown address
-├── data/              # static data (navigation links, footer content, library categories and sort orders, mock games, game details, leaderboard)
+│   ├── library/       # title with filters and sorting, game cards, pagination, the Library's URL state
+│   └── not-found/     # the 404 page for an unknown address
+├── data/              # static content (navigation links, footer content, the texts and messages of every section)
 ├── types/             # shared interfaces and enums
 ├── utils/             # DOM, navigation, dialog, timer and formatting helpers
 ├── assets/            # fonts, icons, images
@@ -60,6 +61,8 @@ src/
     ├── main.scss      # global styles entry point
     ├── abstracts/     # tokens, functions, mixins (no CSS output)
     └── base/          # global element styles and typography
+public/
+└── assets/images/games/  # the course's game pictures, at the paths the API names them by
 ```
 
 Each component and page section keeps its TypeScript and SCSS files together in one folder.
@@ -91,6 +94,34 @@ The URL is the single source of truth. A click on a chip, a sort option, a page 
 The URL helpers (`src/app/url.ts`, `src/pages/library/library-query.ts`) are pure functions without DOM access, ready for unit tests.
 
 To add a page, add a value to the `Route` enum (`src/types/route.ts`) and its path to `ROUTES` in `src/app/url.ts`, write a function that returns the page's `PageView`, and register it in `src/app/app.ts`.
+
+## API
+
+The data comes from the course's REST API: the base URL is in `src/api/api-config.ts`, and the endpoints are described at <https://faxb76kxra.execute-api.eu-central-1.amazonaws.com/docs>. Each kind of data has its own module in `src/api/`:
+
+| Request                                          | Module               | Used by                      |
+| ------------------------------------------------ | -------------------- | ---------------------------- |
+| `GET /games?featured=true`                       | `games-api.ts`       | Home slider                  |
+| `GET /leaderboard`                               | `leaderboard-api.ts` | Home leaderboard             |
+| `GET /categories`                                | `categories-api.ts`  | Library category chips       |
+| `GET /games?category=&sort=&page=&limit=6`       | `games-api.ts`       | Library cards and pagination |
+| `GET /games/{slug}`                              | `games-api.ts`       | Game Details                 |
+| `GET /games/{slug}/comments?limit=3&sort=newest` | `comments-api.ts`    | The comments of Game Details |
+
+- `getJson` (`http-client.ts`) sends every request with the caller's `AbortSignal` and a 15-second timeout. Every failure becomes an `ApiError` of one kind: no connection, a bad request (400), not found (404), too many requests (429), a server error, or an answer of the wrong shape. Its message is the API's own `{ "error": "..." }` text when there is one.
+- Answers are read as `unknown` and checked with type guards (`guards.ts`, `response.ts`) before they become the app's types, so an unexpected answer is shown as an error instead of breaking the page.
+- Filtering, sorting and paging happen on the server only: the app sends the values of the URL as request parameters and draws what comes back.
+- The API names its pictures by paths such as `/assets/images/games/palia-card.jpg` but does not serve them, so the 48 pictures of the course are in `public/assets/images/games/`. `resolveAssetUrl` puts the app's base path in front of them.
+
+## Loading, error and empty states
+
+Every area that loads data (the slider, the leaderboard, the category chips, the game cards, the game details and the comments) is an `AsyncArea` (`src/components/feedback/async-area.ts`):
+
+- While its request is on the way, the area shows a skeleton in the shape of its content (`src/components/skeleton`) and has `aria-busy="true"`. The skeleton shimmers, or only pulses when the system asks for reduced motion.
+- A failure shows an error banner with a Retry button in place of the content (`error-banner.ts`), and an empty answer shows a placeholder with a way on, such as "Show all games" (`empty-state.ts`).
+- Only the latest request may draw: a new request cancels the one before it with an `AbortController`, so a late answer never replaces a newer one, and a page cancels its requests when it closes.
+
+Snackbars (`src/components/snackbar`) tell what happened: an error when a request fails, a success after a Retry, and a warning for a corrected URL, a rate limit or an unknown game. They appear near the top of the screen and never block the page. A message closes by itself after 5 seconds (the time stops while the pointer or the focus is on it) or with its close button. At most three are shown, the same message is shown once, and while a modal dialog is open they appear inside it, where they can be seen and closed.
 
 ## Auth dialog
 
