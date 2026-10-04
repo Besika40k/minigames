@@ -20,7 +20,7 @@ export interface LeaderboardColumnContent {
   readonly label: ResponsiveText;
 }
 
-// One row of the table, with the field names of the course's mock dataset
+// One row of the table, with the field names of the API (`GET /api/leaderboard`)
 export interface LeaderboardEntry {
   readonly rank: number;
   readonly playerName: string;
