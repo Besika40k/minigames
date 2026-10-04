@@ -9,11 +9,12 @@ $text-line-height: 1.4;
 $close-icon-size: 12px;
 $close-hover-opacity: 0.15;
 
-// The region sits at the bottom of the screen. Its empty parts let clicks
-// through to the page.
+// The region sits near the top of the screen, under the close button of a
+// dialog: at the bottom it would cover the last controls of a scrolled page or
+// dialog, such as a Retry button. Its empty parts let clicks through.
 .snackbars {
   position: fixed;
-  inset: auto 0 get-size(3);
+  inset: get-size(9) 0 auto;
   z-index: $region-layer;
   display: flex;
   flex-direction: column;
@@ -21,13 +22,9 @@ $close-hover-opacity: 0.15;
   gap: get-size(1);
   padding-inline: get-size(2);
   pointer-events: none;
-
-  @include media-down(mobile) {
-    inset-block-end: get-size(2);
-  }
 }
 
-// A new message rises and fades in; with reduced motion it only fades
+// A new message slides down and fades in; with reduced motion it only fades
 .snackbar {
   display: flex;
   align-items: center;
@@ -46,7 +43,7 @@ $close-hover-opacity: 0.15;
     transform get-duration(medium);
 
   @starting-style {
-    transform: translateY(get-size(2));
+    transform: translateY(-(get-size(2)));
     opacity: 0;
   }
 
