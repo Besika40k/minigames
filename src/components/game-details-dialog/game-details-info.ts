@@ -1,3 +1,4 @@
+import { FREE_PRICE } from '../../data/games.ts';
 import { GAME_DETAILS_CONTENT } from '../../data/game-details.ts';
 import { ButtonSize, ButtonVariant } from '../../types/button.ts';
 import type { GameDetails, GameDetailsSection, GameSpecs } from '../../types/game-details.ts';
@@ -38,6 +39,13 @@ function createStats(game: GameDetails): HTMLParagraphElement {
   return createElement('p', { className: 'game-details__stats', children: [rating, likes] });
 }
 
+// A free game is played at once; any other one is bought first, for its price
+function getPlayText(price: string): string {
+  return price === FREE_PRICE
+    ? GAME_DETAILS_CONTENT.playLabel
+    : `${GAME_DETAILS_CONTENT.buyLabel}: ${price}`;
+}
+
 // The genre, players, duration and price, as name and value pairs
 function createSpecs(specs: GameSpecs): HTMLDListElement {
   const items: HTMLDivElement[] = SPEC_NAMES.map((name: keyof GameSpecs): HTMLDivElement =>
@@ -56,8 +64,8 @@ function createSpecs(specs: GameSpecs): HTMLDListElement {
   return createElement('dl', { className: 'game-details__specs', children: items });
 }
 
-// The title, rating and likes, description, specs, and the Play Now and
-// Favorites buttons. Play Now does nothing yet. Favorites switches between
+// The title, rating and likes, description, specs, and the Play Now (or Buy
+// Now) and Favorites buttons. Play Now does nothing yet. Favorites switches between
 // adding and removing, and says which one a click will do; on mobile only its
 // heart shows.
 export function createGameDetailsInfo(game: GameDetails, titleId: string): GameDetailsSection {
@@ -88,7 +96,7 @@ export function createGameDetailsInfo(game: GameDetails, titleId: string): GameD
   const playButton: HTMLButtonElement = createButton({
     variant: ButtonVariant.Filled,
     size: ButtonSize.Medium,
-    text: GAME_DETAILS_CONTENT.playLabel,
+    text: getPlayText(game.specs.price),
     className: 'game-details__play',
   });
 
