@@ -176,4 +176,6 @@ A number that no token covers (a size measured from a mockup, a line height the 
 
 The app is deployed to GitHub Pages: <https://besika40k.github.io/minigames/>
 
-Every push to `story-2` runs `.github/workflows/deploy.yml`, which builds the project and publishes the `dist` folder. The workflow builds with `--base` set to the Pages base path (`/minigames/`), so `npm run dev` and a plain `npm run build` keep using `/`.
+Every push to `story-3` runs `.github/workflows/deploy.yml`, which builds the project and publishes the `dist` folder. The workflow builds with `--base` set to the Pages base path (`/minigames/`), so `npm run dev` and a plain `npm run build` keep using `/`. The router and the picture paths read the base from `import.meta.env.BASE_URL`.
+
+GitHub Pages serves only the files it has, so a deep link such as `/minigames/library?category=puzzle` would get its 404 page. The workflow copies `dist/index.html` to `dist/404.html`: Pages then answers every unknown path with the app, and the router shows the page of the path, or the app's own 404 page. The answer's status stays 404, but the browser shows the app as usual.
