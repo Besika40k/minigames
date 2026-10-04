@@ -1,15 +1,8 @@
 import { DEFAULT_SORT_ORDER } from '../../data/library.ts';
-import { SortOrder } from '../../types/library.ts';
+import { LibraryParameter, SortOrder } from '../../types/library.ts';
 
 // Pure helpers between the address and the Library's state. They read nothing
 // from the page, so they are easy to test.
-
-// The keys of the Library's state in the address
-export enum LibraryParameter {
-  Category = 'category',
-  Sort = 'sort',
-  Page = 'page',
-}
 
 export const FIRST_PAGE = 1;
 

@@ -1,7 +1,7 @@
 import type { LoadMessages } from './feedback.ts';
 
-// A category of the filter chips, with the field names of the course's mock
-// data (`categories.json`)
+// A category of the filter chips, with the field names of the API
+// (`GET /api/categories`)
 export interface Category {
   readonly slug: string;
   readonly label: string;
@@ -22,6 +22,13 @@ export interface SortOption {
   readonly label: string;
   // The text read out instead, because screen readers spell the arrows out
   readonly spokenLabel: string;
+}
+
+// The keys of the Library's state in the address
+export enum LibraryParameter {
+  Category = 'category',
+  Sort = 'sort',
+  Page = 'page',
 }
 
 // The state of the Library that lives in the address and in the request for
