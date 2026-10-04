@@ -24,6 +24,8 @@ export const LIBRARY_CONTENT: LibraryContent = {
   notFoundTitle: 'Data Not Found',
   notFoundMessage: 'No games match this choice yet. Try another category or see them all.',
   showAllText: 'Show all games',
+  pastEndMessage: 'This page is past the end of the list.',
+  firstPageText: 'Go to the first page',
   categoriesMessages: {
     errorTitle: "Couldn't load the categories",
     successMessage: 'The categories are loaded',

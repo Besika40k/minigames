@@ -59,6 +59,9 @@ export interface LibraryContent {
   readonly notFoundTitle: string;
   readonly notFoundMessage: string;
   readonly showAllText: string;
+  // The placeholder of a page past the end of the list
+  readonly pastEndMessage: string;
+  readonly firstPageText: string;
   readonly categoriesMessages: LoadMessages;
   readonly noCategoriesText: string;
   // The warning for an address whose value the Library cannot use

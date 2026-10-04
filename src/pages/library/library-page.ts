@@ -76,6 +76,9 @@ export function renderLibraryPage(location: AppLocation, options: LibraryPageOpt
     onLoad: (result: GamesPage): void => {
       pagination.render(result.page, result.totalPages);
     },
+    onFirstPage: (): void => {
+      goTo({ ...getCurrentQuery(), page: FIRST_PAGE });
+    },
   });
   const pagination: Pagination = createPagination({
     onSelect: (page: number): void => {
