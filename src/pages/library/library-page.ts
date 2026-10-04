@@ -38,6 +38,8 @@ export function renderLibraryPage(location: AppLocation, options: LibraryPageOpt
   let categories: readonly Category[] | undefined;
   // The state whose games are on the screen or on their way
   let shown: LibraryQuery | undefined;
+  // The number of pages of the last answer
+  let totalPages: number | undefined;
 
   // The state on the screen, or the address's own while the categories load
   const getCurrentQuery = (): LibraryQuery => {
@@ -71,9 +73,20 @@ export function renderLibraryPage(location: AppLocation, options: LibraryPageOpt
     });
   };
 
+  // After a page change the new cards start at the top of the list, so the list
+  // comes into view when the visitor has scrolled past its top
+  const revealList = (): void => {
+    if (list.element.getBoundingClientRect().top >= 0) {
+      return;
+    }
+    const isReduced: boolean = globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    list.element.scrollIntoView({ block: 'start', behavior: isReduced ? 'instant' : 'smooth' });
+  };
+
   const list: GameList = createGameList({
     onDetailsClick: options.onGameOpen,
     onLoad: (result: GamesPage): void => {
+      totalPages = result.totalPages;
       pagination.render(result.page, result.totalPages);
     },
     onFirstPage: (): void => {
@@ -83,6 +96,7 @@ export function renderLibraryPage(location: AppLocation, options: LibraryPageOpt
   const pagination: Pagination = createPagination({
     onSelect: (page: number): void => {
       goTo({ ...getCurrentQuery(), page });
+      revealList();
     },
   });
 
@@ -123,6 +137,13 @@ export function renderLibraryPage(location: AppLocation, options: LibraryPageOpt
     }
     if (shown !== undefined && isSameQuery(resolved.query, shown)) {
       return;
+    }
+    // Another page of the same list is marked at once; any other change
+    // waits for its answer to know how many pages there are
+    const isSameList: boolean =
+      shown?.category === resolved.query.category && shown.sort === resolved.query.sort;
+    if (isSameList && totalPages !== undefined) {
+      pagination.render(resolved.query.page, totalPages);
     }
     shown = resolved.query;
     list.show(shown);
