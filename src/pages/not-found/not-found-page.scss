@@ -1,0 +1,91 @@
+@use 'abstracts' as *;
+
+// No mockup exists for this page. The 404 is its picture, so it is bigger
+// than any type of the style guide, drawn like the site's buttons: yellow with
+// a navy outline and a hard shadow.
+$code-font-size: 160px;
+$code-font-size-mobile: 96px;
+$code-line-height: 1;
+// The message stays short enough to read in one glance
+$message-max-width: 640px;
+$message-line-height: 1.5;
+
+// The section owns the space above it, and the space above the footer
+.not-found {
+  padding-block: get-size(15);
+
+  @include media-down(laptop) {
+    padding-block: get-size(10);
+  }
+
+  @include media-down(mobile) {
+    padding-block: get-size(6);
+  }
+}
+
+.not-found__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: get-size(3);
+  max-width: get-breakpoint(desktop);
+  margin-inline: auto;
+  padding-inline: get-size(15);
+  text-align: center;
+
+  @include media-down(laptop) {
+    padding-inline: get-size(5);
+  }
+
+  @include media-down(mobile) {
+    gap: get-size(2);
+    padding-inline: get-size(2);
+  }
+}
+
+.not-found__code {
+  color: get-color(primary);
+  font-size: $code-font-size;
+  font-weight: get-font-weight(extra-bold);
+  line-height: $code-line-height;
+  text-shadow: get-shadow(level-2);
+  -webkit-text-stroke: $border-width get-color(on-primary);
+  paint-order: stroke fill;
+
+  @include media-down(mobile) {
+    font-size: $code-font-size-mobile;
+    text-shadow: get-shadow(level-1);
+  }
+}
+
+.not-found__title {
+  color: get-color(on-primary);
+  font-size: get-font-size(display-medium);
+  font-weight: get-font-weight(bold);
+
+  @include media-down(mobile) {
+    font-size: get-font-size(display-small);
+  }
+}
+
+.not-found__message {
+  max-width: $message-max-width;
+  font-size: get-font-size(body-large);
+  line-height: $message-line-height;
+  // A long address breaks anywhere instead of widening the page
+  overflow-wrap: anywhere;
+
+  @include media-down(mobile) {
+    font-size: get-font-size(body-medium);
+  }
+}
+
+.not-found__path {
+  padding-inline: get-size(0.5);
+  border-radius: get-radius(extra-small);
+  background-color: get-color(secondary);
+  color: get-color(tertiary);
+  // The page's own font, so the address is as big as the words around it
+  font-family: inherit;
+  font-weight: get-font-weight(semi-bold);
+}
