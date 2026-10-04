@@ -15,8 +15,15 @@ function isOnBackdrop(dialog: HTMLDialogElement, event: MouseEvent): boolean {
   );
 }
 
-// Lets a modal dialog close with the Esc key and with a click on its backdrop
-export function enableDialogDismiss(dialog: HTMLDialogElement): void {
+// Lets a modal dialog close with the Esc key and with a click on its backdrop.
+// `onDismiss` decides how: a dialog kept in the address closes by changing
+// the address, the others simply close.
+export function enableDialogDismiss(
+  dialog: HTMLDialogElement,
+  onDismiss: () => void = (): void => {
+    dialog.close();
+  },
+): void {
   // Browsers close a modal dialog on Esc by themselves; handling it here as
   // well keeps that requirement visible and independent of the default
   dialog.addEventListener('keydown', (event: KeyboardEvent): void => {
@@ -25,7 +32,14 @@ export function enableDialogDismiss(dialog: HTMLDialogElement): void {
     }
 
     event.preventDefault();
-    dialog.close();
+    onDismiss();
+  });
+
+  // Other ways the browser closes a dialog, such as the Back gesture of a
+  // phone, take the same way
+  dialog.addEventListener('cancel', (event: Event): void => {
+    event.preventDefault();
+    onDismiss();
   });
 
   // The dialog closes when both the press and the click are on the backdrop, so
@@ -36,7 +50,7 @@ export function enableDialogDismiss(dialog: HTMLDialogElement): void {
   });
   dialog.addEventListener('click', (event: MouseEvent): void => {
     if (isPressOnBackdrop && isOnBackdrop(dialog, event)) {
-      dialog.close();
+      onDismiss();
     }
     isPressOnBackdrop = false;
   });
