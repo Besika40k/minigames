@@ -1,5 +1,7 @@
+import { isRecord } from '../api/guards.ts';
 import type {
   AppLocation,
+  HistoryState,
   PageDefinition,
   PageView,
   Route,
@@ -22,6 +24,8 @@ export interface NavigationOptions {
   // Changes the current history entry instead of adding one, so Back skips
   // the change (for example a corrected address)
   readonly isReplace?: boolean;
+  // Kept with a new entry, such as the mark of an entry that opens a dialog
+  readonly state?: HistoryState;
 }
 
 // Called after every change of the address, once the page has caught up
@@ -112,6 +116,11 @@ export class Router {
       this.showPage(location);
     }
 
+    // A page that asked for a new address while it was drawn has already
+    // passed the newer address on
+    if (this.current !== location) {
+      return;
+    }
     for (const listener of this.listeners) {
       listener(location);
     }
@@ -153,6 +162,13 @@ export class Router {
     return this.current;
   }
 
+  // Whether opening a dialog added the current history entry
+  public get isDialogEntry(): boolean {
+    const state: unknown = globalThis.history.state;
+
+    return isRecord(state) && state.isDialogEntry === true;
+  }
+
   public onChange(listener: LocationListener): void {
     this.listeners.push(listener);
   }
@@ -190,8 +206,13 @@ export class Router {
     if (options.isReplace === true) {
       globalThis.history.replaceState(globalThis.history.state, '', url);
     } else {
-      globalThis.history.pushState({}, '', url);
+      globalThis.history.pushState(options.state ?? {}, '', url);
     }
     this.update();
+  }
+
+  // The previous history entry, as the browser's Back button
+  public back(): void {
+    globalThis.history.back();
   }
 }

@@ -12,6 +12,13 @@ export interface AppLocation {
   readonly query: URLSearchParams;
 }
 
+// What the app keeps in a history entry
+export interface HistoryState {
+  // The entry was added by opening a dialog, so closing the dialog can go back
+  // instead of adding one more entry
+  readonly isDialogEntry?: boolean;
+}
+
 // A page on the screen
 export interface PageView {
   readonly elements: readonly HTMLElement[];
