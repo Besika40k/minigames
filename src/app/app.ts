@@ -23,11 +23,15 @@ import { createElement } from '../utils/create-element.ts';
 import { Router } from './router.ts';
 
 export function startApp(): void {
-  const authDialog: AuthDialog = createAuthDialog();
-  const header: Header = createHeader({ onAuthClick: authDialog.open });
+  const authDialog: AuthDialog = createAuthDialog({
+    onClose: (): void => {
+      authDialog.hide();
+    },
+  });
+  const header: Header = createHeader({ onAuthClick: authDialog.show });
   const menu: BurgerMenu = createBurgerMenu({
     trigger: header.menuButton,
-    onAuthClick: authDialog.open,
+    onAuthClick: authDialog.show,
   });
 
   // A dialog kept in the address closes by leaving the history entry that
@@ -95,7 +99,7 @@ export function startApp(): void {
     // The menu and the auth dialog are not in the address, so a new address
     // (for example the browser's Back button) closes them
     menu.element.close();
-    authDialog.element.close();
+    authDialog.hide();
 
     // The game dialog follows the address: open with its game, or closed
     const slug: string = location.query.get(DialogParameter.Game) ?? '';
