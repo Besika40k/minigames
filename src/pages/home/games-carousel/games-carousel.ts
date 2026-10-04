@@ -1,7 +1,7 @@
+import { fetchFeaturedGames } from '../../../api/games-api.ts';
 import { createButton } from '../../../components/button/button.ts';
 import { createSectionTitle } from '../../../components/section-title/section-title.ts';
 import { CAROUSEL_CONTENT } from '../../../data/carousel.ts';
-import { FEATURED_GAMES } from '../../../data/games.ts';
 import { ButtonSize, ButtonVariant } from '../../../types/button.ts';
 import { SlideRole } from '../../../types/carousel.ts';
 import type { Game } from '../../../types/game.ts';
@@ -60,7 +60,7 @@ function createStats(game: Game): HTMLParagraphElement {
 // A card: the photo, the title, rating and likes, and a button over the whole
 // card that opens the game's details. The photo is decoration: the button and
 // the title name the game.
-function createCard(game: Game, position: number, onOpen?: (game: Game) => void): HTMLLIElement {
+function createCard(game: Game, position: string, onOpen?: (game: Game) => void): HTMLLIElement {
   const image: HTMLImageElement = createElement('img', {
     className: 'games-carousel__image',
     attributes: {
@@ -82,10 +82,7 @@ function createCard(game: Game, position: number, onOpen?: (game: Game) => void)
 
   const openButton: HTMLButtonElement = createElement('button', {
     className: 'games-carousel__open',
-    attributes: {
-      type: 'button',
-      'aria-label': `${game.name}, ${position} ${CAROUSEL_CONTENT.positionSeparator} ${FEATURED_GAMES.length}`,
-    },
+    attributes: { type: 'button', 'aria-label': `${game.name}, ${position}` },
   });
   openButton.addEventListener('click', (): void => {
     onOpen?.(game);
@@ -130,16 +127,19 @@ export interface GamesCarouselOptions {
   readonly onGameOpen?: (game: Game) => void;
 }
 
-// The slider of the featured games. Every card stays in the row: the order and
-// width of each one follow its distance from the active card, so the cards
-// slide and grow or shrink with CSS transitions, and a card that goes round the
-// loop does it while it is hidden.
-export function createGamesCarousel(options: GamesCarouselOptions = {}): HTMLElement {
-  let activeIndex = 0;
+export interface GamesCarousel {
+  readonly element: HTMLElement;
+  // Stops the autoplay and the request when the page closes
+  readonly destroy: () => void;
+}
 
-  const cards: HTMLLIElement[] = FEATURED_GAMES.map((game: Game, index: number): HTMLLIElement =>
-    createCard(game, index + 1, options.onGameOpen),
-  );
+// The slider of the featured games, loaded from the API. Every card stays in
+// the row: the order and width of each one follow its distance from the active
+// card, so the cards slide and grow or shrink with CSS transitions, and a card
+// that goes round the loop does it while it is hidden.
+export function createGamesCarousel(options: GamesCarouselOptions = {}): GamesCarousel {
+  let cards: HTMLLIElement[] = [];
+  let activeIndex = 0;
 
   const render = (): void => {
     for (const [index, card] of cards.entries()) {
@@ -153,14 +153,12 @@ export function createGamesCarousel(options: GamesCarouselOptions = {}): HTMLEle
   };
 
   const move = (step: number): void => {
+    if (cards.length === 0) {
+      return;
+    }
     activeIndex = (activeIndex + step + cards.length) % cards.length;
     render();
   };
-
-  const track: HTMLUListElement = createElement('ul', {
-    className: 'games-carousel__track',
-    children: cards,
-  });
 
   const previous: HTMLButtonElement = createArrow(
     ButtonVariant.Outlined,
@@ -173,6 +171,12 @@ export function createGamesCarousel(options: GamesCarouselOptions = {}): HTMLEle
     IconName.ArrowForward,
   );
 
+  // The arrows work only while there are cards to move
+  const enableArrows = (isEnabled: boolean): void => {
+    previous.disabled = !isEnabled;
+    next.disabled = !isEnabled;
+  };
+
   const header: HTMLDivElement = createElement('div', {
     className: 'games-carousel__header',
     children: [
@@ -181,20 +185,18 @@ export function createGamesCarousel(options: GamesCarouselOptions = {}): HTMLEle
     ],
   });
 
+  // The cards of the slider
+  const body: HTMLDivElement = createElement('div', { className: 'games-carousel__body' });
+
   const section: HTMLElement = createElement('section', {
     className: 'games-carousel',
     attributes: { 'aria-labelledby': TITLE_ID, 'aria-roledescription': 'carousel' },
     children: [
-      createElement('div', { className: 'games-carousel__inner', children: [header, track] }),
+      createElement('div', { className: 'games-carousel__inner', children: [header, body] }),
     ],
   });
 
-  // The timer stops for good once the page has left the screen
   const timer: AutoplayTimer = new AutoplayTimer(AUTOPLAY_INTERVAL, (): void => {
-    if (!section.isConnected) {
-      timer.stop();
-      return;
-    }
     move(1);
   });
 
@@ -209,38 +211,84 @@ export function createGamesCarousel(options: GamesCarouselOptions = {}): HTMLEle
     timer.reset();
   });
 
-  // Holding the slider stops the countdown. Letting go without a swipe goes on
-  // with the time that was left; a swipe starts a new countdown.
-  enableSwipe(track, {
-    onPress: (): void => {
-      timer.pause();
-    },
-    onRelease: (direction: SwipeDirection | undefined): void => {
-      if (direction === undefined) {
-        timer.resume();
-        return;
-      }
-      move(direction === SwipeDirection.Next ? 1 : -1);
+  // The slides of the answer. The autoplay starts once they are on the screen.
+  const showSlides = (games: readonly Game[]): readonly Node[] => {
+    cards = games.map((game: Game, index: number): HTMLLIElement =>
+      createCard(
+        game,
+        `${String(index + 1)} ${CAROUSEL_CONTENT.positionSeparator} ${String(games.length)}`,
+        options.onGameOpen,
+      ),
+    );
+    activeIndex = 0;
+
+    const track: HTMLUListElement = createElement('ul', {
+      className: 'games-carousel__track',
+      children: cards,
+    });
+
+    // Holding the slider stops the countdown. Letting go without a swipe goes
+    // on with the time that was left; a swipe starts a new countdown. A single
+    // card has nowhere to go.
+    enableSwipe(track, {
+      onPress: (): void => {
+        timer.pause();
+      },
+      onRelease: (direction: SwipeDirection | undefined): void => {
+        if (cards.length < 2) {
+          return;
+        }
+        if (direction === undefined) {
+          timer.resume();
+          return;
+        }
+        move(direction === SwipeDirection.Next ? 1 : -1);
+        timer.reset();
+      },
+    });
+
+    render();
+    enableArrows(cards.length > 1);
+    if (cards.length > 1) {
       timer.reset();
-    },
-  });
+    }
+
+    return [track];
+  };
+
+  // The arrows wait for the cards
+  enableArrows(false);
+  const controller: AbortController = new AbortController();
+  const loadSlides = async (): Promise<void> => {
+    try {
+      const games: readonly Game[] = await fetchFeaturedGames(controller.signal);
+      body.replaceChildren(...showSlides(games));
+    } catch {
+      // The loading, error and empty states come next. Until then a failed
+      // request leaves the slider without cards.
+      body.replaceChildren();
+    }
+  };
+  void loadSlides();
 
   // A hidden browser tab would pile the steps up, so the slider waits for it
   const onVisibilityChange = (): void => {
-    if (!section.isConnected) {
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      return;
-    }
     if (document.hidden) {
       timer.pause();
       return;
     }
-    timer.resume();
+    if (cards.length > 1) {
+      timer.resume();
+    }
   };
   document.addEventListener('visibilitychange', onVisibilityChange);
 
-  render();
-  timer.reset();
-
-  return section;
+  return {
+    element: section,
+    destroy: (): void => {
+      timer.stop();
+      controller.abort();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    },
+  };
 }

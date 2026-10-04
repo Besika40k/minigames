@@ -1,6 +1,7 @@
 import type { Game } from '../../types/game.ts';
+import type { PageView } from '../../types/route.ts';
 import { createGameDevelopers } from './game-developers/game-developers.ts';
-import { createGamesCarousel } from './games-carousel/games-carousel.ts';
+import { createGamesCarousel, type GamesCarousel } from './games-carousel/games-carousel.ts';
 import { createHero } from './hero/hero.ts';
 import { createLeaderboard } from './leaderboard/leaderboard.ts';
 
@@ -9,11 +10,13 @@ export interface HomePageOptions {
   readonly onGameOpen?: (game: Game) => void;
 }
 
-export function renderHomePage(options: HomePageOptions = {}): readonly HTMLElement[] {
-  return [
-    createHero(),
-    createGamesCarousel({ onGameOpen: options.onGameOpen }),
-    createLeaderboard(),
-    createGameDevelopers(),
-  ];
+export function renderHomePage(options: HomePageOptions = {}): PageView {
+  const carousel: GamesCarousel = createGamesCarousel({ onGameOpen: options.onGameOpen });
+
+  return {
+    elements: [createHero(), carousel.element, createLeaderboard(), createGameDevelopers()],
+    destroy: (): void => {
+      carousel.destroy();
+    },
+  };
 }

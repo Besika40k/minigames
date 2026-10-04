@@ -42,7 +42,7 @@ export function startApp(): void {
     {
       path: Route.Home,
       title: PAGE_TITLES.home,
-      render: (): PageView => ({ elements: renderHomePage({ onGameOpen: gameDetails.open }) }),
+      render: (): PageView => renderHomePage({ onGameOpen: gameDetails.open }),
     },
     {
       path: Route.Library,
