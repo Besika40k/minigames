@@ -1,3 +1,5 @@
+import type { AuthMode } from './auth.ts';
+
 export enum Route {
   Home = '/',
   Library = '/library',
@@ -15,7 +17,14 @@ export interface AppLocation {
 // The query keys of the dialogs that open over any page
 export enum DialogParameter {
   Game = 'game',
+  Auth = 'auth',
 }
+
+// The dialog an address opens over its page: the game of a slug, or the auth
+// dialog with the form of a mode
+export type OpenDialog =
+  | { readonly parameter: DialogParameter.Game; readonly slug: string }
+  | { readonly parameter: DialogParameter.Auth; readonly mode: AuthMode };
 
 // What the app keeps in a history entry
 export interface HistoryState {
