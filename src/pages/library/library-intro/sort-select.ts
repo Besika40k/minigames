@@ -51,10 +51,22 @@ function getTargetIndex(key: string, current: number, count: number): number | u
   return targets[key];
 }
 
+export interface SortSelectOptions {
+  // Called with the order the visitor picked
+  readonly onSelect: (order: SortOrder) => void;
+}
+
+export interface SortSelect {
+  readonly element: HTMLElement;
+  // Shows the order the address names
+  readonly setSelected: (order: SortOrder) => void;
+}
+
 // A button that shows the chosen sort order and opens the list of orders under
 // it. The list keeps the focus while it is open and points at the highlighted
-// option with aria-activedescendant.
-export function createSortSelect(): HTMLElement {
+// option with aria-activedescendant. The order on the button is the one of the
+// address, so picking one only asks for a new address.
+export function createSortSelect(options: SortSelectOptions): SortSelect {
   const items: OptionItem[] = SORT_OPTIONS.map((option: SortOption): OptionItem =>
     createOptionItem(option),
   );
@@ -121,9 +133,8 @@ export function createSortSelect(): HTMLElement {
   };
 
   const select = (item: OptionItem): void => {
-    selected = item;
-    showSelected();
     close(true);
+    options.onSelect(item.option.order);
   };
 
   trigger.addEventListener('click', (): void => {
@@ -190,5 +201,11 @@ export function createSortSelect(): HTMLElement {
 
   showSelected();
 
-  return createElement('div', { className: 'sort-select', children: [trigger, list] });
+  return {
+    element: createElement('div', { className: 'sort-select', children: [trigger, list] }),
+    setSelected: (order: SortOrder): void => {
+      selected = findItem(items, order);
+      showSelected();
+    },
+  };
 }

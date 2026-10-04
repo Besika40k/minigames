@@ -2,12 +2,12 @@ import { showSnackbar } from '../../components/snackbar/snackbar.ts';
 import { LIBRARY_CONTENT } from '../../data/library.ts';
 import { SnackbarVariant } from '../../types/feedback.ts';
 import type { Game } from '../../types/game.ts';
-import type { Category, LibraryParameter, LibraryQuery } from '../../types/library.ts';
+import type { Category, LibraryParameter, LibraryQuery, SortOrder } from '../../types/library.ts';
 import type { AppLocation, PageView } from '../../types/route.ts';
 import { createGameList, type GameList } from './game-list/game-list.ts';
 import { createCategoryFilter, type CategoryFilter } from './library-intro/category-filter.ts';
 import { createLibraryIntro } from './library-intro/library-intro.ts';
-import { createSortSelect } from './library-intro/sort-select.ts';
+import { createSortSelect, type SortSelect } from './library-intro/sort-select.ts';
 import {
   ALL_CATEGORIES,
   buildLibraryQuery,
@@ -28,10 +28,10 @@ export interface LibraryPageOptions {
   readonly onNavigate: (query: URLSearchParams, isReplace: boolean) => void;
 }
 
-// The Library shows what its address asks for. The chips never change by
-// themselves: a press asks for a new address, and the page follows the
-// address. A click, a deep link and Back/Forward all take this one way, and
-// every change of the list is a new request to the API.
+// The Library shows what its address asks for. The chips and the sort control
+// never change by themselves: a press asks for a new address, and the page
+// follows the address. A click, a deep link and Back/Forward all take this one
+// way, and every change of the list is a new request to the API.
 export function renderLibraryPage(location: AppLocation, options: LibraryPageOptions): PageView {
   let address: URLSearchParams = location.query;
   // The API's categories; an empty list when they could not load
@@ -73,7 +73,7 @@ export function renderLibraryPage(location: AppLocation, options: LibraryPageOpt
     });
   };
 
-  // A change of category starts again from the first page
+  // A change of category or sort starts again from the first page
   const filter: CategoryFilter = createCategoryFilter({
     onSelect: (slug: string): void => {
       goTo({ ...getCurrentQuery(), category: slug, page: FIRST_PAGE });
@@ -87,15 +87,20 @@ export function renderLibraryPage(location: AppLocation, options: LibraryPageOpt
       sync();
     },
   });
-  const sortElement: HTMLElement = createSortSelect();
+  const sortSelect: SortSelect = createSortSelect({
+    onSelect: (order: SortOrder): void => {
+      goTo({ ...getCurrentQuery(), sort: order, page: FIRST_PAGE });
+    },
+  });
 
   // Brings the controls and the list in line with the address. The games wait
   // for the categories, which name the default and tell a wrong category.
   function sync(): void {
+    const parsed: ParsedLibraryQuery = parseLibraryQuery(address);
+    sortSelect.setSelected(parsed.sort);
     if (categories === undefined) {
       return;
     }
-    const parsed: ParsedLibraryQuery = parseLibraryQuery(address);
 
     const resolved: ResolvedLibraryQuery = resolveLibraryQuery(parsed, categories);
     filter.setSelected(resolved.query.category);
@@ -113,7 +118,11 @@ export function renderLibraryPage(location: AppLocation, options: LibraryPageOpt
   sync();
 
   return {
-    elements: [createLibraryIntro([filter.element, sortElement]), list.element, createPagination()],
+    elements: [
+      createLibraryIntro([filter.element, sortSelect.element]),
+      list.element,
+      createPagination(),
+    ],
     update: (next: AppLocation): void => {
       address = next.query;
       sync();
