@@ -10,6 +10,8 @@ export interface AuthSwitcher {
   // Selects the form of a mode. The forms cross-fade unless the dialog is being
   // opened, where the right form has to be there from the first frame.
   readonly select: (mode: AuthMode, isAnimated: boolean) => void;
+  // The mode of the selected form
+  readonly getMode: () => AuthMode;
   readonly focusTab: (mode: AuthMode) => void;
 }
 
@@ -87,7 +89,9 @@ function crossFade(
   return finish;
 }
 
-export function createAuthSwitcher(): AuthSwitcher {
+// `onModeChange` hears of each form the visitor picks, but not of the forms
+// selected with `select`
+export function createAuthSwitcher(onModeChange: (mode: AuthMode) => void): AuthSwitcher {
   let selectedMode: AuthMode = AuthMode.Login;
   let finishChange: (() => void) | undefined;
 
@@ -103,7 +107,7 @@ export function createAuthSwitcher(): AuthSwitcher {
       },
     });
     tab.addEventListener('click', (): void => {
-      select(mode, true);
+      pick(mode);
     });
 
     return tab;
@@ -117,7 +121,7 @@ export function createAuthSwitcher(): AuthSwitcher {
   // The link inside a form switches too, and its own form is gone afterwards,
   // so the focus moves to the tab that stands for the new form
   const switchFromLink = (mode: AuthMode): void => {
-    select(mode, true);
+    pick(mode);
     tabs[mode].focus();
   };
 
@@ -165,6 +169,16 @@ export function createAuthSwitcher(): AuthSwitcher {
     }
   }
 
+  // The visitor picked a form. Picking the form already on the screen changes
+  // nothing.
+  function pick(mode: AuthMode): void {
+    if (mode === selectedMode) {
+      return;
+    }
+    select(mode, true);
+    onModeChange(mode);
+  }
+
   tabList.addEventListener('keydown', (event: KeyboardEvent): void => {
     const target: AuthMode | undefined = getTargetMode(event.key, selectedMode);
     if (target === undefined) {
@@ -172,7 +186,7 @@ export function createAuthSwitcher(): AuthSwitcher {
     }
 
     event.preventDefault();
-    select(target, true);
+    pick(target);
     tabs[target].focus();
   });
 
@@ -182,6 +196,7 @@ export function createAuthSwitcher(): AuthSwitcher {
     tabList,
     panels: container,
     select,
+    getMode: (): AuthMode => selectedMode,
     focusTab: (mode: AuthMode): void => {
       tabs[mode].focus();
     },
