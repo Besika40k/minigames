@@ -14,21 +14,33 @@ export interface ButtonOptions {
   readonly onClick?: () => void;
 }
 
-export function createButton(options: ButtonOptions): HTMLButtonElement {
+export interface ButtonLinkOptions {
+  readonly variant: ButtonVariant;
+  readonly size: ButtonSize;
+  readonly text: string;
+  readonly href: string;
+  readonly className?: string;
+}
+
+function getClassName(variant: ButtonVariant, size: ButtonSize, className?: string): string {
   const classNames: string[] = [
     'button',
-    `button--${options.variant}`,
-    `button--${options.size}`,
-    ...(options.className === undefined ? [] : [options.className]),
+    `button--${variant}`,
+    `button--${size}`,
+    ...(className === undefined ? [] : [className]),
   ];
 
+  return classNames.join(' ');
+}
+
+export function createButton(options: ButtonOptions): HTMLButtonElement {
   const attributes: Record<string, string> = {
     type: options.type ?? 'button',
     ...(options.label !== undefined && { 'aria-label': options.label }),
   };
 
   const button: HTMLButtonElement = createElement('button', {
-    className: classNames.join(' '),
+    className: getClassName(options.variant, options.size, options.className),
     text: options.text,
     attributes,
     children: options.children,
@@ -39,4 +51,14 @@ export function createButton(options: ButtonOptions): HTMLButtonElement {
   }
 
   return button;
+}
+
+// A link that looks like a button: it leads to another page, so it is a real
+// link that also opens in a new tab
+export function createButtonLink(options: ButtonLinkOptions): HTMLAnchorElement {
+  return createElement('a', {
+    className: getClassName(options.variant, options.size, options.className),
+    text: options.text,
+    attributes: { href: options.href },
+  });
 }
