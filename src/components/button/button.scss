@@ -13,6 +13,8 @@ $disabled-opacity: 0.5;
   color: get-color(on-primary);
   font-size: get-font-size(label-large);
   font-weight: get-font-weight(bold);
+  // A link styled as a button has no underline
+  text-decoration: none;
   cursor: pointer;
   transition:
     background-color get-duration(fast),
