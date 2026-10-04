@@ -17,6 +17,13 @@ export const LIBRARY_CONTENT: LibraryContent = {
   categoryLabel: 'Category',
   ratingLabel: 'Rating',
   likesLabel: 'Likes',
+  gamesMessages: {
+    errorTitle: "Couldn't load the games",
+    successMessage: 'The games are loaded',
+  },
+  notFoundTitle: 'Data Not Found',
+  notFoundMessage: 'No games match this choice yet. Try another category or see them all.',
+  showAllText: 'Show all games',
 };
 
 // The categories of the course's mock data (`categories.json`), in the order of
