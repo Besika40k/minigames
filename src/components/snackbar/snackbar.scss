@@ -1,0 +1,112 @@
+@use 'abstracts' as *;
+
+// No mockup exists for the snackbar. The messages follow the site's buttons: a
+// navy frame and a hard shadow, filled with the color of their kind.
+$region-width: 480px;
+// Above the page's own layers, such as the open sort list
+$region-layer: 10;
+$text-line-height: 1.4;
+$close-icon-size: 12px;
+$close-hover-opacity: 0.15;
+
+// The region sits at the bottom of the screen. Its empty parts let clicks
+// through to the page.
+.snackbars {
+  position: fixed;
+  inset: auto 0 get-size(3);
+  z-index: $region-layer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: get-size(1);
+  padding-inline: get-size(2);
+  pointer-events: none;
+
+  @include media-down(mobile) {
+    inset-block-end: get-size(2);
+  }
+}
+
+// A new message rises and fades in; with reduced motion it only fades
+.snackbar {
+  display: flex;
+  align-items: center;
+  gap: get-size(1);
+  width: min(100%, #{$region-width});
+  padding: get-size(1) get-size(1) get-size(1) get-size(2);
+  border: $border-width solid get-color(on-primary);
+  border-radius: get-radius(medium);
+  box-shadow: get-shadow(level-1);
+  color: get-color(white);
+  font-size: get-font-size(body-small);
+  font-weight: get-font-weight(semi-bold);
+  pointer-events: auto;
+  transition:
+    opacity get-duration(medium),
+    transform get-duration(medium);
+
+  @starting-style {
+    transform: translateY(get-size(2));
+    opacity: 0;
+  }
+
+  > svg {
+    flex: none;
+    width: get-size(3);
+    height: get-size(3);
+  }
+
+  @include reduced-motion {
+    @starting-style {
+      transform: none;
+    }
+  }
+}
+
+.snackbar--success {
+  background-color: get-color(success);
+}
+
+.snackbar--error {
+  background-color: get-color(error);
+}
+
+.snackbar--warning {
+  background-color: get-color(primary);
+  color: get-color(on-primary);
+}
+
+.snackbar--info {
+  background-color: get-color(tertiary);
+}
+
+.snackbar__text {
+  flex: 1;
+  line-height: $text-line-height;
+  overflow-wrap: anywhere;
+}
+
+.snackbar__close {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: get-size(4);
+  height: get-size(4);
+  padding: 0;
+  border: 0;
+  border-radius: get-radius(full);
+  background-color: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color get-duration(fast);
+
+  svg {
+    width: $close-icon-size;
+    height: $close-icon-size;
+  }
+
+  @include hover {
+    background-color: rgba(get-color(black), $close-hover-opacity);
+  }
+}
