@@ -66,11 +66,31 @@ Each component and page section keeps its TypeScript and SCSS files together in 
 
 ## Architecture
 
-The app is a single-page application: `index.html` has an empty `body` and one script tag, and every element is created from TypeScript with the typed `createElement` helper (`src/utils/create-element.ts`). Routes live in the URL hash (`#/` for Home, `#/library` for the Library), so the app works on any static host without server rules.
+The app is a single-page application: `index.html` has an empty `body` and one script tag, and every element is created from TypeScript with the typed `createElement` helper (`src/utils/create-element.ts`). The header, the footer and the dialogs are created once, in `src/app/app.ts`.
 
-The header, the footer and the dialogs are created once, in `src/app/app.ts`. When the address changes, the router (`src/app/router.ts`) renders the new page into `main` and scrolls to the top. After every page change, a dialog that was open over the old page closes, and the header and the mobile menu mark the link of the open page with `aria-current="page"` (`src/utils/page-links.ts`), which also styles it. An unknown address shows the not-found page.
+### Router and URL
 
-To add a page, add a value to the `Route` enum (`src/types/route.ts`), write a function that returns the page's elements, and register both in `src/app/app.ts`.
+The router (`src/app/router.ts`) is a small class over the History API, written without a library. Every page has a real path, and the query holds the rest of the state:
+
+| State                           | In the URL                                       | Example                                            |
+| ------------------------------- | ------------------------------------------------ | -------------------------------------------------- |
+| Page                            | `/` or `/home`, `/library`; other paths are 404s | `/library`                                         |
+| Library category, sort and page | `category`, `sort`, `page`                       | `/library?category=puzzle&sort=rating-desc&page=2` |
+| Game Details                    | `game=<slug>`, over any page                     | `/library?category=arcade&page=2&game=palia`       |
+| Auth dialog                     | `auth=login` or `auth=register`, over any page   | `/?auth=login`                                     |
+
+The URL is the single source of truth. A click on a chip, a sort option, a page button, a Details button or Log In only asks the router for a new URL (`router.navigate`). The router then passes the new location to the page and to the dialogs, which draw themselves and send their requests from it. A click, Back and Forward and a deep link all take this one way, so the same URL always shows the same screen.
+
+- A new path renders its page into `main`, sets the tab title and scrolls to the top. A new query of the open page goes to the page's `update`, so the Library loads new games without drawing the page again and without scrolling.
+- Every Library change adds a history entry, so Back steps through them. A new category or sort starts again from page 1.
+- Opening a dialog adds a history entry marked `isDialogEntry`. Closing it (the close button, Esc or the backdrop) goes back to the entry before it or, after a deep link, replaces the URL without the dialog's parameter, so no duplicate entries are left. Back closes an open dialog and Forward opens it again. Switching between the login and the registration form replaces `auth`, so one Back still closes the dialog.
+- Invalid values are corrected with `replaceState`: an unknown category, sort or page falls back to its default with a warning snackbar, an unknown `auth` mode is dropped, and when both `game` and `auth` are present the game wins. A page past the last one keeps its URL and shows the "Data Not Found" banner, and an unknown game opens the dialog in its "Game Not Found" state.
+- Plain left clicks on links of the app are opened by the router. Clicks with Ctrl, Shift or Meta, links with a `target`, and other sites are left to the browser, and every link has a real `href` (`getRouteHref`), so "Open in new tab" works too. An old Story 2 link (`#/library`) moves to its path.
+- The header and the mobile menu mark the link of the open page with `aria-current="page"` (`src/utils/page-links.ts`), which also styles it, and the mobile menu closes on every new URL.
+
+The URL helpers (`src/app/url.ts`, `src/pages/library/library-query.ts`) are pure functions without DOM access, ready for unit tests.
+
+To add a page, add a value to the `Route` enum (`src/types/route.ts`) and its path to `ROUTES` in `src/app/url.ts`, write a function that returns the page's `PageView`, and register it in `src/app/app.ts`.
 
 ## Auth dialog
 
