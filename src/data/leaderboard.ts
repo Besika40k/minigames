@@ -1,3 +1,4 @@
+import type { EmptyStateContent, LoadMessages } from '../types/feedback.ts';
 import {
   LeaderboardColumn,
   type LeaderboardColumnContent,
@@ -19,3 +20,13 @@ export const LEADERBOARD_COLUMNS: readonly LeaderboardColumnContent[] = [
   { column: LeaderboardColumn.Streak, label: { long: 'Streak' } },
   { column: LeaderboardColumn.Favorite, label: { long: 'Favorite Game' } },
 ];
+
+export const LEADERBOARD_MESSAGES: LoadMessages = {
+  errorTitle: "Couldn't load the top players",
+  successMessage: 'The top players are loaded',
+};
+
+export const LEADERBOARD_EMPTY_STATE: EmptyStateContent = {
+  title: 'No players this week yet',
+  message: 'Play a game this week to be the first on the board.',
+};

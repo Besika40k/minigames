@@ -1,7 +1,15 @@
 import { fetchLeaderboard } from '../../../api/leaderboard-api.ts';
 import flameUrl from '../../../assets/images/flame.png';
+import { createAsyncArea, type AsyncArea } from '../../../components/feedback/async-area.ts';
+import { createEmptyState } from '../../../components/feedback/empty-state.ts';
 import { createSectionTitle } from '../../../components/section-title/section-title.ts';
-import { LEADERBOARD_COLUMNS, LEADERBOARD_TITLE } from '../../../data/leaderboard.ts';
+import { createSkeleton } from '../../../components/skeleton/skeleton.ts';
+import {
+  LEADERBOARD_COLUMNS,
+  LEADERBOARD_EMPTY_STATE,
+  LEADERBOARD_MESSAGES,
+  LEADERBOARD_TITLE,
+} from '../../../data/leaderboard.ts';
 import {
   LeaderboardColumn,
   type LeaderboardColumnContent,
@@ -17,6 +25,9 @@ const TITLE_ID = 'leaderboard-title';
 
 // The flame's own size, so the browser can reserve its space
 const FLAME_SIZE = '32';
+
+// The API returns the top five players, and the skeleton holds their place
+const SKELETON_ROWS = 5;
 
 // The screen width up to which a text shows its short form
 enum SwitchPoint {
@@ -141,6 +152,34 @@ function createRow(entry: LeaderboardEntry): HTMLTableRowElement {
   });
 }
 
+// A grey cell in the shape of a real one: the player cell holds an avatar
+// circle and a bar, the other cells a bar each
+function createSkeletonCell(column: LeaderboardColumn): HTMLTableCellElement {
+  const bar: HTMLSpanElement = createSkeleton('leaderboard__skeleton-text');
+  if (column !== LeaderboardColumn.Player) {
+    return createCell(column, [bar]);
+  }
+
+  const player: HTMLSpanElement = createElement('span', {
+    className: 'leaderboard__player',
+    children: [createSkeleton('leaderboard__skeleton-avatar'), bar],
+  });
+
+  return createCell(column, [player]);
+}
+
+function createSkeletonRow(): HTMLTableRowElement {
+  const cells: HTMLTableCellElement[] = LEADERBOARD_COLUMNS.map(
+    (content: LeaderboardColumnContent): HTMLTableCellElement => createSkeletonCell(content.column),
+  );
+
+  return createElement('tr', {
+    className: 'leaderboard__row',
+    attributes: { 'aria-hidden': 'true' },
+    children: cells,
+  });
+}
+
 // The wrapper draws the table's border, corners and shadow, and clips the
 // header's background to the corners
 function createTable(rows: readonly HTMLTableRowElement[]): HTMLDivElement {
@@ -163,33 +202,39 @@ export interface Leaderboard {
   readonly destroy: () => void;
 }
 
-// The table of the week's top players, loaded from the API
+// The table of the week's top players, loaded from the API. While it loads,
+// the table shows its header over grey rows.
 export function createLeaderboard(): Leaderboard {
   const title: HTMLHeadingElement = createSectionTitle(
     TITLE_ID,
     createResponsiveText(LEADERBOARD_TITLE, SwitchPoint.Mobile),
   );
+  // The table, or the error banner or the empty placeholder in its place
   const content: HTMLDivElement = createElement('div', { className: 'leaderboard__content' });
   const inner: HTMLDivElement = createElement('div', {
     className: 'leaderboard__inner',
     children: [title, content],
   });
 
-  const controller: AbortController = new AbortController();
-  const loadRows = async (): Promise<void> => {
-    try {
-      const entries: readonly LeaderboardEntry[] = await fetchLeaderboard(controller.signal);
-      const rows: HTMLTableRowElement[] = entries.map(
-        (entry: LeaderboardEntry): HTMLTableRowElement => createRow(entry),
+  const area: AsyncArea = createAsyncArea({
+    container: content,
+    messages: LEADERBOARD_MESSAGES,
+    load: fetchLeaderboard,
+    renderSkeleton: (): readonly Node[] => {
+      const rows: HTMLTableRowElement[] = Array.from(
+        { length: SKELETON_ROWS },
+        (): HTMLTableRowElement => createSkeletonRow(),
       );
-      content.replaceChildren(createTable(rows));
-    } catch {
-      // The loading, error and empty states come next. Until then a failed
-      // request leaves the section without a table.
-      content.replaceChildren();
-    }
-  };
-  void loadRows();
+
+      return [createTable(rows)];
+    },
+    renderData: (entries: readonly LeaderboardEntry[]): readonly Node[] => [
+      createTable(entries.map((entry: LeaderboardEntry): HTMLTableRowElement => createRow(entry))),
+    ],
+    isEmpty: (entries: readonly LeaderboardEntry[]): boolean => entries.length === 0,
+    renderEmpty: (): readonly Node[] => [createEmptyState(LEADERBOARD_EMPTY_STATE)],
+  });
+  area.reload();
 
   const element: HTMLElement = createElement('section', {
     className: 'leaderboard',
@@ -200,7 +245,7 @@ export function createLeaderboard(): Leaderboard {
   return {
     element,
     destroy: (): void => {
-      controller.abort();
+      area.abort();
     },
   };
 }

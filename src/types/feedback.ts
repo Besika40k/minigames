@@ -25,3 +25,9 @@ export interface LoadMessages {
   readonly errorTitle: string;
   readonly successMessage: string;
 }
+
+// The placeholder of an area whose answer has no items
+export interface EmptyStateContent {
+  readonly title: string;
+  readonly message: string;
+}
