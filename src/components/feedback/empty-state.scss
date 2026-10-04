@@ -1,0 +1,49 @@
+@use 'abstracts' as *;
+
+// No mockup exists for the empty state. It is calm on purpose: a dashed frame
+// and a violet magnifier, nothing red, so it never reads as an error.
+$message-max-width: 480px;
+$message-line-height: 1.5;
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: get-size(1);
+  padding: get-size(5) get-size(3);
+  border: $border-width dashed get-color(outline-variant);
+  border-radius: get-radius(large);
+  text-align: center;
+
+  > svg {
+    width: get-size(7);
+    height: get-size(7);
+    margin-block-end: get-size(1);
+    padding: get-size(2);
+    border-radius: get-radius(full);
+    background-color: get-color(secondary);
+    color: get-color(tertiary);
+  }
+
+  @include media-down(mobile) {
+    padding: get-size(3) get-size(2);
+  }
+}
+
+.empty-state__title {
+  color: get-color(on-primary);
+  font-size: get-font-size(headline-small);
+  font-weight: get-font-weight(bold);
+}
+
+.empty-state__message {
+  max-width: $message-max-width;
+  color: get-color(on-bg-low);
+  font-size: get-font-size(body-medium);
+  line-height: $message-line-height;
+}
+
+// The action keeps some distance from the text above it
+.empty-state__action {
+  margin-block-start: get-size(1);
+}
