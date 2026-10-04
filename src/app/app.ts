@@ -49,6 +49,13 @@ export function startApp(): void {
     onClose: (): void => {
       closeDialog(DialogParameter.Auth);
     },
+    // Another form changes the mode in the address without a new history
+    // entry, so Back still closes the dialog at once
+    onModeChange: (mode: AuthMode): void => {
+      const query: URLSearchParams = new URLSearchParams(router.location.query);
+      query.set(DialogParameter.Auth, mode);
+      router.navigate({ query }, { isReplace: true });
+    },
   });
   const openAuth = (mode: AuthMode): void => {
     openDialog(DialogParameter.Auth, mode);
