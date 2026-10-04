@@ -1,6 +1,6 @@
 import { fetchGames } from '../../../api/games-api.ts';
 import { getRouteHref } from '../../../app/router.ts';
-import { createButtonLink } from '../../../components/button/button.ts';
+import { createButton, createButtonLink } from '../../../components/button/button.ts';
 import { createAsyncArea, type AsyncArea } from '../../../components/feedback/async-area.ts';
 import { createEmptyState } from '../../../components/feedback/empty-state.ts';
 import { createSkeleton } from '../../../components/skeleton/skeleton.ts';
@@ -23,6 +23,8 @@ export interface GameListOptions {
   readonly onDetailsClick?: (game: Game) => void;
   // Called with every answer once it is on the screen, for the pagination
   readonly onLoad?: (page: GamesPage) => void;
+  // Asks for the first page, from a page past the end of the list
+  readonly onFirstPage?: () => void;
 }
 
 export interface GameList {
@@ -68,6 +70,7 @@ function createSkeletonItems(): readonly Node[] {
   return [createItems(items, true)];
 }
 
+// "Data Not Found" for a choice without games, with a link to all of them
 function createNotFound(): HTMLElement {
   return createEmptyState({
     title: LIBRARY_CONTENT.notFoundTitle,
@@ -77,6 +80,20 @@ function createNotFound(): HTMLElement {
       size: ButtonSize.Medium,
       text: LIBRARY_CONTENT.showAllText,
       href: getRouteHref(Route.Library),
+    }),
+  });
+}
+
+// "Data Not Found" for a page past the end of a list that has games
+function createPastEnd(onFirstPage?: () => void): HTMLElement {
+  return createEmptyState({
+    title: LIBRARY_CONTENT.notFoundTitle,
+    message: LIBRARY_CONTENT.pastEndMessage,
+    action: createButton({
+      variant: ButtonVariant.Outlined,
+      size: ButtonSize.Medium,
+      text: LIBRARY_CONTENT.firstPageText,
+      onClick: onFirstPage,
     }),
   });
 }
@@ -105,7 +122,9 @@ export function createGameList(options: GameListOptions = {}): GameList {
       return [createItems(items, false)];
     },
     isEmpty: (page: GamesPage): boolean => page.games.length === 0,
-    renderEmpty: (): readonly Node[] => [createNotFound()],
+    renderEmpty: (page: GamesPage): readonly Node[] => [
+      page.totalPages > 0 ? createPastEnd(options.onFirstPage) : createNotFound(),
+    ],
     onLoad: options.onLoad,
   });
 
