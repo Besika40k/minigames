@@ -14,6 +14,9 @@ export interface AsyncAreaOptions<T> {
   // An answer without items gets a placeholder of its own
   readonly isEmpty: (data: T) => boolean;
   readonly renderEmpty: (data: T) => readonly Node[];
+  // A 404 answer (an unknown game) gets a state of its own instead of the
+  // error banner, with a warning
+  readonly renderNotFound?: () => readonly Node[];
   // Called once the answer is on the screen, and after a failure
   readonly onLoad?: (data: T) => void;
   readonly onError?: (error: unknown) => void;
@@ -75,6 +78,13 @@ export function createAsyncArea<T>(options: AsyncAreaOptions<T>): AsyncArea {
     } catch (error: unknown) {
       // A cancelled request belongs to a page or a query that is gone
       if (current.signal.aborted) {
+        return;
+      }
+      const isNotFound: boolean = error instanceof ApiError && error.kind === ApiErrorKind.NotFound;
+      if (isNotFound && options.renderNotFound !== undefined) {
+        show(options.renderNotFound());
+        showSnackbar({ variant: SnackbarVariant.Warning, text: describeError(error) });
+        options.onError?.(error);
         return;
       }
       const banner: HTMLElement = createErrorBanner({
