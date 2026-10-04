@@ -1,10 +1,11 @@
+import { ApiError, ApiErrorKind } from '../../api/api-error.ts';
 import { fetchGameDetails } from '../../api/games-api.ts';
-import { GAME_DETAILS_CONTENT, STATIC_COMMENTS } from '../../data/game-details.ts';
+import { GAME_DETAILS_CONTENT } from '../../data/game-details.ts';
 import { ButtonSize, ButtonVariant } from '../../types/button.ts';
 import type {
+  GameCommentsSection,
   GameDetails,
   GameDetailsDialog,
-  GameDetailsSection,
 } from '../../types/game-details.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { createIcon, IconName } from '../../utils/create-icon.ts';
@@ -86,13 +87,14 @@ export function createGameDetailsDialog(options: GameDetailsDialogOptions): Game
   // or the Game Not Found state
   const main: HTMLDivElement = createElement('div', { className: 'game-details__main' });
 
-  // The comments wait for the game, and stay away when it fails
-  const comments: GameDetailsSection = createGameDetailsComments(STATIC_COMMENTS);
+  // The comments load next to the game, with states of their own, so a failed
+  // comments request leaves the game on the screen. An unknown game has no
+  // comments to show at all.
+  const comments: GameCommentsSection = createGameDetailsComments();
   const bottom: HTMLDivElement = createElement('div', {
     className: 'game-details__content game-details__content--bottom',
     children: [comments.element],
   });
-  bottom.hidden = true;
 
   // The close button comes first, so it is the first stop of the keyboard
   dialog.append(closeButton, main, bottom);
@@ -116,8 +118,13 @@ export function createGameDetailsDialog(options: GameDetailsDialogOptions): Game
     isEmpty: (): boolean => false,
     renderEmpty: (): readonly Node[] => [],
     renderNotFound: (): readonly Node[] => [createNotFound(slug, options.onClose)],
-    onLoad: (): void => {
-      bottom.hidden = false;
+    onError: (error: unknown): void => {
+      const isNotFound: boolean = error instanceof ApiError && error.kind === ApiErrorKind.NotFound;
+      if (!isNotFound) {
+        return;
+      }
+      bottom.hidden = true;
+      comments.abort();
     },
   });
 
@@ -126,9 +133,9 @@ export function createGameDetailsDialog(options: GameDetailsDialogOptions): Game
       return;
     }
     slug = nextSlug;
-    bottom.hidden = true;
-    comments.reset();
+    bottom.hidden = false;
     area.reload();
+    comments.show(slug);
     if (!dialog.open) {
       dialog.showModal();
     }
@@ -138,6 +145,7 @@ export function createGameDetailsDialog(options: GameDetailsDialogOptions): Game
 
   const hide = (): void => {
     area.abort();
+    comments.abort();
     if (dialog.open) {
       dialog.close();
     }
