@@ -9,7 +9,8 @@ export enum AuthMode {
 export interface AuthDialog {
   readonly element: HTMLDialogElement;
   // Shows the dialog with the form of the given mode selected
-  readonly open: (mode: AuthMode) => void;
+  readonly show: (mode: AuthMode) => void;
+  readonly hide: () => void;
 }
 
 export interface AuthField {

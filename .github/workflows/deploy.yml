@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [story-2]
+    branches: [story-3]
   workflow_dispatch:
 
 permissions:
@@ -36,6 +36,20 @@ jobs:
 
       - name: Build
         run: npm run build -- --base="${{ steps.pages.outputs.base_path }}/"
+
+      # GitHub Pages answers an unknown path with 404.html. As a copy of the app,
+      # it opens deep links such as /minigames/library?page=2, and the app's
+      # router decides what to show.
+      - name: Serve the app for unknown paths
+        run: cp dist/index.html dist/404.html
+
+      # Pages serves library.html for /library, so a deep link to a page of the
+      # app (the paths of src/app/url.ts) answers with status 200 instead of
+      # 404, and the browser logs no failed request
+      - name: Serve the app for its pages
+        run: |
+          cp dist/index.html dist/home.html
+          cp dist/index.html dist/library.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

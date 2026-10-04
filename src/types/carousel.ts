@@ -1,3 +1,5 @@
+import type { LoadMessages } from './feedback.ts';
+
 // How a card sits in the row: the active card is the big one in the middle,
 // the near cards are its neighbors, the far cards are the outer ones, and the
 // hidden cards wait off the row until the slider brings them in
@@ -17,4 +19,9 @@ export interface CarouselContent {
   readonly likesLabel: string;
   // Read out with each card's place in the slider: "Palia, 5 of 9"
   readonly positionSeparator: string;
+  readonly messages: LoadMessages;
+  // The placeholder for an answer without games, with a link to the Library
+  readonly emptyTitle: string;
+  readonly emptyMessage: string;
+  readonly libraryLinkText: string;
 }

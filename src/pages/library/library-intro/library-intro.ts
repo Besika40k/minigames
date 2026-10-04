@@ -1,17 +1,15 @@
 import { LIBRARY_CONTENT } from '../../../data/library.ts';
 import { createElement } from '../../../utils/create-element.ts';
-import { createCategoryFilter } from './category-filter.ts';
 import './library-intro.scss';
-import { createSortSelect } from './sort-select.ts';
 
 const TITLE_ID = 'library-title';
 
-// The top of the Library page: the page title, its description, the category
-// chips and the sort control
-export function createLibraryIntro(): HTMLElement {
+// The top of the Library page: the page title, its description, and the
+// controls the page gives it (the category chips and the sort control)
+export function createLibraryIntro(controlElements: readonly HTMLElement[]): HTMLElement {
   const controls: HTMLDivElement = createElement('div', {
     className: 'library-intro__controls',
-    children: [createCategoryFilter(), createSortSelect()],
+    children: controlElements,
   });
 
   const inner: HTMLDivElement = createElement('div', {

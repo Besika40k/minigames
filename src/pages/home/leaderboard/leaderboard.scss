@@ -29,6 +29,9 @@ $avatar-size-tablet: get-size(3) + get-size(0.5);
 $tag-padding-inline: get-size(1) + get-size(0.5);
 $flame-size-small: 14px;
 
+// A loading bar fills this much of its cell
+$skeleton-text-width: 60%;
+
 // The first player gets the brand yellow, the next four players take the
 // avatar colors in turn
 $avatar-colors: (
@@ -312,6 +315,37 @@ $avatar-colors: (
   box-shadow: inset 0 0 0 $border-width-thin get-color(on-primary);
   font-size: get-font-size(label-medium);
   vertical-align: middle;
+}
+
+// ---------- Loading ----------
+// A skeleton row is as high as a real one: its circle has the size of an
+// avatar, and its bars are a line of text high
+.leaderboard__skeleton-avatar {
+  flex: none;
+  width: get-size(5);
+  height: get-size(5);
+  border-radius: get-radius(full);
+
+  @include media-down(laptop) {
+    width: $avatar-size-tablet;
+    height: $avatar-size-tablet;
+  }
+
+  @include media-down(mobile) {
+    width: get-size(3);
+    height: get-size(3);
+  }
+}
+
+.leaderboard__skeleton-text {
+  width: $skeleton-text-width;
+  height: get-size(2);
+  margin-inline: auto;
+}
+
+// Beside the circle the bar starts at the left, like a name
+.leaderboard__player .leaderboard__skeleton-text {
+  margin-inline: 0;
 }
 
 // ---------- Long and short texts ----------

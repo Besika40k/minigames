@@ -7,4 +7,11 @@ export const CAROUSEL_CONTENT: CarouselContent = {
   ratingLabel: 'Rating',
   likesLabel: 'Likes',
   positionSeparator: 'of',
+  messages: {
+    errorTitle: "Couldn't load the new games",
+    successMessage: 'The new games are loaded',
+  },
+  emptyTitle: 'No new games yet',
+  emptyMessage: 'Fresh games show up here soon. Until then, the Library has them all.',
+  libraryLinkText: 'Browse Library',
 };

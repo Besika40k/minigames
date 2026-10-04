@@ -1,0 +1,58 @@
+@use 'abstracts' as *;
+
+// No mockup exists for the error state. The banner is a card of the site's
+// style with a red frame, so it never looks like the calm empty state.
+// The text keeps at least this width before the button wraps under it.
+$text-min-width: 220px;
+$text-line-height: 1.4;
+
+.error-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: get-size(2);
+  padding: get-size(2) get-size(3);
+  border: $border-width solid get-color(error);
+  border-radius: get-radius(large);
+  background-color: get-color(white);
+  box-shadow: get-shadow(level-1);
+
+  > svg {
+    flex: none;
+    width: get-size(4);
+    height: get-size(4);
+    color: get-color(error);
+  }
+
+  @include media-down(mobile) {
+    padding: get-size(2);
+  }
+}
+
+.error-banner__text {
+  display: flex;
+  flex: 1 1 $text-min-width;
+  flex-direction: column;
+  gap: get-size(0.5);
+  line-height: $text-line-height;
+}
+
+.error-banner__title {
+  color: get-color(on-primary);
+  font-size: get-font-size(body-large);
+  font-weight: get-font-weight(bold);
+}
+
+.error-banner__message {
+  color: get-color(on-bg);
+  font-size: get-font-size(body-small);
+}
+
+.button.error-banner__retry {
+  gap: get-size(1);
+
+  svg {
+    width: get-size(2);
+    height: get-size(2);
+  }
+}

@@ -5,26 +5,49 @@ import { enableDialogDismiss } from '../../utils/dismiss-dialog.ts';
 import { createAuthSwitcher, type AuthSwitcher } from './auth-switcher.ts';
 import './auth-dialog.scss';
 
-export function createAuthDialog(): AuthDialog {
-  const switcher: AuthSwitcher = createAuthSwitcher();
+export interface AuthDialogOptions {
+  // Asks to close the dialog: Esc and the backdrop
+  readonly onClose: () => void;
+  // Hears of each form the visitor picks: with a tab, an arrow key or the
+  // link at the bottom of a form
+  readonly onModeChange?: (mode: AuthMode) => void;
+}
+
+// The dialog with the login and registration forms. It closes only through
+// `onClose`, so the owner decides what a close means (the dialog lives in the
+// address).
+export function createAuthDialog(options: AuthDialogOptions): AuthDialog {
+  const switcher: AuthSwitcher = createAuthSwitcher((mode: AuthMode): void => {
+    options.onModeChange?.(mode);
+  });
 
   const dialog: HTMLDialogElement = createElement('dialog', {
     className: 'auth-dialog',
     attributes: { 'aria-label': AUTH_DIALOG_LABEL },
     children: [switcher.tabList, switcher.panels],
   });
-  enableDialogDismiss(dialog);
+  enableDialogDismiss(dialog, options.onClose);
 
-  const open = (mode: AuthMode): void => {
-    switcher.select(mode, false);
-
-    if (!dialog.open) {
-      dialog.showModal();
+  const show = (mode: AuthMode): void => {
+    // An open dialog only switches to another form, so a switch the visitor
+    // has just started keeps its animation
+    if (dialog.open) {
+      if (mode !== switcher.getMode()) {
+        switcher.select(mode, true);
+      }
+      return;
     }
-
+    switcher.select(mode, false);
+    dialog.showModal();
     // The browser would focus the first tab, which is not always the selected one
     switcher.focusTab(mode);
   };
 
-  return { element: dialog, open };
+  const hide = (): void => {
+    if (dialog.open) {
+      dialog.close();
+    }
+  };
+
+  return { element: dialog, show, hide };
 }

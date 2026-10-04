@@ -30,6 +30,13 @@ $heart-height: 19px;
 $heart-gap: 6px;
 $tag-padding-block-stacked: 2px;
 
+// The bars of a loading card: a title, a line and a shorter line of text
+$skeleton-title-width: 60%;
+$skeleton-short-width: 40%;
+// The text part of a stacked card (title, tag, two lines, stats and the
+// Details button) is about this high, measured at 375px
+$skeleton-stacked-height: 232px;
+
 .game-card {
   position: relative;
   display: grid;
@@ -255,4 +262,65 @@ $tag-padding-block-stacked: 2px;
 
 .game-card__hidden {
   @include visually-hidden;
+}
+
+// ---------- Loading ----------
+// A loading card has the frame and the photo box of a real card, so the list
+// keeps its size. A light frame without a shadow keeps it quieter.
+.game-card--skeleton {
+  box-shadow: none;
+
+  &::after {
+    border-color: get-color(outline-variant);
+  }
+}
+
+.game-card__skeleton-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+
+  @container game-card (width < #{$stacked-below}) {
+    height: auto;
+    aspect-ratio: $image-ratio;
+  }
+}
+
+.game-card__skeleton-body {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(1);
+  padding: get-size(2);
+
+  @container game-card (width < #{$stacked-below}) {
+    min-height: $skeleton-stacked-height;
+  }
+}
+
+.game-card__skeleton-line {
+  height: get-size(2);
+}
+
+.game-card__skeleton-line--title {
+  width: $skeleton-title-width;
+  height: get-size(3);
+  margin-block-end: get-size(1);
+}
+
+.game-card__skeleton-line--short {
+  width: $skeleton-short-width;
+}
+
+// The place of the Details button: at the bottom right as on a real card, and
+// as wide as the card when stacked
+.game-card__skeleton-line--button {
+  align-self: flex-end;
+  width: get-size(13);
+  height: get-size(5);
+  margin-block-start: auto;
+
+  @container game-card (width < #{$stacked-below}) {
+    align-self: stretch;
+    width: auto;
+  }
 }

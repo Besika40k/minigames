@@ -1,3 +1,5 @@
+import type { LoadMessages } from './feedback.ts';
+
 // The facts shown in the four boxes under the description
 export interface GameSpecs {
   readonly genre: string;
@@ -14,8 +16,8 @@ export interface TopRecord {
   readonly achievedAt: string;
 }
 
-// A comment on a game, with the field names of the course's mock data
-// (`comments-tukoni-forest-keepers.json`)
+// A comment on a game, with the field names of the API
+// (`GET /api/games/{slug}/comments`)
 export interface GameComment {
   readonly commentId: string;
   readonly authorName: string;
@@ -27,9 +29,15 @@ export interface GameComment {
   readonly createdAt: string;
 }
 
-// The details of a game, with the field names of the course's mock data
-// (`game-tukoni-forest-keepers.json`). The hero image is the imported file
-// instead of the mock's server path.
+// The latest comments of a game, and how many the game has in all
+export interface GameCommentsPage {
+  readonly comments: readonly GameComment[];
+  readonly totalComments: number;
+}
+
+// The details of a game, with the field names of the API
+// (`GET /api/games/{slug}`). The hero image is the address the browser loads it
+// from.
 export interface GameDetails {
   readonly slug: string;
   readonly name: string;
@@ -42,12 +50,16 @@ export interface GameDetails {
 }
 
 export interface GameDetailsContent {
+  // The name of the dialog while it has no game title to show
+  readonly dialogLabel: string;
   readonly closeLabel: string;
   // Read out before the numbers, which show only an icon on the screen
   readonly ratingLabel: string;
   readonly likesLabel: string;
   readonly specLabels: Readonly<Record<keyof GameSpecs, string>>;
   readonly playLabel: string;
+  // A game that is not free is bought instead: "Buy Now: $1.99"
+  readonly buyLabel: string;
   // The Favorites button says what a click will do
   readonly addFavoriteLabel: string;
   readonly removeFavoriteLabel: string;
@@ -62,6 +74,16 @@ export interface GameDetailsContent {
   readonly commentLabel: string;
   readonly commentPlaceholder: string;
   readonly sendLabel: string;
+  readonly messages: LoadMessages;
+  // The state of an address whose game does not exist: the sentence around
+  // the slug it names
+  readonly notFoundTitle: string;
+  readonly notFoundMessageStart: string;
+  readonly notFoundMessageEnd: string;
+  readonly commentsMessages: LoadMessages;
+  // The placeholder of a game without comments
+  readonly noCommentsTitle: string;
+  readonly noCommentsMessage: string;
 }
 
 // A part of the dialog. `reset` puts it back the way it looks when the dialog
@@ -71,7 +93,20 @@ export interface GameDetailsSection {
   readonly reset: () => void;
 }
 
+// The comments part of the dialog, loaded for one game at a time
+export interface GameCommentsSection {
+  readonly element: HTMLElement;
+  // Loads the comments of a game, and empties the comment form
+  readonly show: (slug: string) => void;
+  // Cancels the request when the dialog closes
+  readonly abort: () => void;
+}
+
 export interface GameDetailsDialog {
   readonly element: HTMLDialogElement;
-  readonly open: () => void;
+  // Opens the dialog and loads the game of a slug. The game that is already
+  // open stays as it is.
+  readonly show: (slug: string) => void;
+  // Closes the dialog and cancels its request
+  readonly hide: () => void;
 }

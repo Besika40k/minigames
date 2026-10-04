@@ -1,6 +1,8 @@
-import { createButton } from '../../../components/button/button.ts';
+import { getRouteHref } from '../../../app/router.ts';
+import { createButtonLink } from '../../../components/button/button.ts';
 import { HERO_CONTENT } from '../../../data/hero.ts';
 import { ButtonSize, ButtonVariant } from '../../../types/button.ts';
+import { Route } from '../../../types/route.ts';
 import { createElement } from '../../../utils/create-element.ts';
 import './hero.scss';
 
@@ -29,11 +31,12 @@ export function createHero(): HTMLElement {
     attributes: { id: TITLE_ID },
   });
 
-  // The button does nothing yet: the Library page is not part of Story 1.
-  const button: HTMLButtonElement = createButton({
+  // The button opens the Library page, so it is a link that looks like a button
+  const button: HTMLAnchorElement = createButtonLink({
     variant: ButtonVariant.Filled,
     size: ButtonSize.Large,
     text: HERO_CONTENT.buttonText,
+    href: getRouteHref(Route.Library),
     className: 'hero__button',
   });
 
