@@ -20,16 +20,33 @@ function readQuery(location: AppLocation): LibraryQuery {
   return { category: parsed.category ?? DEFAULT_CATEGORY, sort: parsed.sort, page: parsed.page };
 }
 
-// The Library shows the games of the state in the address
+function isSameQuery(first: LibraryQuery, second: LibraryQuery): boolean {
+  return (
+    first.category === second.category && first.sort === second.sort && first.page === second.page
+  );
+}
+
+// The Library shows the games of the state in the address. A new address of
+// the same page (Back, Forward, a link) loads the games again, unless only
+// another part of it changed.
 export function renderLibraryPage(
   location: AppLocation,
   options: LibraryPageOptions = {},
 ): PageView {
+  let query: LibraryQuery = readQuery(location);
   const list: GameList = createGameList({ onDetailsClick: options.onGameOpen });
-  list.show(readQuery(location));
+  list.show(query);
 
   return {
     elements: [createLibraryIntro(), list.element, createPagination()],
+    update: (next: AppLocation): void => {
+      const nextQuery: LibraryQuery = readQuery(next);
+      if (isSameQuery(nextQuery, query)) {
+        return;
+      }
+      query = nextQuery;
+      list.show(query);
+    },
     destroy: (): void => {
       list.abort();
     },
