@@ -1,10 +1,15 @@
 import { fetchFeaturedGames } from '../../../api/games-api.ts';
-import { createButton } from '../../../components/button/button.ts';
+import { getRouteHref } from '../../../app/router.ts';
+import { createButton, createButtonLink } from '../../../components/button/button.ts';
+import { createAsyncArea, type AsyncArea } from '../../../components/feedback/async-area.ts';
+import { createEmptyState } from '../../../components/feedback/empty-state.ts';
 import { createSectionTitle } from '../../../components/section-title/section-title.ts';
+import { createSkeleton } from '../../../components/skeleton/skeleton.ts';
 import { CAROUSEL_CONTENT } from '../../../data/carousel.ts';
 import { ButtonSize, ButtonVariant } from '../../../types/button.ts';
 import { SlideRole } from '../../../types/carousel.ts';
 import type { Game } from '../../../types/game.ts';
+import { Route } from '../../../types/route.ts';
 import { AutoplayTimer } from '../../../utils/autoplay-timer.ts';
 import { createElement } from '../../../utils/create-element.ts';
 import { createIcon, IconName } from '../../../utils/create-icon.ts';
@@ -28,6 +33,16 @@ const ROLES: readonly SlideRole[] = [
   SlideRole.Near,
   SlideRole.Far,
   SlideRole.Hidden,
+];
+
+// The skeleton is the desktop row from left to right, so the cards that load
+// take the room it held
+const SKELETON_ROLES: readonly SlideRole[] = [
+  SlideRole.Far,
+  SlideRole.Near,
+  SlideRole.Active,
+  SlideRole.Near,
+  SlideRole.Far,
 ];
 
 // A text that is only read out, for the numbers that show just an icon
@@ -91,6 +106,35 @@ function createCard(game: Game, position: string, onOpen?: (game: Game) => void)
   return createElement('li', {
     className: 'games-carousel__card',
     children: [image, overlay, openButton],
+  });
+}
+
+// Grey cards in the place of the real ones while they load
+function createSkeletonTrack(): HTMLUListElement {
+  const cards: HTMLLIElement[] = SKELETON_ROLES.map((role: SlideRole): HTMLLIElement =>
+    createElement('li', {
+      className: `games-carousel__card games-carousel__card--${role} games-carousel__card--skeleton`,
+      children: [createSkeleton('games-carousel__skeleton')],
+    }),
+  );
+
+  return createElement('ul', {
+    className: 'games-carousel__track',
+    attributes: { 'aria-hidden': 'true' },
+    children: cards,
+  });
+}
+
+function createEmptySlider(): HTMLElement {
+  return createEmptyState({
+    title: CAROUSEL_CONTENT.emptyTitle,
+    message: CAROUSEL_CONTENT.emptyMessage,
+    action: createButtonLink({
+      variant: ButtonVariant.Outlined,
+      size: ButtonSize.Medium,
+      text: CAROUSEL_CONTENT.libraryLinkText,
+      href: getRouteHref(Route.Library),
+    }),
   });
 }
 
@@ -185,7 +229,7 @@ export function createGamesCarousel(options: GamesCarouselOptions = {}): GamesCa
     ],
   });
 
-  // The cards of the slider
+  // The cards, or the skeleton, the error banner or the empty placeholder
   const body: HTMLDivElement = createElement('div', { className: 'games-carousel__body' });
 
   const section: HTMLElement = createElement('section', {
@@ -256,20 +300,24 @@ export function createGamesCarousel(options: GamesCarouselOptions = {}): GamesCa
     return [track];
   };
 
-  // The arrows wait for the cards
-  enableArrows(false);
-  const controller: AbortController = new AbortController();
-  const loadSlides = async (): Promise<void> => {
-    try {
-      const games: readonly Game[] = await fetchFeaturedGames(controller.signal);
-      body.replaceChildren(...showSlides(games));
-    } catch {
-      // The loading, error and empty states come next. Until then a failed
-      // request leaves the slider without cards.
-      body.replaceChildren();
-    }
+  // Whatever the slider showed goes away while it loads again
+  const showSkeleton = (): readonly Node[] => {
+    timer.stop();
+    cards = [];
+    enableArrows(false);
+
+    return [createSkeletonTrack()];
   };
-  void loadSlides();
+
+  const area: AsyncArea = createAsyncArea({
+    container: body,
+    messages: CAROUSEL_CONTENT.messages,
+    load: fetchFeaturedGames,
+    renderSkeleton: showSkeleton,
+    renderData: showSlides,
+    isEmpty: (games: readonly Game[]): boolean => games.length === 0,
+    renderEmpty: (): readonly Node[] => [createEmptySlider()],
+  });
 
   // A hidden browser tab would pile the steps up, so the slider waits for it
   const onVisibilityChange = (): void => {
@@ -283,11 +331,13 @@ export function createGamesCarousel(options: GamesCarouselOptions = {}): GamesCa
   };
   document.addEventListener('visibilitychange', onVisibilityChange);
 
+  area.reload();
+
   return {
     element: section,
     destroy: (): void => {
       timer.stop();
-      controller.abort();
+      area.abort();
       document.removeEventListener('visibilitychange', onVisibilityChange);
     },
   };

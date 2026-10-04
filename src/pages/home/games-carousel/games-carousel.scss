@@ -221,6 +221,19 @@ $arrow-icon-tablet: 18px;
   @include hidden-card;
 }
 
+// The skeleton cards take the roles of a loaded row, so they hold its room.
+// A light frame without a shadow keeps them quieter than the real cards.
+.games-carousel__card--skeleton {
+  border-color: get-color(outline-variant);
+  box-shadow: none;
+}
+
+.games-carousel__skeleton {
+  position: absolute;
+  inset: 0;
+  border-radius: 0;
+}
+
 // The photo is cropped and centered like the mockup's. It covers the card's
 // whole box, so the scale is the mockup's, and the border goes over its edge
 // (the card clips what is outside its border).
