@@ -14,6 +14,9 @@ export interface AsyncAreaOptions<T> {
   // An answer without items gets a placeholder of its own
   readonly isEmpty: (data: T) => boolean;
   readonly renderEmpty: (data: T) => readonly Node[];
+  // Called once the answer is on the screen, and after a failure
+  readonly onLoad?: (data: T) => void;
+  readonly onError?: (error: unknown) => void;
 }
 
 export interface AsyncArea {
@@ -68,6 +71,7 @@ export function createAsyncArea<T>(options: AsyncAreaOptions<T>): AsyncArea {
       if (isRetry) {
         showSnackbar({ variant: SnackbarVariant.Success, text: options.messages.successMessage });
       }
+      options.onLoad?.(data);
     } catch (error: unknown) {
       // A cancelled request belongs to a page or a query that is gone
       if (current.signal.aborted) {
@@ -82,6 +86,7 @@ export function createAsyncArea<T>(options: AsyncAreaOptions<T>): AsyncArea {
       });
       show([banner]);
       notifyFailure(error, options.messages);
+      options.onError?.(error);
     } finally {
       if (!current.signal.aborted) {
         options.container.removeAttribute('aria-busy');
