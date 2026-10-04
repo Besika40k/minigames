@@ -12,6 +12,11 @@ export interface AppLocation {
   readonly query: URLSearchParams;
 }
 
+// The query keys of the dialogs that open over any page
+export enum DialogParameter {
+  Game = 'game',
+}
+
 // What the app keeps in a history entry
 export interface HistoryState {
   // The entry was added by opening a dialog, so closing the dialog can go back

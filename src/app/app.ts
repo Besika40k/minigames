@@ -12,6 +12,7 @@ import type { BurgerMenu } from '../types/burger-menu.ts';
 import type { Game } from '../types/game.ts';
 import type { GameDetailsDialog } from '../types/game-details.ts';
 import {
+  DialogParameter,
   Route,
   type AppLocation,
   type PageDefinition,
@@ -29,14 +30,30 @@ export function startApp(): void {
     onAuthClick: authDialog.open,
   });
 
+  // A dialog kept in the address closes by leaving the history entry that
+  // opened it, or, when the address came in with the dialog open (a deep
+  // link), by taking its parameter out of the address
+  const closeDialog = (parameter: DialogParameter): void => {
+    if (router.isDialogEntry) {
+      router.back();
+      return;
+    }
+    const query: URLSearchParams = new URLSearchParams(router.location.query);
+    query.delete(parameter);
+    router.navigate({ query }, { isReplace: true });
+  };
+
   const gameDetails: GameDetailsDialog = createGameDetailsDialog({
     onClose: (): void => {
-      gameDetails.hide();
+      closeDialog(DialogParameter.Game);
     },
   });
 
+  // A game opens over the page in a new history entry, so Back closes it
   const openGame = (game: Game): void => {
-    gameDetails.show(game.slug);
+    const query: URLSearchParams = new URLSearchParams(router.location.query);
+    query.set(DialogParameter.Game, game.slug);
+    router.navigate({ query }, { state: { isDialogEntry: true } });
   };
 
   const main: HTMLElement = createElement('main');
@@ -75,11 +92,18 @@ export function startApp(): void {
   router.onChange((location: AppLocation): void => {
     header.setCurrentPage(location.route);
     menu.setCurrentPage(location.route);
-    // A dialog belongs to the page it was opened on, so it closes when the
-    // address changes under it (for example with the browser's Back button)
+    // The menu and the auth dialog are not in the address, so a new address
+    // (for example the browser's Back button) closes them
     menu.element.close();
     authDialog.element.close();
-    gameDetails.hide();
+
+    // The game dialog follows the address: open with its game, or closed
+    const slug: string = location.query.get(DialogParameter.Game) ?? '';
+    if (slug === '') {
+      gameDetails.hide();
+      return;
+    }
+    gameDetails.show(slug);
   });
   router.start();
 }
