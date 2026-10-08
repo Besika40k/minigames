@@ -13,7 +13,8 @@ export default defineConfig((configEnvironment: ConfigEnv): UserConfig =>
       unstubGlobals: true,
       coverage: {
         provider: 'v8',
-        reporter: ['text', 'html'],
+        // the table also lists the files that are fully covered, so it shows every included file
+        reporter: [['text', { skipFull: false }], 'html'],
         // every source file is reported, also the ones no test imports yet
         include: ['src/**/*.ts'],
         exclude: [
