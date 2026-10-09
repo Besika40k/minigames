@@ -295,6 +295,11 @@ $locked-opacity: 0.5;
   }
 }
 
+// While Google's window is open, the turning ring takes the place of the logo
+.auth-dialog__google[aria-busy='true'] img {
+  display: none;
+}
+
 // The button of a request under way is disabled like every other control, but
 // stays fully visible with a turning ring: it is busy, not unavailable
 .button[aria-busy='true']:disabled {
