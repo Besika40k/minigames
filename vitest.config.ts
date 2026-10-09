@@ -22,6 +22,8 @@ export default defineConfig((configEnvironment: ConfigEnv): UserConfig =>
           'src/**/*.test.ts',
           // bootstrap only: imports the global styles and calls startApp()
           'src/main.ts',
+          // type declarations only, which compile to no code
+          'src/**/*.d.ts',
         ],
       },
     },
