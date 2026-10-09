@@ -1,4 +1,4 @@
-import { AuthMode, type AuthFormContent } from '../types/auth.ts';
+import { AuthFieldName, AuthMode, type AuthFormContent } from '../types/auth.ts';
 import { IconName } from '../utils/create-icon.ts';
 
 export const AUTH_DIALOG_LABEL = 'Log in or sign up';
@@ -14,7 +14,7 @@ export const AUTH_CONTENT: Readonly<Record<AuthMode, AuthFormContent>> = {
     description: 'Sign in to resume your games and progress.',
     fields: [
       {
-        name: 'email',
+        name: AuthFieldName.Email,
         label: 'Email Address',
         type: 'email',
         icon: IconName.Mail,
@@ -22,7 +22,7 @@ export const AUTH_CONTENT: Readonly<Record<AuthMode, AuthFormContent>> = {
         autocomplete: 'email',
       },
       {
-        name: 'password',
+        name: AuthFieldName.Password,
         label: 'Password',
         type: 'password',
         icon: IconName.Lock,
@@ -43,7 +43,7 @@ export const AUTH_CONTENT: Readonly<Record<AuthMode, AuthFormContent>> = {
     description: 'Join MiniGames to track your score & streak.',
     fields: [
       {
-        name: 'username',
+        name: AuthFieldName.Username,
         label: 'Username',
         type: 'text',
         icon: IconName.Person,
@@ -51,7 +51,7 @@ export const AUTH_CONTENT: Readonly<Record<AuthMode, AuthFormContent>> = {
         autocomplete: 'username',
       },
       {
-        name: 'email',
+        name: AuthFieldName.Email,
         label: 'Email Address',
         type: 'email',
         icon: IconName.Mail,
@@ -59,7 +59,7 @@ export const AUTH_CONTENT: Readonly<Record<AuthMode, AuthFormContent>> = {
         autocomplete: 'email',
       },
       {
-        name: 'password',
+        name: AuthFieldName.Password,
         label: 'Password',
         type: 'password',
         icon: IconName.Lock,
@@ -68,7 +68,7 @@ export const AUTH_CONTENT: Readonly<Record<AuthMode, AuthFormContent>> = {
         minLength: 8,
       },
       {
-        name: 'confirm-password',
+        name: AuthFieldName.ConfirmPassword,
         label: 'Confirm Password',
         type: 'password',
         icon: IconName.Lock,
