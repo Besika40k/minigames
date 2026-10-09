@@ -77,6 +77,12 @@ export const AUTH_SUCCESS_MESSAGES: Readonly<Record<AuthMode, string>> = {
 // first visit
 export const GOOGLE_SUCCESS_MESSAGE = 'Welcome';
 
+// What logging out says. A failed Firebase sign-out still ends the app session.
+export const LOGOUT_MESSAGES: Readonly<{ success: string; failure: string }> = {
+  success: 'You have logged out.',
+  failure: 'Signing out of your account failed, but you are logged out of MiniGames.',
+};
+
 // The warning when the app session runs out (see src/auth/session.ts)
 export const SESSION_EXPIRED_MESSAGE = 'Your session has expired. Please log in again.';
 
