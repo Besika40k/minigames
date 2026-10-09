@@ -1,3 +1,4 @@
+import { createAuthActions, type AuthActions, type AuthService } from '../auth/auth-actions.ts';
 import { SESSION_STORAGE_KEY } from '../auth/session.ts';
 import { createSessionStore, type SessionStore } from '../auth/session-store.ts';
 import { createAuthDialog } from '../components/auth-dialog/auth-dialog.ts';
@@ -29,12 +30,17 @@ import { createElement } from '../utils/create-element.ts';
 import { Router } from './router.ts';
 import { parseDialog, removeUnusedDialogParameters } from './url.ts';
 
+// The auth service brings Firebase with it, so it loads only when it is
+// needed, and a guest's visit never downloads it
+async function loadAuthService(): Promise<AuthService> {
+  return import('../auth/auth-service.ts');
+}
+
 export function startApp(): void {
-  // Whether the visitor is signed in. Firebase loads only when it is needed,
-  // so a guest's visit never downloads it.
+  // Whether the visitor is signed in
   const session: SessionStore = createSessionStore({
     signOut: async (): Promise<void> => {
-      const { signOutUser } = await import('../auth/auth-service.ts');
+      const { signOutUser } = await loadAuthService();
       await signOutUser();
     },
     onExpire: (): void => {
@@ -62,10 +68,23 @@ export function startApp(): void {
     router.navigate({ query }, { isReplace: true });
   };
 
+  const authActions: AuthActions = createAuthActions({
+    session,
+    loadService: loadAuthService,
+    // The dialog closes like any other close, unless the visitor has already
+    // left it, for example with Back
+    onSignedIn: (): void => {
+      if (parseDialog(router.location.query)?.parameter === DialogParameter.Auth) {
+        closeDialog(DialogParameter.Auth);
+      }
+    },
+  });
+
   const authDialog: AuthDialog = createAuthDialog({
     onClose: (): void => {
       closeDialog(DialogParameter.Auth);
     },
+    onSubmit: authActions.submit,
     // Another form changes the mode in the address without a new history
     // entry, so Back still closes the dialog at once
     onModeChange: (mode: AuthMode): void => {
