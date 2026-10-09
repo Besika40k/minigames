@@ -98,4 +98,29 @@ describe('header logout', (): void => {
 
     expect(onLogout).toHaveBeenCalledOnce();
   });
+
+  it('moves the focus from Log Out to Log In when the session ends', (): void => {
+    const header: Header = renderHeader();
+    header.setSession(SESSION);
+    header.element
+      .querySelector<HTMLButtonElement>(':scope .header__auth-button--log-out')
+      ?.focus();
+
+    header.setSession(undefined);
+
+    expect(document.activeElement).toBe(
+      header.element.querySelector('.header__auth-button--log-in'),
+    );
+  });
+
+  it('leaves the focus alone when it is outside the account buttons', (): void => {
+    const header: Header = renderHeader();
+    const link: HTMLAnchorElement | null = header.element.querySelector('.header__nav-link');
+    link?.focus();
+
+    header.setSession(SESSION);
+    header.setSession(undefined);
+
+    expect(document.activeElement).toBe(link);
+  });
 });
