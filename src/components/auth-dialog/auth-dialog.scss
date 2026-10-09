@@ -194,6 +194,25 @@ $submit-line-height: 1.25;
   color: get-color(on-primary);
 }
 
+// The error state of the UI guide: an invalid field has a red outline and
+// icon, after the rules above so that focus and text do not darken the icon
+.auth-dialog__input[aria-invalid='true'] {
+  border-color: get-color(error);
+}
+
+.auth-dialog__input[aria-invalid='true'] ~ .auth-dialog__icon {
+  color: get-color(error);
+}
+
+// The message under an invalid field, centered as in the UI guide. It sits
+// closer to its input than the label above it.
+.auth-dialog__error {
+  margin-block-start: get-size(0.5) - get-size(1);
+  color: get-color(error);
+  font-size: get-font-size(label-medium);
+  text-align: center;
+}
+
 // The button is bigger than its icon to be easy to hit, and sits so that the
 // icon is where the mockup has it
 .auth-dialog__reveal {
