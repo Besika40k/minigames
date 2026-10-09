@@ -39,8 +39,8 @@ function createHeader(content: AuthFormContent): HTMLElement {
 }
 
 function createForm(content: AuthFormContent, mode: AuthMode): HTMLFormElement {
-  const fields: HTMLElement[] = content.fields.map((field: AuthField): HTMLElement =>
-    createAuthField(field, mode),
+  const fields: HTMLElement[] = content.fields.map(
+    (field: AuthField): HTMLElement => createAuthField(field, mode).element,
   );
 
   // Resetting the password is not part of Story 1, so the link does nothing yet
