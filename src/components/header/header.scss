@@ -102,6 +102,24 @@ $header-height: 85px;
   }
 }
 
+// The guest buttons or the profile, laid out as items of the actions
+.header__account {
+  display: contents;
+}
+
+// The name gives way to the burger button on mobile, where the avatar alone
+// stands for the profile
+.header__profile {
+  color: get-color(on-primary);
+  font-size: get-font-size(body-medium);
+
+  .profile-summary__name {
+    @include media-down(mobile) {
+      display: none;
+    }
+  }
+}
+
 .header__auth-button--log-in {
   @include media-down(tablet) {
     display: none;

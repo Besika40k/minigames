@@ -3,12 +3,14 @@ import { NAVIGATION_LINKS } from '../../data/navigation.ts';
 import { AuthMode } from '../../types/auth.ts';
 import { ButtonSize, ButtonVariant } from '../../types/button.ts';
 import type { NavigationLink } from '../../types/navigation.ts';
+import type { AppSession } from '../../types/session.ts';
 import { Route } from '../../types/route.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { createIcon, IconName } from '../../utils/create-icon.ts';
 import { PageLinks } from '../../utils/page-links.ts';
 import { createButton } from '../button/button.ts';
 import { createLogo } from '../logo/logo.ts';
+import { createProfileSummary } from '../profile/profile.ts';
 import './header.scss';
 
 export interface HeaderOptions {
@@ -21,6 +23,9 @@ export interface Header {
   readonly menuButton: HTMLButtonElement;
   // Marks the navigation link of the open page
   readonly setCurrentPage: (page: Route | undefined) => void;
+  // Shows the profile of a signed-in user in place of Log In and Sign Up, and
+  // the buttons again for a guest
+  readonly setSession: (session: AppSession | undefined) => void;
 }
 
 function createNavigationItem(link: NavigationLink, pageLinks: PageLinks): HTMLLIElement {
@@ -58,7 +63,7 @@ function createMenuButton(): HTMLButtonElement {
   });
 }
 
-function createActions(options: HeaderOptions, menuButton: HTMLButtonElement): HTMLElement {
+function createGuestButtons(options: HeaderOptions): HTMLButtonElement[] {
   const logIn: HTMLButtonElement = createButton({
     variant: ButtonVariant.Outlined,
     size: ButtonSize.Medium,
@@ -79,15 +84,19 @@ function createActions(options: HeaderOptions, menuButton: HTMLButtonElement): H
     },
   });
 
-  return createElement('div', {
-    className: 'header__actions',
-    children: [logIn, signUp, menuButton],
-  });
+  return [logIn, signUp];
 }
 
 export function createHeader(options: HeaderOptions = {}): Header {
   const menuButton: HTMLButtonElement = createMenuButton();
   const pageLinks: PageLinks = new PageLinks();
+  const guestButtons: HTMLButtonElement[] = createGuestButtons(options);
+
+  // The part of the actions that depends on who is visiting
+  const account: HTMLElement = createElement('div', {
+    className: 'header__account',
+    children: guestButtons,
+  });
 
   const element: HTMLElement = createElement('header', {
     className: 'header',
@@ -97,7 +106,10 @@ export function createHeader(options: HeaderOptions = {}): Header {
         children: [
           createLogo({ className: 'header__logo' }),
           createNavigation(pageLinks),
-          createActions(options, menuButton),
+          createElement('div', {
+            className: 'header__actions',
+            children: [account, menuButton],
+          }),
         ],
       }),
     ],
@@ -108,6 +120,13 @@ export function createHeader(options: HeaderOptions = {}): Header {
     menuButton,
     setCurrentPage: (page: Route | undefined): void => {
       pageLinks.markCurrent(page);
+    },
+    setSession: (session: AppSession | undefined): void => {
+      account.replaceChildren(
+        ...(session === undefined
+          ? guestButtons
+          : [createProfileSummary(session, 'header__profile')]),
+      );
     },
   };
 }
