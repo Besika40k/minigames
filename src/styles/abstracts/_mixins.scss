@@ -10,15 +10,17 @@
 // covers everything up to the next whole pixel: media-down(tablet) is
 // `width < 769px` and media-up(tablet) is `width >= 769px`. The two never
 // overlap and never leave a gap, and 768.2px is still a tablet.
+$breakpoint-step: 1px;
+
 @mixin media-up($name) {
-  @media (width >= #{get-breakpoint($name) + 1px}) {
+  @media (width >= #{get-breakpoint($name) + $breakpoint-step}) {
     @content;
   }
 }
 
 // Styles for viewports up to the breakpoint (see media-up).
 @mixin media-down($name) {
-  @media (width < #{get-breakpoint($name) + 1px}) {
+  @media (width < #{get-breakpoint($name) + $breakpoint-step}) {
     @content;
   }
 }
@@ -48,12 +50,15 @@
 }
 
 // Takes an element off the screen but leaves it to screen readers, for a text
-// that a sighted person does not need (or that does not fit)
+// that a sighted person does not need (or that does not fit). A box of one
+// pixel, not zero: some screen readers skip an element without any size.
+$hidden-size: 1px;
+
 @mixin visually-hidden {
   position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
+  width: $hidden-size;
+  height: $hidden-size;
+  margin: -$hidden-size;
   padding: 0;
   overflow: hidden;
   border: 0;
