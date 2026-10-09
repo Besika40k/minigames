@@ -3,7 +3,10 @@
 // The style guide gives no line height: this one is measured from the mockups
 $description-line-height: 20px;
 
-// On mobile the spec boxes are 150px wide at most, centered in two columns
+// The four spec boxes stand in one row; on mobile they are 150px wide at most,
+// centered in two columns
+$spec-columns: 4;
+$spec-columns-mobile: 2;
 $spec-width-mobile: 150px;
 
 // Sizes that fall between two size tokens. The heart icon is 20 by 19px, the
@@ -75,12 +78,12 @@ $heart-gap: 6px;
 // Four boxes in a row, two by two on mobile
 .game-details__specs {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat($spec-columns, minmax(0, 1fr));
   gap: get-size(2);
   margin: get-size(3) 0 0;
 
   @include media-down(mobile) {
-    grid-template-columns: repeat(2, minmax(0, $spec-width-mobile));
+    grid-template-columns: repeat($spec-columns-mobile, minmax(0, $spec-width-mobile));
     justify-content: center;
   }
 }
