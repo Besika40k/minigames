@@ -10,6 +10,8 @@ export interface AuthSwitcherActions {
   readonly onModeChange: (mode: AuthMode) => void;
   // Sends the values of a valid form (see AuthPanelActions)
   readonly onSubmit: (request: AuthRequest) => Promise<void>;
+  // Signs in through Google's window (see AuthPanelActions)
+  readonly onGoogle: () => Promise<void>;
 }
 
 export interface AuthSwitcher {
@@ -131,7 +133,11 @@ export function createAuthSwitcher(actions: AuthSwitcherActions): AuthSwitcher {
     tabs[mode].focus();
   };
 
-  const panelActions: AuthPanelActions = { onSwitch: switchFromLink, onSubmit: actions.onSubmit };
+  const panelActions: AuthPanelActions = {
+    onSwitch: switchFromLink,
+    onSubmit: actions.onSubmit,
+    onGoogle: actions.onGoogle,
+  };
   const panels: Readonly<Record<AuthMode, AuthPanel>> = {
     [AuthMode.Login]: createAuthPanel(AuthMode.Login, panelActions),
     [AuthMode.Register]: createAuthPanel(AuthMode.Register, panelActions),

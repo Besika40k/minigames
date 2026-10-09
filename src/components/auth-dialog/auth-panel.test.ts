@@ -10,10 +10,12 @@ function renderPanel(
   mode: AuthMode,
   parent: HTMLElement = document.body,
   onSubmit: SubmitHandler = vi.fn<(request: AuthRequest) => Promise<void>>(),
+  onGoogle: Mock<() => Promise<void>> = vi.fn<() => Promise<void>>().mockResolvedValue(),
 ): AuthPanel {
   const panel: AuthPanel = createAuthPanel(mode, {
     onSwitch: vi.fn<(mode: AuthMode) => void>(),
     onSubmit,
+    onGoogle,
   });
   parent.append(panel.element);
 

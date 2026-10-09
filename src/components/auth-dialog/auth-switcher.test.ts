@@ -9,6 +9,7 @@ function renderSwitcher(onModeChange: ModeListener = vi.fn()): AuthSwitcher {
   const switcher: AuthSwitcher = createAuthSwitcher({
     onModeChange,
     onSubmit: vi.fn<(request: AuthRequest) => Promise<void>>().mockResolvedValue(),
+    onGoogle: vi.fn<() => Promise<void>>().mockResolvedValue(),
   });
   document.body.append(switcher.tabList, switcher.panels);
 
