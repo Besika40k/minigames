@@ -36,6 +36,7 @@ const SIGN_IN_UNAVAILABLE = 'Sign-in is not available right now. Please try agai
 export const AUTH_ERROR_MESSAGES: AuthErrorMessages = {
   canceled: 'Google sign-in was canceled.',
   unknown: 'Something went wrong. Please try again.',
+  outdated: 'MiniGames has been updated. Reload the page and try again.',
   byCode: {
     'auth/invalid-credential': WRONG_CREDENTIALS,
     'auth/wrong-password': WRONG_CREDENTIALS,

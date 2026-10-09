@@ -29,16 +29,20 @@ export interface AuthActions {
   readonly signInWithGoogle: () => Promise<void>;
 }
 
-// The message of a failure: the service explains its own errors, a closed
-// Google window is only news, and a service that could not even load means no
-// connection
+// The message of a service that could not load. Offline, the connection is to
+// blame. Online, a newer deploy of the app has replaced the file this page
+// asks for, and only a reload brings the page up to date.
+function getLoadFailureText(): string {
+  return navigator.onLine
+    ? AUTH_ERROR_MESSAGES.outdated
+    : (AUTH_ERROR_MESSAGES.byCode['auth/network-request-failed'] ?? AUTH_ERROR_MESSAGES.unknown);
+}
+
+// The message of a failure: the service explains its own errors, and a
+// closed Google window is only news
 function getFailureMessage(error: unknown, service: AuthService | undefined): SnackbarMessage {
   if (service === undefined) {
-    return {
-      variant: SnackbarVariant.Error,
-      text:
-        AUTH_ERROR_MESSAGES.byCode['auth/network-request-failed'] ?? AUTH_ERROR_MESSAGES.unknown,
-    };
+    return { variant: SnackbarVariant.Error, text: getLoadFailureText() };
   }
   const failure: InstanceType<AuthService['AuthServiceError']> =
     error instanceof service.AuthServiceError ? error : service.toAuthServiceError(error);
