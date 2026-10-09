@@ -1,14 +1,19 @@
+import { SESSION_STORAGE_KEY } from '../auth/session.ts';
+import { createSessionStore, type SessionStore } from '../auth/session-store.ts';
 import { createAuthDialog } from '../components/auth-dialog/auth-dialog.ts';
 import { createBurgerMenu } from '../components/burger-menu/burger-menu.ts';
 import { createFooter } from '../components/footer/footer.ts';
 import { createGameDetailsDialog } from '../components/game-details-dialog/game-details-dialog.ts';
 import { createHeader, type Header } from '../components/header/header.ts';
+import { showSnackbar } from '../components/snackbar/snackbar.ts';
+import { SESSION_EXPIRED_MESSAGE } from '../data/auth.ts';
 import { PAGE_TITLES } from '../data/pages.ts';
 import { renderHomePage } from '../pages/home/home-page.ts';
 import { renderLibraryPage } from '../pages/library/library-page.ts';
 import { renderNotFoundPage } from '../pages/not-found/not-found-page.ts';
 import type { AuthDialog, AuthMode } from '../types/auth.ts';
 import type { BurgerMenu } from '../types/burger-menu.ts';
+import { SnackbarVariant } from '../types/feedback.ts';
 import type { Game } from '../types/game.ts';
 import type { GameDetailsDialog } from '../types/game-details.ts';
 import {
@@ -25,6 +30,18 @@ import { Router } from './router.ts';
 import { parseDialog, removeUnusedDialogParameters } from './url.ts';
 
 export function startApp(): void {
+  // Whether the visitor is signed in. Firebase loads only when it is needed,
+  // so a guest's visit never downloads it.
+  const session: SessionStore = createSessionStore({
+    signOut: async (): Promise<void> => {
+      const { signOutUser } = await import('../auth/auth-service.ts');
+      await signOutUser();
+    },
+    onExpire: (): void => {
+      showSnackbar({ variant: SnackbarVariant.Warning, text: SESSION_EXPIRED_MESSAGE });
+    },
+  });
+
   // A dialog opens over the page in a new history entry, so Back closes it
   const openDialog = (parameter: DialogParameter, value: string): void => {
     const query: URLSearchParams = new URLSearchParams(router.location.query);
@@ -129,6 +146,9 @@ export function startApp(): void {
   };
   const router: Router = new Router(routes, notFound, main);
   router.onChange((location: AppLocation): void => {
+    // An expired session ends before a dialog of the new address shows, and
+    // the navigation goes on in guest mode
+    session.check();
     header.setCurrentPage(location.route);
     menu.setCurrentPage(location.route);
     // The menu is not in the address, so a new address (for example the
@@ -145,5 +165,22 @@ export function startApp(): void {
     }
     showDialog(dialog);
   });
+
+  // Timers run late in a hidden tab, so a session may have expired by the
+  // time the visitor comes back. Another tab may also sign in or out.
+  document.addEventListener('visibilitychange', (): void => {
+    if (document.visibilityState === 'visible') {
+      session.check();
+    }
+  });
+  globalThis.addEventListener('storage', (event: StorageEvent): void => {
+    // A key of null means the other tab cleared all of the site's storage
+    if ((event.key ?? SESSION_STORAGE_KEY) === SESSION_STORAGE_KEY) {
+      session.check();
+    }
+  });
+
+  // The stored session is checked once at startup, before the first page shows
+  session.check();
   router.start();
 }

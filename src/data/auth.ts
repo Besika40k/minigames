@@ -66,6 +66,9 @@ export const CANCELED_AUTH_CODES: ReadonlySet<string> = new Set([
   'auth/user-cancelled',
 ]);
 
+// The warning when the app session runs out (see src/auth/session.ts)
+export const SESSION_EXPIRED_MESSAGE = 'Your session has expired. Please log in again.';
+
 export const AUTH_DIALOG_LABEL = 'Log in or sign up';
 export const AUTH_TABS_LABEL = 'Account form';
 
