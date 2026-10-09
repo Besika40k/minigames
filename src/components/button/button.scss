@@ -59,6 +59,11 @@ $disabled-opacity: 0.5;
   @include hover {
     background-color: get-color(surface);
   }
+
+  // After the hover rule: a disabled button does not react to the pointer
+  &:disabled {
+    background-color: transparent;
+  }
 }
 
 .button--filled {
@@ -66,5 +71,10 @@ $disabled-opacity: 0.5;
 
   @include hover {
     background-color: get-color(primary-high);
+  }
+
+  // After the hover rule: a disabled button does not react to the pointer
+  &:disabled {
+    background-color: get-color(primary);
   }
 }
