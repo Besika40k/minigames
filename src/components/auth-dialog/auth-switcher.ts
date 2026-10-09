@@ -2,7 +2,7 @@ import { AUTH_CONTENT, AUTH_MODES, AUTH_TABS_LABEL } from '../../data/auth.ts';
 import { AuthMode } from '../../types/auth.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { getPanelId, getTabId } from './auth-ids.ts';
-import { createAuthPanel } from './auth-panel.ts';
+import { createAuthPanel, type AuthPanel } from './auth-panel.ts';
 
 export interface AuthSwitcher {
   readonly tabList: HTMLElement;
@@ -125,7 +125,7 @@ export function createAuthSwitcher(onModeChange: (mode: AuthMode) => void): Auth
     tabs[mode].focus();
   };
 
-  const panels: Readonly<Record<AuthMode, HTMLElement>> = {
+  const panels: Readonly<Record<AuthMode, AuthPanel>> = {
     [AuthMode.Login]: createAuthPanel(AuthMode.Login, switchFromLink),
     [AuthMode.Register]: createAuthPanel(AuthMode.Register, switchFromLink),
   };
@@ -138,7 +138,7 @@ export function createAuthSwitcher(onModeChange: (mode: AuthMode) => void): Auth
 
   const container: HTMLElement = createElement('div', {
     className: 'auth-dialog__panels',
-    children: AUTH_MODES.map((mode: AuthMode): HTMLElement => panels[mode]),
+    children: AUTH_MODES.map((mode: AuthMode): HTMLElement => panels[mode].element),
   });
 
   // Only the selected tab is a stop of the Tab key: the arrow keys move between tabs
@@ -160,12 +160,17 @@ export function createAuthSwitcher(onModeChange: (mode: AuthMode) => void): Auth
 
     if (isAnimated && mode !== previousMode) {
       const isForward: boolean = AUTH_MODES.indexOf(mode) > AUTH_MODES.indexOf(previousMode);
-      finishChange = crossFade(container, panels[previousMode], panels[mode], isForward);
+      finishChange = crossFade(
+        container,
+        panels[previousMode].element,
+        panels[mode].element,
+        isForward,
+      );
       return;
     }
 
     for (const panelMode of AUTH_MODES) {
-      panels[panelMode].hidden = panelMode !== mode;
+      panels[panelMode].element.hidden = panelMode !== mode;
     }
   }
 
