@@ -1,8 +1,10 @@
 @use 'abstracts' as *;
 
+// The desktop header in the mockup, between the size-10 and size-11 tokens
+$header-height: 85px;
+
 .header {
-  // 85px in the mockup: size-10 plus 5px, which no size token covers
-  height: get-size(10) + 5px;
+  height: $header-height;
   border-bottom: $border-width solid get-color(on-primary);
   background-color: get-color(bg);
 
