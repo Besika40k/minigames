@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { showSnackbar } from '../components/snackbar/snackbar.ts';
-import { AUTH_ERROR_MESSAGES } from '../data/auth.ts';
+import { AUTH_ERROR_MESSAGES, LOGOUT_MESSAGES } from '../data/auth.ts';
 import { AuthMode, type AuthProfile } from '../types/auth.ts';
 import { SnackbarVariant } from '../types/feedback.ts';
 import type { AppSession } from '../types/session.ts';
@@ -26,19 +26,24 @@ const PROFILE: AuthProfile = { displayName: 'CozyGamer', email: 'cozy@minigames.
 interface TestActions {
   readonly actions: AuthActions;
   readonly onSignedIn: Mock<(session: AppSession) => void>;
+  readonly session: SessionStore;
+  readonly signOut: Mock<() => Promise<void>>;
 }
 
 function createTestActions(
   loadService: () => Promise<AuthService> = (): Promise<AuthService> =>
     Promise.resolve(authService),
 ): TestActions {
-  const session: SessionStore = createSessionStore({
-    signOut: vi.fn<() => Promise<void>>().mockResolvedValue(),
-    onExpire: vi.fn<() => void>(),
-  });
+  const signOut: Mock<() => Promise<void>> = vi.fn<() => Promise<void>>().mockResolvedValue();
+  const session: SessionStore = createSessionStore({ signOut, onExpire: vi.fn<() => void>() });
   const onSignedIn: Mock<(session: AppSession) => void> = vi.fn<(session: AppSession) => void>();
 
-  return { actions: createAuthActions({ session, loadService, onSignedIn }), onSignedIn };
+  return {
+    actions: createAuthActions({ session, loadService, onSignedIn }),
+    onSignedIn,
+    session,
+    signOut,
+  };
 }
 
 function readStoredSession(): unknown {
@@ -214,6 +219,40 @@ describe('Google sign-in', (): void => {
     expect(showSnackbar).toHaveBeenCalledWith({
       variant: SnackbarVariant.Error,
       text: AUTH_ERROR_MESSAGES.byCode['auth/popup-blocked'],
+    });
+  });
+});
+
+describe('logout', (): void => {
+  it('removes only the session key, signs out and says goodbye', async (): Promise<void> => {
+    localStorage.setItem('other-app', 'kept');
+    const { actions, session, signOut } = createTestActions();
+    session.start(PROFILE);
+
+    await actions.logOut();
+
+    expect(localStorage.getItem(SESSION_STORAGE_KEY)).toBeNull();
+    expect(localStorage.getItem('other-app')).toBe('kept');
+    expect(session.check()).toBeUndefined();
+    expect(signOut).toHaveBeenCalledOnce();
+    expect(showSnackbar).toHaveBeenCalledExactlyOnceWith({
+      variant: SnackbarVariant.Success,
+      text: LOGOUT_MESSAGES.success,
+    });
+  });
+
+  it('stays a guest and shows an error when the Firebase sign-out fails', async (): Promise<void> => {
+    const { actions, session, signOut } = createTestActions();
+    session.start(PROFILE);
+    signOut.mockRejectedValue(new Error('offline'));
+
+    await actions.logOut();
+
+    expect(session.check()).toBeUndefined();
+    expect(localStorage.getItem(SESSION_STORAGE_KEY)).toBeNull();
+    expect(showSnackbar).toHaveBeenCalledExactlyOnceWith({
+      variant: SnackbarVariant.Error,
+      text: LOGOUT_MESSAGES.failure,
     });
   });
 });
