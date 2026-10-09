@@ -85,6 +85,9 @@ $header-height: 85px;
   display: flex;
   align-items: center;
   gap: get-size(2);
+  // Without this the actions keep the full width of a long name: they may
+  // shrink, and the name then ends in an ellipsis
+  min-width: 0;
 
   @include media-down(laptop) {
     gap: get-size(1);
@@ -118,6 +121,12 @@ $header-height: 85px;
       display: none;
     }
   }
+}
+
+// The buttons keep their size and their one line; the name gives way instead
+.header__auth-button {
+  flex: none;
+  white-space: nowrap;
 }
 
 .header__auth-button--log-in,
