@@ -33,6 +33,24 @@ export interface AuthField {
   readonly canRevealPassword?: boolean;
 }
 
+// The inline error texts of the field rules
+export interface AuthValidationMessages {
+  readonly emailRequired: string;
+  readonly emailFormat: string;
+  readonly usernameRequired: string;
+  readonly usernameFirstLetter: string;
+  readonly usernameCharacters: string;
+  readonly usernameLength: string;
+  readonly passwordRequired: string;
+  readonly passwordLength: string;
+  readonly passwordCharacters: string;
+  readonly passwordUppercase: string;
+  readonly passwordDigit: string;
+  readonly passwordSpecial: string;
+  readonly confirmPasswordRequired: string;
+  readonly confirmPasswordMismatch: string;
+}
+
 export interface AuthFormContent {
   readonly tabLabel: string;
   readonly title: string;

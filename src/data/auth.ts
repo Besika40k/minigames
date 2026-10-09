@@ -1,5 +1,32 @@
-import { AuthFieldName, AuthMode, type AuthFormContent } from '../types/auth.ts';
+import {
+  AuthFieldName,
+  AuthMode,
+  type AuthFormContent,
+  type AuthValidationMessages,
+} from '../types/auth.ts';
 import { IconName } from '../utils/create-icon.ts';
+
+// The limits of the field rules
+export const USERNAME_MIN_LENGTH = 2;
+export const USERNAME_MAX_LENGTH = 30;
+export const PASSWORD_MIN_LENGTH = 6;
+
+export const AUTH_VALIDATION_MESSAGES: AuthValidationMessages = {
+  emailRequired: 'Please enter your email address',
+  emailFormat: 'Please enter a valid email address',
+  usernameRequired: 'Please enter a username',
+  usernameFirstLetter: 'Username must start with an uppercase English letter',
+  usernameCharacters: 'Username may contain only English letters and digits',
+  usernameLength: `Username must be ${String(USERNAME_MIN_LENGTH)} to ${String(USERNAME_MAX_LENGTH)} characters long`,
+  passwordRequired: 'Please enter your password',
+  passwordLength: `Password must be at least ${String(PASSWORD_MIN_LENGTH)} characters long`,
+  passwordCharacters: 'Password may contain only English letters, digits and special characters',
+  passwordUppercase: 'Password must contain an uppercase English letter',
+  passwordDigit: 'Password must contain a digit',
+  passwordSpecial: 'Password must contain a special character, such as ! or #',
+  confirmPasswordRequired: 'Please repeat your password',
+  confirmPasswordMismatch: 'Passwords do not match',
+};
 
 export const AUTH_DIALOG_LABEL = 'Log in or sign up';
 export const AUTH_TABS_LABEL = 'Account form';
@@ -28,6 +55,7 @@ export const AUTH_CONTENT: Readonly<Record<AuthMode, AuthFormContent>> = {
         icon: IconName.Lock,
         placeholder: '••••••••',
         autocomplete: 'current-password',
+        minLength: PASSWORD_MIN_LENGTH,
         canRevealPassword: true,
       },
     ],
@@ -63,9 +91,9 @@ export const AUTH_CONTENT: Readonly<Record<AuthMode, AuthFormContent>> = {
         label: 'Password',
         type: 'password',
         icon: IconName.Lock,
-        placeholder: 'Min. 8 characters',
+        placeholder: `Min. ${String(PASSWORD_MIN_LENGTH)} characters`,
         autocomplete: 'new-password',
-        minLength: 8,
+        minLength: PASSWORD_MIN_LENGTH,
       },
       {
         name: AuthFieldName.ConfirmPassword,
