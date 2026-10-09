@@ -56,7 +56,7 @@ describe('header', (): void => {
 
     header.setSession(SESSION);
 
-    expect(getButtonTexts(header)).toEqual([]);
+    expect(getButtonTexts(header)).toEqual(['Log Out']);
     expect(header.element.querySelector('.header__profile')?.textContent).toBe('APAlex Pro');
     // The menu button stays
     expect(header.element.querySelector('.header__burger')).toBe(header.menuButton);

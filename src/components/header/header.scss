@@ -120,7 +120,8 @@ $header-height: 85px;
   }
 }
 
-.header__auth-button--log-in {
+.header__auth-button--log-in,
+.header__auth-button--log-out {
   @include media-down(tablet) {
     display: none;
   }

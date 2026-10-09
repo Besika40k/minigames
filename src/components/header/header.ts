@@ -16,6 +16,8 @@ import './header.scss';
 export interface HeaderOptions {
   // Log In asks for the login form and Sign Up for the registration form
   readonly onAuthClick?: (mode: AuthMode) => void;
+  // Log Out ends the session of the signed-in user
+  readonly onLogout?: () => void;
 }
 
 export interface Header {
@@ -87,10 +89,24 @@ function createGuestButtons(options: HeaderOptions): HTMLButtonElement[] {
   return [logIn, signUp];
 }
 
+// On desktop Log Out stands next to the profile; below that it is in the menu
+function createLogoutButton(options: HeaderOptions): HTMLButtonElement {
+  return createButton({
+    variant: ButtonVariant.Outlined,
+    size: ButtonSize.Medium,
+    text: 'Log Out',
+    className: 'header__auth-button header__auth-button--log-out',
+    onClick: (): void => {
+      options.onLogout?.();
+    },
+  });
+}
+
 export function createHeader(options: HeaderOptions = {}): Header {
   const menuButton: HTMLButtonElement = createMenuButton();
   const pageLinks: PageLinks = new PageLinks();
   const guestButtons: HTMLButtonElement[] = createGuestButtons(options);
+  const logoutButton: HTMLButtonElement = createLogoutButton(options);
 
   // The part of the actions that depends on who is visiting
   const account: HTMLElement = createElement('div', {
@@ -125,7 +141,7 @@ export function createHeader(options: HeaderOptions = {}): Header {
       account.replaceChildren(
         ...(session === undefined
           ? guestButtons
-          : [createProfileSummary(session, 'header__profile')]),
+          : [createProfileSummary(session, 'header__profile'), logoutButton]),
       );
     },
   };
