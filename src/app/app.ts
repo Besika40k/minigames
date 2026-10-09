@@ -36,6 +36,16 @@ async function loadAuthService(): Promise<AuthService> {
   return import('../auth/auth-service.ts');
 }
 
+// Google's window may only open right after a click, so the auth service
+// starts loading as soon as the auth dialog opens and is ready by then
+async function preloadAuthService(): Promise<void> {
+  try {
+    await loadAuthService();
+  } catch {
+    // A sign-in reports a service that cannot load
+  }
+}
+
 export function startApp(): void {
   // Whether the visitor is signed in
   const session: SessionStore = createSessionStore({
@@ -85,6 +95,7 @@ export function startApp(): void {
       closeDialog(DialogParameter.Auth);
     },
     onSubmit: authActions.submit,
+    onGoogle: authActions.signInWithGoogle,
     // Another form changes the mode in the address without a new history
     // entry, so Back still closes the dialog at once
     onModeChange: (mode: AuthMode): void => {
@@ -122,6 +133,7 @@ export function startApp(): void {
       case DialogParameter.Auth: {
         gameDetails.hide();
         authDialog.show(dialog.mode);
+        void preloadAuthService();
         break;
       }
       default: {
