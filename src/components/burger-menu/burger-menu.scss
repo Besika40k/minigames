@@ -104,6 +104,17 @@ body:has(.mobile-menu[open]) {
   }
 }
 
+// The signed-in user above the menu's account button, in white on the dark menu
+.mobile-menu__profile {
+  color: get-color(white);
+  font-size: get-font-size(body-large);
+
+  // The menu is wide enough for most names: only a longer one ends in an ellipsis
+  .profile-summary__name {
+    max-width: none;
+  }
+}
+
 .mobile-menu__actions {
   display: flex;
   flex-direction: column;
