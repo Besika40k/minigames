@@ -27,6 +27,7 @@ export interface MenuContentHandlers {
   readonly onClose: () => void;
   readonly onLinkClick: () => void;
   readonly onAuthClick: (mode: AuthMode) => void;
+  readonly onLogout: () => void;
 }
 
 function createTop(handlers: MenuContentHandlers): HTMLElement {
@@ -92,6 +93,13 @@ function createActions(handlers: MenuContentHandlers): MenuActions {
     },
   });
 
+  const logOut: HTMLButtonElement = createButton({
+    variant: ButtonVariant.Outlined,
+    size: ButtonSize.Medium,
+    text: 'Log Out',
+    onClick: handlers.onLogout,
+  });
+
   const guestButtons: HTMLButtonElement[] = [logIn, signUp];
   const element: HTMLElement = createElement('div', {
     className: 'mobile-menu__actions',
@@ -104,7 +112,7 @@ function createActions(handlers: MenuContentHandlers): MenuActions {
       element.replaceChildren(
         ...(session === undefined
           ? guestButtons
-          : [createProfileSummary(session, 'mobile-menu__profile')]),
+          : [createProfileSummary(session, 'mobile-menu__profile'), logOut]),
       );
     },
   };

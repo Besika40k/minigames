@@ -71,7 +71,7 @@ describe('burger menu', (): void => {
     const { menu } = renderMenu();
 
     menu.setSession(SESSION);
-    expect(getActionTexts(menu)).toEqual([]);
+    expect(getActionTexts(menu)).toEqual(['Log Out']);
     expect(menu.element.querySelector('.mobile-menu__profile')?.textContent).toBe('APAlex Pro');
 
     menu.setSession(undefined);

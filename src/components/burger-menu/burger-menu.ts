@@ -29,6 +29,10 @@ export function createBurgerMenu(options: BurgerMenuOptions): BurgerMenu {
         closeMenu();
         options.onAuthClick?.(mode);
       },
+      onLogout: (): void => {
+        closeMenu();
+        options.onLogout?.();
+      },
     },
     pageLinks,
   );
