@@ -1,7 +1,11 @@
 import { showSnackbar } from '../components/snackbar/snackbar.ts';
-import { AUTH_ERROR_MESSAGES, AUTH_SUCCESS_MESSAGES } from '../data/auth.ts';
+import {
+  AUTH_ERROR_MESSAGES,
+  AUTH_SUCCESS_MESSAGES,
+  GOOGLE_SUCCESS_MESSAGE,
+} from '../data/auth.ts';
 import { AuthMode, type AuthProfile, type AuthRequest } from '../types/auth.ts';
-import { SnackbarVariant } from '../types/feedback.ts';
+import { SnackbarVariant, type SnackbarMessage } from '../types/feedback.ts';
 import type { AppSession } from '../types/session.ts';
 import type { SessionStore } from './session-store.ts';
 
@@ -20,25 +24,37 @@ export interface AuthActions {
   // Signs in or up with the values of a valid form. Resolves once the outcome
   // is shown; a failure leaves the visitor as a guest, free to try again.
   readonly submit: (request: AuthRequest) => Promise<void>;
+  // Signs in through Google's window, with the same outcomes. Closing the
+  // window is not an error.
+  readonly signInWithGoogle: () => Promise<void>;
 }
 
-// The message of a failure: the service explains its own errors, and a
-// service that could not even load means no connection
-function getFailureMessage(error: unknown, service: AuthService | undefined): string {
+// The message of a failure: the service explains its own errors, a closed
+// Google window is only news, and a service that could not even load means no
+// connection
+function getFailureMessage(error: unknown, service: AuthService | undefined): SnackbarMessage {
   if (service === undefined) {
-    return AUTH_ERROR_MESSAGES.byCode['auth/network-request-failed'] ?? AUTH_ERROR_MESSAGES.unknown;
+    return {
+      variant: SnackbarVariant.Error,
+      text:
+        AUTH_ERROR_MESSAGES.byCode['auth/network-request-failed'] ?? AUTH_ERROR_MESSAGES.unknown,
+    };
   }
+  const failure: InstanceType<AuthService['AuthServiceError']> =
+    error instanceof service.AuthServiceError ? error : service.toAuthServiceError(error);
+  const isCanceled: boolean = failure.kind === service.AuthErrorKind.Canceled;
 
-  return error instanceof service.AuthServiceError
-    ? error.message
-    : service.toAuthServiceError(error).message;
+  return {
+    variant: isCanceled ? SnackbarVariant.Info : SnackbarVariant.Error,
+    text: failure.message,
+  };
 }
 
 export function createAuthActions(options: AuthActionsOptions): AuthActions {
   // A successful sign-in starts the app session, closes the dialog and greets
-  // the visitor by name. Any failure is one error message.
+  // the visitor by name. Any failure is one message.
   const run = async (
-    mode: AuthMode,
+    greeting: string,
     operation: (service: AuthService) => Promise<AuthProfile>,
   ): Promise<void> => {
     let service: AuthService | undefined;
@@ -49,19 +65,26 @@ export function createAuthActions(options: AuthActionsOptions): AuthActions {
       options.onSignedIn(session);
       showSnackbar({
         variant: SnackbarVariant.Success,
-        text: `${AUTH_SUCCESS_MESSAGES[mode]}, ${session.displayName}!`,
+        text: `${greeting}, ${session.displayName}!`,
       });
     } catch (error: unknown) {
-      showSnackbar({ variant: SnackbarVariant.Error, text: getFailureMessage(error, service) });
+      showSnackbar(getFailureMessage(error, service));
     }
   };
 
   return {
     submit: async (request: AuthRequest): Promise<void> => {
-      await run(request.mode, async (service: AuthService): Promise<AuthProfile> =>
-        request.mode === AuthMode.Register
-          ? service.registerWithEmail(request.username, request.email, request.password)
-          : service.signInWithEmail(request.email, request.password),
+      await run(
+        AUTH_SUCCESS_MESSAGES[request.mode],
+        async (service: AuthService): Promise<AuthProfile> =>
+          request.mode === AuthMode.Register
+            ? service.registerWithEmail(request.username, request.email, request.password)
+            : service.signInWithEmail(request.email, request.password),
+      );
+    },
+    signInWithGoogle: async (): Promise<void> => {
+      await run(GOOGLE_SUCCESS_MESSAGE, async (service: AuthService): Promise<AuthProfile> =>
+        service.signInWithGoogle(),
       );
     },
   };
