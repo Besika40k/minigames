@@ -57,7 +57,7 @@ $skeleton-record-height: 49px;
 // The close button stays over the hero in every state of the dialog
 .game-details__close {
   position: absolute;
-  z-index: 1;
+  z-index: get-layer(raised);
   inset-block-start: get-size(2);
   inset-inline-end: get-size(2);
   display: flex;

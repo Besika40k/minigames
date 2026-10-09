@@ -64,7 +64,7 @@ $open-caret-rotation: 180deg;
   position: absolute;
   inset-block-start: calc(100% + #{get-size(0.5)});
   inset-inline-end: 0;
-  z-index: 1;
+  z-index: get-layer(raised);
   width: max(100%, $list-width);
   margin: 0;
   padding: 0;
