@@ -64,3 +64,19 @@ export interface AuthFormContent {
   readonly switchQuestion: string;
   readonly switchLinkText: string;
 }
+
+// The signed-in user as the app keeps it: no password and no Firebase token
+export interface AuthProfile {
+  readonly displayName: string;
+  readonly email: string;
+  // The account picture, when the account has one (Google)
+  readonly avatarUrl?: string;
+}
+
+export interface AuthErrorMessages {
+  // A Google window the visitor closed
+  readonly canceled: string;
+  // Any failure without a message of its own
+  readonly unknown: string;
+  readonly byCode: Readonly<Partial<Record<string, string>>>;
+}

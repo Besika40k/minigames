@@ -1,6 +1,7 @@
 import {
   AuthFieldName,
   AuthMode,
+  type AuthErrorMessages,
   type AuthFormContent,
   type AuthValidationMessages,
 } from '../types/auth.ts';
@@ -27,6 +28,43 @@ export const AUTH_VALIDATION_MESSAGES: AuthValidationMessages = {
   confirmPasswordRequired: 'Please repeat your password',
   confirmPasswordMismatch: 'Passwords do not match',
 };
+
+// What a failed sign-in, sign-up or sign-out says, by Firebase error code
+const WRONG_CREDENTIALS = 'Wrong email or password.';
+const SIGN_IN_UNAVAILABLE = 'Sign-in is not available right now. Please try again later.';
+
+export const AUTH_ERROR_MESSAGES: AuthErrorMessages = {
+  canceled: 'Google sign-in was canceled.',
+  unknown: 'Something went wrong. Please try again.',
+  byCode: {
+    'auth/invalid-credential': WRONG_CREDENTIALS,
+    'auth/wrong-password': WRONG_CREDENTIALS,
+    'auth/user-not-found': WRONG_CREDENTIALS,
+    'auth/invalid-email': 'This email address is not valid.',
+    'auth/user-disabled': 'This account is disabled.',
+    'auth/email-already-in-use': 'An account with this email already exists. Log in instead.',
+    'auth/weak-password': 'This password is too weak. Choose a stronger one.',
+    'auth/too-many-requests': 'Too many attempts. Wait a moment and try again.',
+    'auth/network-request-failed':
+      'The sign-in service cannot be reached. Check your connection and try again.',
+    'auth/popup-blocked':
+      'The browser blocked the Google window. Allow pop-ups for this site and try again.',
+    'auth/account-exists-with-different-credential':
+      'This email already has an account with a password. Log in with your email instead.',
+    // The project config is missing or does not allow this sign-in
+    'auth/invalid-api-key': SIGN_IN_UNAVAILABLE,
+    'auth/configuration-not-found': SIGN_IN_UNAVAILABLE,
+    'auth/operation-not-allowed': SIGN_IN_UNAVAILABLE,
+    'auth/unauthorized-domain': SIGN_IN_UNAVAILABLE,
+  },
+};
+
+// The codes of a Google window the visitor closed or replaced with another one
+export const CANCELED_AUTH_CODES: ReadonlySet<string> = new Set([
+  'auth/popup-closed-by-user',
+  'auth/cancelled-popup-request',
+  'auth/user-cancelled',
+]);
 
 export const AUTH_DIALOG_LABEL = 'Log in or sign up';
 export const AUTH_TABS_LABEL = 'Account form';
