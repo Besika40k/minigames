@@ -96,5 +96,7 @@ export interface AuthErrorMessages {
   readonly canceled: string;
   // Any failure without a message of its own
   readonly unknown: string;
+  // The sign-in part of the app is gone: a newer deploy replaced it
+  readonly outdated: string;
   readonly byCode: Readonly<Partial<Record<string, string>>>;
 }
