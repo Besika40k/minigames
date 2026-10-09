@@ -66,6 +66,12 @@ export const CANCELED_AUTH_CODES: ReadonlySet<string> = new Set([
   'auth/user-cancelled',
 ]);
 
+// The start of the message after a sign-in or sign-up, followed by the name
+export const AUTH_SUCCESS_MESSAGES: Readonly<Record<AuthMode, string>> = {
+  [AuthMode.Login]: 'Welcome back',
+  [AuthMode.Register]: 'Welcome to MiniGames',
+};
+
 // The warning when the app session runs out (see src/auth/session.ts)
 export const SESSION_EXPIRED_MESSAGE = 'Your session has expired. Please log in again.';
 
@@ -102,6 +108,7 @@ export const AUTH_CONTENT: Readonly<Record<AuthMode, AuthFormContent>> = {
     ],
     forgotPasswordText: 'Forgot Password?',
     submitText: 'Login',
+    pendingText: 'Logging in…',
     googleText: 'Continue with Google',
     switchQuestion: "Don't have an account?",
     switchLinkText: 'Register',
@@ -146,6 +153,7 @@ export const AUTH_CONTENT: Readonly<Record<AuthMode, AuthFormContent>> = {
       },
     ],
     submitText: 'Create Account',
+    pendingText: 'Creating account…',
     googleText: 'Sign up with Google',
     switchQuestion: 'Already have an account?',
     switchLinkText: 'Login',
