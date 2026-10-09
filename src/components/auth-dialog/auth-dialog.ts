@@ -14,6 +14,8 @@ export interface AuthDialogOptions {
   // Signs in or up with the values of a valid form. The dialog stays locked
   // until the promise settles, and the visitor can try again after a failure.
   readonly onSubmit?: (request: AuthRequest) => Promise<void>;
+  // Signs in through Google's window, locked the same way
+  readonly onGoogle?: () => Promise<void>;
 }
 
 // The dialog with the login and registration forms. It closes only through
@@ -87,6 +89,11 @@ export function createAuthDialog(options: AuthDialogOptions): AuthDialog {
     onSubmit: async (request: AuthRequest): Promise<void> => {
       await runLocked(async (): Promise<void> => {
         await options.onSubmit?.(request);
+      });
+    },
+    onGoogle: async (): Promise<void> => {
+      await runLocked(async (): Promise<void> => {
+        await options.onGoogle?.();
       });
     },
   });

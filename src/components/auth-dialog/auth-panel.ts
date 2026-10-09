@@ -20,6 +20,9 @@ export interface AuthPanelActions {
   // Sends the values of a valid form. The submit button shows that the
   // request is under way until the promise settles.
   readonly onSubmit: (request: AuthRequest) => Promise<void>;
+  // Signs in through Google's window. The Google button shows that it is
+  // waiting until the promise settles.
+  readonly onGoogle: () => Promise<void>;
 }
 
 export interface AuthPanel {
@@ -202,18 +205,41 @@ function createForm(
   };
 }
 
-// Signing in with Google is not part of Story 1, so the button does nothing yet
-function createGoogleButton(text: string): HTMLButtonElement {
+// The Google button says that it waits while Google's window is open
+function createGoogleButton(
+  content: AuthFormContent,
+  onGoogle: () => Promise<void>,
+): HTMLButtonElement {
   const logo: HTMLImageElement = createElement('img', {
     attributes: { src: googleLogoUrl, alt: '', width: GOOGLE_LOGO_SIZE, height: GOOGLE_LOGO_SIZE },
   });
-
-  return createButton({
+  const label: HTMLSpanElement = createElement('span', { text: content.googleText });
+  const button: HTMLButtonElement = createButton({
     variant: ButtonVariant.Outlined,
     size: ButtonSize.Large,
     className: 'auth-dialog__google',
-    children: [logo, createElement('span', { text })],
+    children: [logo, label],
   });
+
+  const setBusy = (isBusy: boolean): void => {
+    label.textContent = isBusy ? content.googlePendingText : content.googleText;
+    button.setAttribute('aria-busy', String(isBusy));
+  };
+
+  const signIn = async (): Promise<void> => {
+    setBusy(true);
+    try {
+      await onGoogle();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  button.addEventListener('click', (): void => {
+    void signIn();
+  });
+
+  return button;
 }
 
 // One form of the dialog, with the link at its bottom that switches to the other
@@ -233,7 +259,7 @@ export function createAuthPanel(mode: AuthMode, actions: AuthPanelActions): Auth
       createHeader(content),
       form.element,
       createElement('p', { className: 'auth-dialog__divider', text: DIVIDER_TEXT }),
-      createGoogleButton(content.googleText),
+      createGoogleButton(content, actions.onGoogle),
       createElement('p', {
         className: 'auth-dialog__switch',
         children: [`${content.switchQuestion} `, switchLink],
