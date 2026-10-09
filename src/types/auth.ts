@@ -13,8 +13,16 @@ export interface AuthDialog {
   readonly hide: () => void;
 }
 
+// The fields of the two forms. The values are the inputs' names and parts of their ids.
+export enum AuthFieldName {
+  Username = 'username',
+  Email = 'email',
+  Password = 'password',
+  ConfirmPassword = 'confirm-password',
+}
+
 export interface AuthField {
-  readonly name: string;
+  readonly name: AuthFieldName;
   readonly label: string;
   readonly type: 'text' | 'email' | 'password';
   readonly icon: IconName;
