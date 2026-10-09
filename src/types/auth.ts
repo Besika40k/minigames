@@ -58,12 +58,28 @@ export interface AuthFormContent {
   readonly fields: readonly AuthField[];
   readonly forgotPasswordText?: string;
   readonly submitText: string;
+  // The submit button's text while the request is under way
+  readonly pendingText: string;
   readonly googleText: string;
   // The sentence at the bottom of the form and the link in it that switches
   // to the other form
   readonly switchQuestion: string;
   readonly switchLinkText: string;
 }
+
+// The values of a valid form, ready to send
+export type AuthRequest =
+  | {
+      readonly mode: AuthMode.Login;
+      readonly email: string;
+      readonly password: string;
+    }
+  | {
+      readonly mode: AuthMode.Register;
+      readonly username: string;
+      readonly email: string;
+      readonly password: string;
+    };
 
 // The signed-in user as the app keeps it: no password and no Firebase token
 export interface AuthProfile {
