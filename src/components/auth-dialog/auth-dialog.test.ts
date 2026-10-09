@@ -42,9 +42,12 @@ interface TestDialog {
   readonly onSubmit: SubmitHandler;
 }
 
-function renderDialog(onSubmit: SubmitHandler): TestDialog {
+function renderDialog(
+  onSubmit: SubmitHandler,
+  onGoogle: Mock<() => Promise<void>> = vi.fn<() => Promise<void>>().mockResolvedValue(),
+): TestDialog {
   const onClose: Mock<() => void> = vi.fn<() => void>();
-  const dialog: AuthDialog = createAuthDialog({ onClose, onSubmit });
+  const dialog: AuthDialog = createAuthDialog({ onClose, onSubmit, onGoogle });
   document.body.append(dialog.element);
   dialog.show(AuthMode.Login);
 
@@ -213,5 +216,39 @@ describe('auth dialog without a request', (): void => {
 
     dialog.hide();
     expect(dialog.element.open).toBe(false);
+  });
+});
+
+describe('auth dialog during a Google sign-in', (): void => {
+  it('locks the dialog until Google answers', async (): Promise<void> => {
+    const deferred: Deferred = createDeferred();
+    const onGoogle: Mock<() => Promise<void>> = vi.fn<() => Promise<void>>(
+      (): Promise<void> => deferred.promise,
+    );
+    const { dialog, onClose } = renderDialog(createInstantSubmit(), onGoogle);
+    const google: HTMLButtonElement | null = dialog.element.querySelector('.auth-dialog__google');
+
+    google?.click();
+    google?.click();
+    pressEscape(dialog);
+
+    expect(onGoogle).toHaveBeenCalledOnce();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(
+      getControls(dialog).every((control: HTMLButtonElement | HTMLInputElement): boolean =>
+        isDisabled(control),
+      ),
+    ).toBe(true);
+
+    deferred.resolve();
+    await vi.waitFor((): void => {
+      expect(google?.getAttribute('aria-busy')).toBe('false');
+    });
+    expect(
+      getControls(dialog).some((control: HTMLButtonElement | HTMLInputElement): boolean =>
+        isDisabled(control),
+      ),
+    ).toBe(true);
+    expect(google?.disabled).toBe(false);
   });
 });
