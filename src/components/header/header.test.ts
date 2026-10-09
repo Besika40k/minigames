@@ -10,8 +10,11 @@ const SESSION: AppSession = {
   authenticatedAt: Date.UTC(2026, 9, 9),
 };
 
-function renderHeader(onAuthClick: Mock<(mode: AuthMode) => void> = vi.fn()): Header {
-  const header: Header = createHeader({ onAuthClick });
+function renderHeader(
+  onAuthClick: Mock<(mode: AuthMode) => void> = vi.fn(),
+  onLogout: Mock<() => void> = vi.fn(),
+): Header {
+  const header: Header = createHeader({ onAuthClick, onLogout });
   document.body.append(header.element);
 
   return header;
@@ -80,5 +83,19 @@ describe('header', (): void => {
     expect(header.element.querySelector(':scope .header__profile img')?.getAttribute('src')).toBe(
       'https://photo.example/alex.jpg',
     );
+  });
+});
+
+describe('header logout', (): void => {
+  it('logs out with the button next to the profile', (): void => {
+    const onLogout: Mock<() => void> = vi.fn<() => void>();
+    const header: Header = renderHeader(vi.fn(), onLogout);
+    header.setSession(SESSION);
+
+    header.element
+      .querySelector<HTMLButtonElement>(':scope .header__auth-button--log-out')
+      ?.click();
+
+    expect(onLogout).toHaveBeenCalledOnce();
   });
 });
