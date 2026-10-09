@@ -1,8 +1,16 @@
 import { AUTH_CONTENT, AUTH_MODES, AUTH_TABS_LABEL } from '../../data/auth.ts';
-import { AuthMode } from '../../types/auth.ts';
+import { AuthMode, type AuthRequest } from '../../types/auth.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { getPanelId, getTabId } from './auth-ids.ts';
-import { createAuthPanel, type AuthPanel } from './auth-panel.ts';
+import { createAuthPanel, type AuthPanel, type AuthPanelActions } from './auth-panel.ts';
+
+export interface AuthSwitcherActions {
+  // Hears of each form the visitor picks, but not of the forms selected with
+  // `select`
+  readonly onModeChange: (mode: AuthMode) => void;
+  // Sends the values of a valid form (see AuthPanelActions)
+  readonly onSubmit: (request: AuthRequest) => Promise<void>;
+}
 
 export interface AuthSwitcher {
   readonly tabList: HTMLElement;
@@ -89,9 +97,7 @@ function crossFade(
   return finish;
 }
 
-// `onModeChange` hears of each form the visitor picks, but not of the forms
-// selected with `select`
-export function createAuthSwitcher(onModeChange: (mode: AuthMode) => void): AuthSwitcher {
+export function createAuthSwitcher(actions: AuthSwitcherActions): AuthSwitcher {
   let selectedMode: AuthMode = AuthMode.Login;
   let finishChange: (() => void) | undefined;
 
@@ -125,9 +131,10 @@ export function createAuthSwitcher(onModeChange: (mode: AuthMode) => void): Auth
     tabs[mode].focus();
   };
 
+  const panelActions: AuthPanelActions = { onSwitch: switchFromLink, onSubmit: actions.onSubmit };
   const panels: Readonly<Record<AuthMode, AuthPanel>> = {
-    [AuthMode.Login]: createAuthPanel(AuthMode.Login, switchFromLink),
-    [AuthMode.Register]: createAuthPanel(AuthMode.Register, switchFromLink),
+    [AuthMode.Login]: createAuthPanel(AuthMode.Login, panelActions),
+    [AuthMode.Register]: createAuthPanel(AuthMode.Register, panelActions),
   };
 
   const tabList: HTMLElement = createElement('div', {
@@ -186,7 +193,7 @@ export function createAuthSwitcher(onModeChange: (mode: AuthMode) => void): Auth
       return;
     }
     select(mode, true);
-    onModeChange(mode);
+    actions.onModeChange(mode);
   }
 
   tabList.addEventListener('keydown', (event: KeyboardEvent): void => {

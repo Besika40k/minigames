@@ -1,12 +1,15 @@
 import { afterEach, describe, expect, it, vi, type Mock } from 'vitest';
-import { AuthFieldName, AuthMode } from '../../types/auth.ts';
+import { AuthFieldName, AuthMode, type AuthRequest } from '../../types/auth.ts';
 import { getErrorId, getFieldId, getPanelId, getTabId } from './auth-ids.ts';
 import { createAuthSwitcher, type AuthSwitcher } from './auth-switcher.ts';
 
 type ModeListener = Mock<(mode: AuthMode) => void>;
 
 function renderSwitcher(onModeChange: ModeListener = vi.fn()): AuthSwitcher {
-  const switcher: AuthSwitcher = createAuthSwitcher(onModeChange);
+  const switcher: AuthSwitcher = createAuthSwitcher({
+    onModeChange,
+    onSubmit: vi.fn<(request: AuthRequest) => Promise<void>>().mockResolvedValue(),
+  });
   document.body.append(switcher.tabList, switcher.panels);
 
   return switcher;
