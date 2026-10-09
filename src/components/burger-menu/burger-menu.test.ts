@@ -15,15 +15,17 @@ interface TestMenu {
   readonly menu: BurgerMenu;
   readonly trigger: HTMLButtonElement;
   readonly onAuthClick: Mock<(mode: AuthMode) => void>;
+  readonly onLogout: Mock<() => void>;
 }
 
 function renderMenu(): TestMenu {
   const trigger: HTMLButtonElement = document.createElement('button');
   const onAuthClick: Mock<(mode: AuthMode) => void> = vi.fn<(mode: AuthMode) => void>();
-  const menu: BurgerMenu = createBurgerMenu({ trigger, onAuthClick });
+  const onLogout: Mock<() => void> = vi.fn<() => void>();
+  const menu: BurgerMenu = createBurgerMenu({ trigger, onAuthClick, onLogout });
   document.body.append(trigger, menu.element);
 
-  return { menu, trigger, onAuthClick };
+  return { menu, trigger, onAuthClick, onLogout };
 }
 
 function getActionTexts(menu: BurgerMenu): string[] {
@@ -77,5 +79,18 @@ describe('burger menu', (): void => {
     menu.setSession(undefined);
     expect(getActionTexts(menu)).toEqual(['Log In', 'Sign Up']);
     expect(menu.element.querySelector('.mobile-menu__profile')).toBeNull();
+  });
+});
+
+describe('burger menu logout', (): void => {
+  it('closes before it logs out', (): void => {
+    const { menu, trigger, onLogout } = renderMenu();
+    menu.setSession(SESSION);
+    trigger.click();
+
+    menu.element.querySelector<HTMLButtonElement>(':scope .mobile-menu__actions button')?.click();
+
+    expect(menu.element.open).toBe(false);
+    expect(onLogout).toHaveBeenCalledOnce();
   });
 });
