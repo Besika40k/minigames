@@ -245,3 +245,21 @@ describe('auth form submission', (): void => {
     expect(getSubmit(panel).disabled).toBe(false);
   });
 });
+
+describe('Google sign-in button', (): void => {
+  it('starts the Google sign-in and says that it waits until it ends', async (): Promise<void> => {
+    const onGoogle: Mock<() => Promise<void>> = vi.fn<() => Promise<void>>().mockResolvedValue();
+    const panel: AuthPanel = renderPanel(AuthMode.Register, document.body, undefined, onGoogle);
+    const button: HTMLButtonElement | null = panel.element.querySelector('.auth-dialog__google');
+
+    button?.click();
+
+    expect(onGoogle).toHaveBeenCalledOnce();
+    expect(button?.textContent).toBe('Waiting for Google…');
+    expect(button?.getAttribute('aria-busy')).toBe('true');
+    await vi.waitFor((): void => {
+      expect(button?.textContent).toBe('Sign up with Google');
+    });
+    expect(button?.getAttribute('aria-busy')).toBe('false');
+  });
+});
