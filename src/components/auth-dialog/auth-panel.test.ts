@@ -192,3 +192,54 @@ describe('auth form validation', (): void => {
     expect(event.defaultPrevented).toBe(true);
   });
 });
+
+describe('auth form submission', (): void => {
+  it('sends the registration values, with the email trimmed', (): void => {
+    const onSubmit: SubmitHandler = vi
+      .fn<(request: AuthRequest) => Promise<void>>()
+      .mockResolvedValue();
+    const panel: AuthPanel = renderPanel(AuthMode.Register, document.body, onSubmit);
+    type(getInput(panel, AuthFieldName.Username), 'CozyGamer99');
+    type(getInput(panel, AuthFieldName.Email), ' cozy@minigames.com ');
+    type(getInput(panel, AuthFieldName.Password), 'Secret1!');
+    type(getInput(panel, AuthFieldName.ConfirmPassword), 'Secret1!');
+
+    getSubmit(panel).click();
+
+    expect(onSubmit).toHaveBeenCalledExactlyOnceWith({
+      mode: AuthMode.Register,
+      username: 'CozyGamer99',
+      email: 'cozy@minigames.com',
+      password: 'Secret1!',
+    });
+  });
+
+  it('sends nothing while the form is invalid', (): void => {
+    const onSubmit: SubmitHandler = vi.fn<(request: AuthRequest) => Promise<void>>();
+    const panel: AuthPanel = renderPanel(AuthMode.Login, document.body, onSubmit);
+    type(getInput(panel, AuthFieldName.Email), 'alex@');
+
+    panel.element.querySelector('form')?.requestSubmit();
+
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('shows the busy text on the submit button until the request settles', async (): Promise<void> => {
+    const onSubmit: SubmitHandler = vi
+      .fn<(request: AuthRequest) => Promise<void>>()
+      .mockResolvedValue();
+    const panel: AuthPanel = renderPanel(AuthMode.Login, document.body, onSubmit);
+    type(getInput(panel, AuthFieldName.Email), 'alex@minigames.com');
+    type(getInput(panel, AuthFieldName.Password), 'simple');
+
+    getSubmit(panel).click();
+
+    expect(getSubmit(panel).textContent).toBe('Logging in…');
+    expect(getSubmit(panel).getAttribute('aria-busy')).toBe('true');
+    await vi.waitFor((): void => {
+      expect(getSubmit(panel).textContent).toBe('Login');
+    });
+    expect(getSubmit(panel).getAttribute('aria-busy')).toBe('false');
+    expect(getSubmit(panel).disabled).toBe(false);
+  });
+});
