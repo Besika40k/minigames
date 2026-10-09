@@ -138,11 +138,17 @@ export function createHeader(options: HeaderOptions = {}): Header {
       pageLinks.markCurrent(page);
     },
     setSession: (session: AppSession | undefined): void => {
+      // A pressed Log Out leaves the page, so the focus moves to Log In
+      // instead of falling back to the start of the page
+      const wasFocused: boolean = account.contains(document.activeElement);
       account.replaceChildren(
         ...(session === undefined
           ? guestButtons
           : [createProfileSummary(session, 'header__profile'), logoutButton]),
       );
+      if (wasFocused) {
+        account.querySelector('button')?.focus();
+      }
     },
   };
 }
