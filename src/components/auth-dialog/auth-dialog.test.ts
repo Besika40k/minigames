@@ -88,6 +88,17 @@ function getControls(dialog: AuthDialog): (HTMLButtonElement | HTMLInputElement)
   ];
 }
 
+function isDisabled(control: HTMLButtonElement | HTMLInputElement): boolean {
+  return control.disabled;
+}
+
+// Which controls of the dialog are disabled, in their order
+function getDisabledStates(dialog: AuthDialog): boolean[] {
+  return getControls(dialog).map((control: HTMLButtonElement | HTMLInputElement): boolean =>
+    isDisabled(control),
+  );
+}
+
 function pressEscape(dialog: AuthDialog): void {
   dialog.element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
 }
@@ -151,16 +162,16 @@ describe('auth dialog while a request is under way', (): void => {
     const deferred: Deferred = createDeferred();
     const { dialog, onClose } = renderDialog(createPendingSubmit(deferred));
     fillLogin();
+    const disabledBefore: boolean[] = getDisabledStates(dialog);
     getSubmit().click();
 
     deferred.reject(new Error('Wrong email or password.'));
     await settle();
 
-    expect(
-      getControls(dialog).every(
-        (control: HTMLButtonElement | HTMLInputElement): boolean => !control.disabled,
-      ),
-    ).toBe(true);
+    // Every control is as before: the empty registration form keeps its
+    // submit button disabled
+    expect(getDisabledStates(dialog)).toEqual(disabledBefore);
+    expect(disabledBefore.filter(Boolean)).toHaveLength(1);
     expect(getSubmit().textContent).toBe('Login');
     // The values stay, so the visitor can correct them
     expect(

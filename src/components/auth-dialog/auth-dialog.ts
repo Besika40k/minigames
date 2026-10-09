@@ -20,7 +20,10 @@ export interface AuthDialogOptions {
 // `onClose`, so the owner decides what a close means (the dialog lives in the
 // address).
 export function createAuthDialog(options: AuthDialogOptions): AuthDialog {
-  const state: { isPending: boolean } = { isPending: false };
+  const state: { isPending: boolean; lockedControls: (HTMLButtonElement | HTMLInputElement)[] } = {
+    isPending: false,
+    lockedControls: [],
+  };
 
   const dialog: HTMLDialogElement = createElement('dialog', {
     className: 'auth-dialog',
@@ -31,14 +34,26 @@ export function createAuthDialog(options: AuthDialogOptions): AuthDialog {
   // While a request is under way, every control of the forms and tabs is
   // disabled, so no second request can start, and the dialog cannot be
   // closed. A message shown inside the dialog keeps its close button.
+  // Afterwards only the controls locked here come back: a submit button that
+  // waits for a valid form stays disabled.
   const setPending = (isPending: boolean): void => {
     state.isPending = isPending;
     dialog.setAttribute('aria-busy', String(isPending));
+    if (!isPending) {
+      for (const control of state.lockedControls) {
+        control.disabled = false;
+      }
+      state.lockedControls = [];
+      return;
+    }
     const controls: NodeListOf<HTMLButtonElement | HTMLInputElement> = dialog.querySelectorAll(
       ':scope > .auth-dialog__tabs button, :scope > .auth-dialog__panels :is(button, input)',
     );
-    for (const control of controls) {
-      control.disabled = isPending;
+    state.lockedControls = [...controls].filter(
+      (control: HTMLButtonElement | HTMLInputElement): boolean => !control.disabled,
+    );
+    for (const control of state.lockedControls) {
+      control.disabled = true;
     }
   };
 
