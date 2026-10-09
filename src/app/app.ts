@@ -17,6 +17,7 @@ import type { BurgerMenu } from '../types/burger-menu.ts';
 import { SnackbarVariant } from '../types/feedback.ts';
 import type { Game } from '../types/game.ts';
 import type { GameDetailsDialog } from '../types/game-details.ts';
+import type { AppSession } from '../types/session.ts';
 import {
   DialogParameter,
   Route,
@@ -111,6 +112,11 @@ export function startApp(): void {
   const menu: BurgerMenu = createBurgerMenu({
     trigger: header.menuButton,
     onAuthClick: openAuth,
+  });
+  // The header and the menu show the signed-in profile or the guest buttons
+  session.subscribe((current: AppSession | undefined): void => {
+    header.setSession(current);
+    menu.setSession(current);
   });
 
   const gameDetails: GameDetailsDialog = createGameDetailsDialog({
