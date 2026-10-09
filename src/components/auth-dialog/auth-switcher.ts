@@ -158,8 +158,11 @@ export function createAuthSwitcher(onModeChange: (mode: AuthMode) => void): Auth
     selectedMode = mode;
     markSelected();
 
+    // A form always comes in empty, without the values and errors of its
+    // last visit. It is still hidden here, so nothing flashes.
     if (isAnimated && mode !== previousMode) {
       const isForward: boolean = AUTH_MODES.indexOf(mode) > AUTH_MODES.indexOf(previousMode);
+      panels[mode].reset();
       finishChange = crossFade(
         container,
         panels[previousMode].element,
@@ -169,7 +172,9 @@ export function createAuthSwitcher(onModeChange: (mode: AuthMode) => void): Auth
       return;
     }
 
+    // Without an animation the dialog is opening: both forms start empty
     for (const panelMode of AUTH_MODES) {
+      panels[panelMode].reset();
       panels[panelMode].element.hidden = panelMode !== mode;
     }
   }
