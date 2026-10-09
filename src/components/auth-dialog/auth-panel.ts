@@ -2,16 +2,25 @@ import googleLogoUrl from '../../assets/images/google-logo.svg';
 import { validateAuthField, type AuthValues } from '../../auth/validation.ts';
 import { AUTH_CONTENT } from '../../data/auth.ts';
 import {
+  AuthFieldName,
   AuthMode,
   type AuthField,
-  type AuthFieldName,
   type AuthFormContent,
+  type AuthRequest,
 } from '../../types/auth.ts';
 import { ButtonSize, ButtonVariant } from '../../types/button.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { createButton } from '../button/button.ts';
 import { createAuthField, type AuthFieldView } from './auth-field.ts';
 import { getPanelId, getTabId } from './auth-ids.ts';
+
+export interface AuthPanelActions {
+  // Switches to the other form: the link at the bottom of a form
+  readonly onSwitch: (mode: AuthMode) => void;
+  // Sends the values of a valid form. The submit button shows that the
+  // request is under way until the promise settles.
+  readonly onSubmit: (request: AuthRequest) => Promise<void>;
+}
 
 export interface AuthPanel {
   readonly element: HTMLElement;
@@ -55,10 +64,25 @@ function createHeader(content: AuthFormContent): HTMLElement {
   });
 }
 
+// The request of a valid form. The email loses the spaces around it, which
+// its check ignores too.
+function createAuthRequest(mode: AuthMode, values: AuthValues): AuthRequest {
+  const email: string = (values[AuthFieldName.Email] ?? '').trim();
+  const password: string = values[AuthFieldName.Password] ?? '';
+
+  return mode === AuthMode.Register
+    ? { mode, username: values[AuthFieldName.Username] ?? '', email, password }
+    : { mode, email, password };
+}
+
 // A form checks its fields as the visitor types. A field shows its error once
 // the visitor has typed in it or left it, so a new form is not covered in
 // errors, and the submit button waits until every field is valid.
-function createForm(content: AuthFormContent, mode: AuthMode): AuthPanelForm {
+function createForm(
+  content: AuthFormContent,
+  mode: AuthMode,
+  onSubmit: (request: AuthRequest) => Promise<void>,
+): AuthPanelForm {
   const fields: AuthFieldView[] = content.fields.map((field: AuthField): AuthFieldView =>
     createAuthField(field, mode),
   );
@@ -95,13 +119,16 @@ function createForm(content: AuthFormContent, mode: AuthMode): AuthPanelForm {
 
   // Checks every field, because a rule can read another field: the
   // confirmation changes with the password
-  const update = (): void => {
-    const values: AuthValues = Object.fromEntries(
+  const getValues = (): AuthValues =>
+    Object.fromEntries(
       fields.map((field: AuthFieldView): [AuthFieldName, string] => [
         field.name,
         field.input.value,
       ]),
     );
+
+  const update = (): void => {
+    const values: AuthValues = getValues();
     let invalidCount: number = 0;
     for (const field of fields) {
       const error: string | undefined = validateAuthField(mode, field.name, values);
@@ -135,9 +162,32 @@ function createForm(content: AuthFormContent, mode: AuthMode): AuthPanelForm {
     }
     touch(event.target);
   });
-  // The page never reloads: the app handles the values itself
+
+  // While the request is under way the button says so, and the dialog keeps
+  // every control locked
+  const setBusy = (isBusy: boolean): void => {
+    submit.textContent = isBusy ? content.pendingText : content.submitText;
+    submit.setAttribute('aria-busy', String(isBusy));
+  };
+
+  const send = async (request: AuthRequest): Promise<void> => {
+    setBusy(true);
+    try {
+      await onSubmit(request);
+    } finally {
+      setBusy(false);
+      update();
+    }
+  };
+
+  // The page never reloads: the app handles the values itself. Only a valid
+  // form that is not already sending goes out.
   form.addEventListener('submit', (event: SubmitEvent): void => {
     event.preventDefault();
+    if (submit.disabled) {
+      return;
+    }
+    void send(createAuthRequest(mode, getValues()));
   });
 
   return {
@@ -167,13 +217,13 @@ function createGoogleButton(text: string): HTMLButtonElement {
 }
 
 // One form of the dialog, with the link at its bottom that switches to the other
-export function createAuthPanel(mode: AuthMode, onSwitch: (mode: AuthMode) => void): AuthPanel {
+export function createAuthPanel(mode: AuthMode, actions: AuthPanelActions): AuthPanel {
   const content: AuthFormContent = AUTH_CONTENT[mode];
   const otherMode: AuthMode = mode === AuthMode.Login ? AuthMode.Register : AuthMode.Login;
-  const form: AuthPanelForm = createForm(content, mode);
+  const form: AuthPanelForm = createForm(content, mode, actions.onSubmit);
 
   const switchLink: HTMLButtonElement = createLinkButton(content.switchLinkText, (): void => {
-    onSwitch(otherMode);
+    actions.onSwitch(otherMode);
   });
 
   const element: HTMLElement = createElement('section', {

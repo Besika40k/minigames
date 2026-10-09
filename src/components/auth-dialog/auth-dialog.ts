@@ -1,5 +1,5 @@
 import { AUTH_DIALOG_LABEL } from '../../data/auth.ts';
-import type { AuthDialog, AuthMode } from '../../types/auth.ts';
+import type { AuthDialog, AuthMode, AuthRequest } from '../../types/auth.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { enableDialogDismiss } from '../../utils/dismiss-dialog.ts';
 import { createAuthSwitcher, type AuthSwitcher } from './auth-switcher.ts';
@@ -11,14 +11,21 @@ export interface AuthDialogOptions {
   // Hears of each form the visitor picks: with a tab, an arrow key or the
   // link at the bottom of a form
   readonly onModeChange?: (mode: AuthMode) => void;
+  // Signs in or up with the values of a valid form
+  readonly onSubmit?: (request: AuthRequest) => Promise<void>;
 }
 
 // The dialog with the login and registration forms. It closes only through
 // `onClose`, so the owner decides what a close means (the dialog lives in the
 // address).
 export function createAuthDialog(options: AuthDialogOptions): AuthDialog {
-  const switcher: AuthSwitcher = createAuthSwitcher((mode: AuthMode): void => {
-    options.onModeChange?.(mode);
+  const switcher: AuthSwitcher = createAuthSwitcher({
+    onModeChange: (mode: AuthMode): void => {
+      options.onModeChange?.(mode);
+    },
+    onSubmit: async (request: AuthRequest): Promise<void> => {
+      await options.onSubmit?.(request);
+    },
   });
 
   const dialog: HTMLDialogElement = createElement('dialog', {

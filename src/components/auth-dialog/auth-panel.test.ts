@@ -1,11 +1,20 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { AUTH_VALIDATION_MESSAGES as MESSAGES } from '../../data/auth.ts';
-import { AuthFieldName, AuthMode } from '../../types/auth.ts';
+import { AuthFieldName, AuthMode, type AuthRequest } from '../../types/auth.ts';
 import { getErrorId } from './auth-ids.ts';
 import { createAuthPanel, type AuthPanel } from './auth-panel.ts';
 
-function renderPanel(mode: AuthMode, parent: HTMLElement = document.body): AuthPanel {
-  const panel: AuthPanel = createAuthPanel(mode, vi.fn<(mode: AuthMode) => void>());
+type SubmitHandler = Mock<(request: AuthRequest) => Promise<void>>;
+
+function renderPanel(
+  mode: AuthMode,
+  parent: HTMLElement = document.body,
+  onSubmit: SubmitHandler = vi.fn<(request: AuthRequest) => Promise<void>>(),
+): AuthPanel {
+  const panel: AuthPanel = createAuthPanel(mode, {
+    onSwitch: vi.fn<(mode: AuthMode) => void>(),
+    onSubmit,
+  });
   parent.append(panel.element);
 
   return panel;
