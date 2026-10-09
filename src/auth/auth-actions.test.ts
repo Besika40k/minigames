@@ -127,7 +127,8 @@ describe('email sign-in', (): void => {
     });
   });
 
-  it('reports no connection when the sign-in part of the app cannot load', async (): Promise<void> => {
+  it('reports no connection when the sign-in part of the app cannot load offline', async (): Promise<void> => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     const { actions, onSignedIn } = createTestActions((): Promise<AuthService> =>
       Promise.reject(new TypeError('Failed to fetch dynamically imported module')),
     );
@@ -139,6 +140,20 @@ describe('email sign-in', (): void => {
       text: AUTH_ERROR_MESSAGES.byCode['auth/network-request-failed'],
     });
     expect(onSignedIn).not.toHaveBeenCalled();
+  });
+
+  it('asks for a reload when a newer deploy replaced the sign-in part', async (): Promise<void> => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(true);
+    const { actions } = createTestActions((): Promise<AuthService> =>
+      Promise.reject(new TypeError('Failed to fetch dynamically imported module')),
+    );
+
+    await actions.signInWithGoogle();
+
+    expect(showSnackbar).toHaveBeenCalledExactlyOnceWith({
+      variant: SnackbarVariant.Error,
+      text: AUTH_ERROR_MESSAGES.outdated,
+    });
   });
 });
 
