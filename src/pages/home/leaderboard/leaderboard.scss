@@ -32,6 +32,13 @@ $flame-size-small: 14px;
 // A loading bar fills this much of its cell
 $skeleton-text-width: 60%;
 
+// Tablet and mobile show only the top rows of the table
+$compact-rows: 3;
+
+// The initials sit in the middle of the avatar circle, without the extra
+// space a line height adds above and below the letters
+$avatar-line-height: 1;
+
 // The first player gets the brand yellow, the next four players take the
 // avatar colors in turn
 $avatar-colors: (
@@ -211,7 +218,7 @@ $avatar-colors: (
 
   // Tablet and mobile show the top three players
   @include media-down(laptop) {
-    &:nth-child(n + 4) {
+    &:nth-child(n + #{$compact-rows + 1}) {
       display: none;
     }
   }
@@ -267,7 +274,7 @@ $avatar-colors: (
   border-radius: get-radius(full);
   box-shadow: inset 0 0 0 $border-width-thin get-color(on-primary);
   font-size: get-font-size(body-small);
-  line-height: 1;
+  line-height: $avatar-line-height;
 
   @include media-down(laptop) {
     width: $avatar-size-tablet;
