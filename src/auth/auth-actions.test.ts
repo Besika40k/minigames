@@ -16,6 +16,7 @@ vi.mock('./auth-service.ts', async (importOriginal: () => Promise<AuthService>) 
   ...(await importOriginal()),
   signInWithEmail: vi.fn(),
   registerWithEmail: vi.fn(),
+  signInWithGoogle: vi.fn(),
 }));
 
 const NOW: number = Date.UTC(2026, 9, 9, 12, 0, 0);
@@ -138,5 +139,66 @@ describe('email sign-in', (): void => {
       text: AUTH_ERROR_MESSAGES.byCode['auth/network-request-failed'],
     });
     expect(onSignedIn).not.toHaveBeenCalled();
+  });
+});
+
+describe('Google sign-in', (): void => {
+  it('starts the session with the Google picture and greets the user', async (): Promise<void> => {
+    vi.mocked(authService.signInWithGoogle).mockResolvedValue({
+      displayName: 'Alex',
+      email: 'alex@gmail.com',
+      avatarUrl: 'https://photo',
+    });
+    const { actions, onSignedIn } = createTestActions();
+
+    await actions.signInWithGoogle();
+
+    expect(readStoredSession()).toEqual({
+      displayName: 'Alex',
+      email: 'alex@gmail.com',
+      avatarUrl: 'https://photo',
+      authenticatedAt: NOW,
+    });
+    expect(onSignedIn).toHaveBeenCalledOnce();
+    expect(showSnackbar).toHaveBeenCalledExactlyOnceWith({
+      variant: SnackbarVariant.Success,
+      text: 'Welcome, Alex!',
+    });
+  });
+
+  it('tells about a closed Google window without an error', async (): Promise<void> => {
+    vi.mocked(authService.signInWithGoogle).mockRejectedValue(
+      new authService.AuthServiceError(
+        authService.AuthErrorKind.Canceled,
+        AUTH_ERROR_MESSAGES.canceled,
+        'auth/popup-closed-by-user',
+      ),
+    );
+    const { actions, onSignedIn } = createTestActions();
+
+    await actions.signInWithGoogle();
+
+    expect(showSnackbar).toHaveBeenCalledExactlyOnceWith({
+      variant: SnackbarVariant.Info,
+      text: AUTH_ERROR_MESSAGES.canceled,
+    });
+    expect(onSignedIn).not.toHaveBeenCalled();
+    expect(localStorage.getItem(SESSION_STORAGE_KEY)).toBeNull();
+  });
+
+  it('shows an error when the browser blocks the Google window', async (): Promise<void> => {
+    vi.mocked(authService.signInWithGoogle).mockRejectedValue(
+      Object.assign(new Error('Firebase: Error (auth/popup-blocked).'), {
+        code: 'auth/popup-blocked',
+      }),
+    );
+    const { actions } = createTestActions();
+
+    await actions.signInWithGoogle();
+
+    expect(showSnackbar).toHaveBeenCalledWith({
+      variant: SnackbarVariant.Error,
+      text: AUTH_ERROR_MESSAGES.byCode['auth/popup-blocked'],
+    });
   });
 });
