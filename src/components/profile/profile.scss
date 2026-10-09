@@ -1,0 +1,52 @@
+@use 'abstracts' as *;
+
+// The initials sit in the middle of the circle, without the extra space a
+// line height adds above and below the letters
+$initials-line-height: 1;
+
+// A long name ends in an ellipsis instead of pushing the header apart
+$name-max-width: 160px;
+
+// The avatar of a signed-in user: a circle like the leaderboard avatars, with
+// the brand yellow and the thin outline of the small shapes
+.profile-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: get-size(5);
+  height: get-size(5);
+  overflow: hidden;
+  border-radius: get-radius(full);
+  background-color: get-color(primary);
+  box-shadow: inset 0 0 0 $border-width-thin get-color(on-primary);
+  color: get-color(on-primary);
+  font-size: get-font-size(body-small);
+  font-weight: get-font-weight(bold);
+  line-height: $initials-line-height;
+
+  svg {
+    width: get-size(3);
+    height: get-size(3);
+  }
+}
+
+.profile-avatar__photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-summary {
+  display: flex;
+  align-items: center;
+  gap: get-size(1);
+  min-width: 0;
+}
+
+.profile-summary__name {
+  max-width: $name-max-width;
+  overflow: hidden;
+  font-weight: get-font-weight(bold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
