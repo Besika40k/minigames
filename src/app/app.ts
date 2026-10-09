@@ -108,10 +108,14 @@ export function startApp(): void {
   const openAuth = (mode: AuthMode): void => {
     openDialog(DialogParameter.Auth, mode);
   };
-  const header: Header = createHeader({ onAuthClick: openAuth });
+  const logOut = (): void => {
+    void authActions.logOut();
+  };
+  const header: Header = createHeader({ onAuthClick: openAuth, onLogout: logOut });
   const menu: BurgerMenu = createBurgerMenu({
     trigger: header.menuButton,
     onAuthClick: openAuth,
+    onLogout: logOut,
   });
   // The header and the menu show the signed-in profile or the guest buttons
   session.subscribe((current: AppSession | undefined): void => {
