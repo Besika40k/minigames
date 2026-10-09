@@ -61,6 +61,8 @@ export interface AuthFormContent {
   // The submit button's text while the request is under way
   readonly pendingText: string;
   readonly googleText: string;
+  // The Google button's text while Google's window is open
+  readonly googlePendingText: string;
   // The sentence at the bottom of the form and the link in it that switches
   // to the other form
   readonly switchQuestion: string;
