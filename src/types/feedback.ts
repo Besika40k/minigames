@@ -26,6 +26,14 @@ export interface LoadMessages {
   readonly successMessage: string;
 }
 
+// What a change sent to the server says besides its success: the warning
+// that asks a guest to log in first, and the warning after a change whose
+// outcome is unknown
+export interface ChangeMessages {
+  readonly loginWarning: string;
+  readonly unconfirmed: string;
+}
+
 // The placeholder of an area whose answer has no items
 export interface EmptyStateContent {
   readonly title: string;
