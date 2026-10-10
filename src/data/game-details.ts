@@ -3,6 +3,16 @@ import type { GameDetailsContent } from '../types/game-details.ts';
 // The API's limit for the text of a comment, counted after trimming
 export const COMMENT_MAX_LENGTH = 500;
 
+// The color tokens a commenter's avatar takes one of, at random (see the
+// avatar styles of the comments)
+export const AVATAR_COLORS: readonly string[] = [
+  'avatar-random-1',
+  'avatar-random-2',
+  'avatar-random-3',
+  'avatar-random-4',
+  'avatar-random-5',
+];
+
 export const GAME_DETAILS_CONTENT: GameDetailsContent = {
   dialogLabel: 'Game details',
   closeLabel: 'Close',
