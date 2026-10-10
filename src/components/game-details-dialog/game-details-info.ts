@@ -1,11 +1,12 @@
 import { FREE_PRICE } from '../../data/games.ts';
 import { GAME_DETAILS_CONTENT } from '../../data/game-details.ts';
 import { ButtonSize, ButtonVariant } from '../../types/button.ts';
-import type { GameDetails, GameDetailsSection, GameSpecs } from '../../types/game-details.ts';
+import type { GameDetails, GameSpecs } from '../../types/game-details.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { createIcon, IconName } from '../../utils/create-icon.ts';
 import { formatCompactNumber } from '../../utils/format-number.ts';
 import { createButton } from '../button/button.ts';
+import { createFavoriteButton, type FavoriteButtonOptions } from './game-details-favorite.ts';
 import './game-details-info.scss';
 
 const RATING_FRACTION_DIGITS = 1;
@@ -17,7 +18,10 @@ function createHiddenLabel(text: string): HTMLSpanElement {
   return createElement('span', { className: 'game-details__hidden', text: `${text}: ` });
 }
 
-function createStats(game: GameDetails): HTMLParagraphElement {
+// What the info needs for its Favorites button besides the game
+export type GameInfoOptions = Pick<FavoriteButtonOptions, 'requireSession' | 'onUnconfirmed'>;
+
+function createStats(game: GameDetails, likesCount: HTMLSpanElement): HTMLParagraphElement {
   const rating: HTMLSpanElement = createElement('span', {
     className: 'game-details__rating',
     children: [
@@ -32,7 +36,7 @@ function createStats(game: GameDetails): HTMLParagraphElement {
     children: [
       createIcon(IconName.Heart),
       createHiddenLabel(GAME_DETAILS_CONTENT.likesLabel),
-      formatCompactNumber(game.likesCount),
+      likesCount,
     ],
   });
 
@@ -65,32 +69,23 @@ function createSpecs(specs: GameSpecs): HTMLDListElement {
 }
 
 // The title, rating and likes, description, specs, and the Play Now (or Buy
-// Now) and Favorites buttons. Play Now does nothing yet. Favorites switches between
-// adding and removing, and says which one a click will do; on mobile only its
-// heart shows.
-export function createGameDetailsInfo(game: GameDetails, titleId: string): GameDetailsSection {
-  let isFavorite = false;
-
-  const favoriteText: HTMLSpanElement = createElement('span', {
-    className: 'game-details__favorite-text',
+// Now) and Favorites buttons. Play Now does nothing yet. The likes count the
+// users who have the game among their favorites, so they follow the
+// Favorites button.
+export function createGameDetailsInfo(
+  game: GameDetails,
+  titleId: string,
+  options: GameInfoOptions,
+): HTMLElement {
+  const likesCount: HTMLSpanElement = createElement('span', {
+    text: formatCompactNumber(game.likesCount),
   });
-  const favoriteButton: HTMLButtonElement = createButton({
-    variant: ButtonVariant.Outlined,
-    size: ButtonSize.Medium,
-    className: 'game-details__favorite',
-    children: [createIcon(IconName.Heart), favoriteText],
-  });
-
-  const showFavorite = (): void => {
-    favoriteText.textContent = isFavorite
-      ? GAME_DETAILS_CONTENT.removeFavoriteLabel
-      : GAME_DETAILS_CONTENT.addFavoriteLabel;
-    favoriteButton.classList.toggle('game-details__favorite--active', isFavorite);
-  };
-
-  favoriteButton.addEventListener('click', (): void => {
-    isFavorite = !isFavorite;
-    showFavorite();
+  const favoriteButton: HTMLButtonElement = createFavoriteButton({
+    ...options,
+    game,
+    onLikesChange: (count: number): void => {
+      likesCount.textContent = formatCompactNumber(count);
+    },
   });
 
   const playButton: HTMLButtonElement = createButton({
@@ -108,11 +103,11 @@ export function createGameDetailsInfo(game: GameDetails, titleId: string): GameD
         text: game.name,
         attributes: { id: titleId },
       }),
-      createStats(game),
+      createStats(game, likesCount),
     ],
   });
 
-  const element: HTMLElement = createElement('section', {
+  return createElement('section', {
     className: 'game-details__info',
     attributes: { 'aria-labelledby': titleId },
     children: [
@@ -125,12 +120,4 @@ export function createGameDetailsInfo(game: GameDetails, titleId: string): GameD
       }),
     ],
   });
-
-  const reset = (): void => {
-    isFavorite = false;
-    showFavorite();
-  };
-  reset();
-
-  return { element, reset };
 }

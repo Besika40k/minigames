@@ -7,6 +7,7 @@ import type {
   GameDetails,
   GameDetailsDialog,
 } from '../../types/game-details.ts';
+import type { AppSession } from '../../types/session.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { createIcon, IconName } from '../../utils/create-icon.ts';
 import { enableDialogDismiss } from '../../utils/dismiss-dialog.ts';
@@ -28,6 +29,12 @@ const TITLE_ID = 'game-details-title';
 export interface GameDetailsDialogOptions {
   // Asks to close the dialog: the close button, Esc and the backdrop
   readonly onClose: () => void;
+  // The email of the signed-in user, or undefined for a guest. The game of a
+  // signed-in user says whether it is among that user's favorites.
+  readonly getUserEmail: () => string | undefined;
+  // Checks the session before a change such as a favorite. A guest gets
+  // undefined, and the auth dialog in place of this one.
+  readonly requireSession: (warning: string) => AppSession | undefined;
 }
 
 // The cover picture of the game. It is decoration: the dialog is named by the
@@ -103,13 +110,20 @@ export function createGameDetailsDialog(options: GameDetailsDialogOptions): Game
   const area: AsyncArea = createAsyncArea({
     container: main,
     messages: GAME_DETAILS_CONTENT.messages,
-    load: (signal: AbortSignal): Promise<GameDetails> => fetchGameDetails(slug, signal),
+    load: (signal: AbortSignal): Promise<GameDetails> =>
+      fetchGameDetails(slug, signal, options.getUserEmail()),
     renderSkeleton: createGameDetailsSkeleton,
-    // Each game is drawn anew, so nothing the visitor changed is kept
+    // Each game is drawn anew from the answer of the server
     renderData: (game: GameDetails): readonly Node[] => {
+      const info: HTMLElement = createGameDetailsInfo(game, TITLE_ID, {
+        requireSession: options.requireSession,
+        onUnconfirmed: (): void => {
+          area.reload();
+        },
+      });
       const content: HTMLDivElement = createElement('div', {
         className: 'game-details__content game-details__content--top',
-        children: [createGameDetailsInfo(game, TITLE_ID).element, createGameDetailsRecords(game)],
+        children: [info, createGameDetailsRecords(game)],
       });
 
       return [createHero(game), content];
