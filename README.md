@@ -88,14 +88,16 @@ The router (`src/app/router.ts`) is a small class over the History API, written 
 | Page                            | `/` or `/home`, `/library`; other paths are 404s | `/library`                                         |
 | Library category, sort and page | `category`, `sort`, `page`                       | `/library?category=puzzle&sort=rating-desc&page=2` |
 | Game Details                    | `game=<slug>`, over any page                     | `/library?category=arcade&page=2&game=palia`       |
-| Auth dialog                     | `auth=login` or `auth=register`, over any page   | `/?auth=login`                                     |
+| Auth dialog (guests only)       | `auth=login` or `auth=register`, over any page   | `/?auth=login`                                     |
 
 The URL is the single source of truth. A click on a chip, a sort option, a page button, a Details button or Log In only asks the router for a new URL (`router.navigate`). The router then passes the new location to the page and to the dialogs, which draw themselves and send their requests from it. A click, Back and Forward and a deep link all take this one way, so the same URL always shows the same screen.
 
 - A new path renders its page into `main`, sets the tab title and scrolls to the top. A new query of the open page goes to the page's `update`, so the Library loads new games without drawing the page again and without scrolling.
 - Every Library change adds a history entry, so Back steps through them. A new category or sort starts again from page 1.
 - Opening a dialog adds a history entry marked `isDialogEntry`. Closing it (the close button, Esc or the backdrop) goes back to the entry before it or, after a deep link, replaces the URL without the dialog's parameter, so no duplicate entries are left. Back closes an open dialog and Forward opens it again. Switching between the login and the registration form replaces `auth`, so one Back still closes the dialog.
-- Invalid values are corrected with `replaceState`: an unknown category, sort or page falls back to its default with a warning snackbar, an unknown `auth` mode is dropped, and when both `game` and `auth` are present the game wins. A page past the last one keeps its URL and shows the "Data Not Found" banner, and an unknown game opens the dialog in its "Game Not Found" state.
+- Invalid values are corrected with `replaceState`: an unknown category, sort or page falls back to its default with a warning snackbar, an unknown `auth` mode is dropped, and so is `auth` for a signed-in user. A page past the last one keeps its URL and shows the "Data Not Found" banner, and an unknown game opens the dialog in its "Game Not Found" state.
+- When both `game` and `auth` are present, the auth dialog shows in place of Game Details, and the game comes back when `auth` leaves the URL (see [Authentication and the app session](#authentication-and-the-app-session)). `decideDialog` in `src/app/url.ts` makes all these decisions in one pure function.
+- A dialog changes only the query: the path and the hash of the page stay.
 - Plain left clicks on links of the app are opened by the router. Clicks with Ctrl, Shift or Meta, links with a `target`, and other sites are left to the browser, and every link has a real `href` (`getRouteHref`), so "Open in new tab" works too. An old Story 2 link (`#/library`) moves to its path.
 - The header and the mobile menu mark the link of the open page with `aria-current="page"` (`src/utils/page-links.ts`), which also styles it, and the mobile menu closes on every new URL.
 
@@ -107,16 +109,22 @@ To add a page, add a value to the `Route` enum (`src/types/route.ts`) and its pa
 
 The data comes from the course's REST API: the base URL is in `src/api/api-config.ts`, and the endpoints are described at <https://faxb76kxra.execute-api.eu-central-1.amazonaws.com/docs>. Each kind of data has its own module in `src/api/`:
 
-| Request                                          | Module               | Used by                      |
-| ------------------------------------------------ | -------------------- | ---------------------------- |
-| `GET /games?featured=true`                       | `games-api.ts`       | Home slider                  |
-| `GET /leaderboard`                               | `leaderboard-api.ts` | Home leaderboard             |
-| `GET /categories`                                | `categories-api.ts`  | Library category chips       |
-| `GET /games?category=&sort=&page=&limit=6`       | `games-api.ts`       | Library cards and pagination |
-| `GET /games/{slug}`                              | `games-api.ts`       | Game Details                 |
-| `GET /games/{slug}/comments?limit=3&sort=newest` | `comments-api.ts`    | The comments of Game Details |
+| Request                                                     | Module               | Used by                                                          |
+| ----------------------------------------------------------- | -------------------- | ---------------------------------------------------------------- |
+| `GET /games?featured=true`                                  | `games-api.ts`       | Home slider                                                      |
+| `GET /leaderboard`                                          | `leaderboard-api.ts` | Home leaderboard                                                 |
+| `GET /categories`                                           | `categories-api.ts`  | Library category chips                                           |
+| `GET /games?category=&sort=&page=&limit=6`                  | `games-api.ts`       | Library cards and pagination                                     |
+| `GET /games/{slug}?userEmail=`                              | `games-api.ts`       | Game Details, with the favorite of a signed-in user              |
+| `GET /games/{slug}/comments?limit=3&sort=newest&userEmail=` | `comments-api.ts`    | The comments of Game Details, with the likes of a signed-in user |
+| `POST /games/{slug}/favorite`                               | `favorites-api.ts`   | Add to Favorites                                                 |
+| `POST /games/{slug}/comments`                               | `comments-api.ts`    | The comment form                                                 |
+| `POST /comments/{commentId}/like`                           | `likes-api.ts`       | The like buttons                                                 |
 
-- `getJson` (`http-client.ts`) sends every request with the caller's `AbortSignal` and a 15-second timeout. Every failure becomes an `ApiError` of one kind: no connection, a bad request (400), not found (404), too many requests (429), a server error, or an answer of the wrong shape. Its message is the API's own `{ "error": "..." }` text when there is one.
+A guest's requests leave `userEmail` out. Every `POST` sends the email of the app session, which is the only identity the API needs.
+
+- `getJson` (`http-client.ts`) sends every request with the caller's `AbortSignal` and a 15-second timeout. Every failure becomes an `ApiError` of one kind: no connection, a bad request (400), no user (401), not found (404), too many requests (429), a server error, or an answer of the wrong shape. Its message is the API's own `{ "error": "..." }` text when there is one.
+- `postJson` sends a change as JSON, with the same timeout. A change is never canceled once it is sent and never sent again by itself: the favorite and the like endpoints toggle, so a second request would undo the first, and a second comment would be posted twice. When the outcome is unknown (no answer, a server failure or an unreadable answer, see `isOutcomeUnknown`), the app says so and loads the state again instead.
 - Answers are read as `unknown` and checked with type guards (`guards.ts`, `response.ts`) before they become the app's types, so an unexpected answer is shown as an error instead of breaking the page.
 - Filtering, sorting and paging happen on the server only: the app sends the values of the URL as request parameters and draws what comes back.
 - The API names its pictures by paths such as `/assets/images/games/palia-card.jpg` but does not serve them, so the 48 pictures of the course are in `public/assets/images/games/`. `resolveAssetUrl` puts the app's base path in front of them.
@@ -185,13 +193,15 @@ The Library's state lives in the URL (see [Router and URL](#router-and-url)): `l
 
 The game details dialog (`src/components/game-details-dialog`) opens for the `game` parameter of the URL: from the Details button of a Library card, a click on a slider card, or a deep link. Like the auth dialog, it is a native `<dialog>` opened with `showModal()` and animated with the `animated-dialog` mixin. It closes with its close button, with Esc and with a click on the backdrop (`enableDialogDismiss` in `src/utils/dismiss-dialog.ts`, shared with the auth dialog), which take `game` out of the URL, and the page behind it does not scroll while it is open.
 
-The game is loaded by its slug. Under the hero picture come the game info (title, rating and likes, description, the four spec boxes, Play Now, or Buy Now with the price of a paid game, and Add to Favorites) and the top records. The comments load next to the game, with states of their own: the three newest comments with times such as "5 min ago" (`src/utils/format-relative-time.ts`), and the total number of comments in the heading. An unknown slug shows the "Game Not Found" state with a Close button.
+The game is loaded by its slug, for the signed-in user or for a guest, and loads again when the session changes. Under the hero picture come the game info (title, rating and likes, description, the four spec boxes, Play Now, or Buy Now with the price of a paid game, and Add to Favorites) and the top records. The comments load next to the game, with states of their own: the three newest comments with times such as "5 min ago" (`src/utils/format-relative-time.ts`), and the total number of comments in the heading. An unknown slug shows the "Game Not Found" state with a Close button.
 
-- Add to Favorites switches between its two states, and its text says what a click will do.
-- The comment textarea grows with its text from 48px to 88px and scrolls after that (CSS `field-sizing: content`). The send button is disabled while the text is empty.
-- Each like button toggles on its own and changes its count by one.
+The favorite, the comment form and the likes work for a signed-in user only; a guest's click opens the auth dialog with a warning (see [Authentication and the app session](#authentication-and-the-app-session)). They show only what the server confirms:
 
-Posting a comment and liking need an account, which comes in Story 4, so nothing is sent to the API yet: every opening loads the game again and scrolls the dialog to the top.
+- Add to Favorites starts from the user's state in the game details, and its text says what a click will do. A click locks it with a turning ring until the answer comes, then shows the new state and the new number of likes.
+- The comment form is locked for a guest, and its avatar shows the first letter of the user's name. The textarea grows with its text from 48px to 88px and scrolls after that (CSS `field-sizing: content`, with a script fallback for browsers without it). Enter sends and Shift+Enter starts a new line; the text is trimmed and may have at most 500 characters. While a comment is on its way the form is locked; after the `201` the form empties and the comments load again with the new total. A refusal keeps the text for another try, and an unknown outcome keeps it too and loads the comments again.
+- A like button is locked with a turning ring while its request is on its way and then shows the server's state and count.
+- A commenter's avatar shows the first letter of the name and one of the `avatar-random` colors, picked at random and kept for that commenter while the dialog exists.
+- Every opening empties the comment form and scrolls the dialog to the top; a comment interrupted by a sign-in comes back in its game.
 
 ## Styling
 
