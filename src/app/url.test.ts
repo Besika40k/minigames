@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { Route } from '../types/route.ts';
-import { fromLegacyHash, parseRoute, toAppPath, toBrowserUrl } from './url.ts';
+import { AuthMode } from '../types/auth.ts';
+import { DialogParameter, Route } from '../types/route.ts';
+import {
+  decideDialog,
+  fromLegacyHash,
+  parseRoute,
+  toAppPath,
+  toBrowserUrl,
+  type DialogDecision,
+} from './url.ts';
 
 const BASE: string = '/minigames/';
 
@@ -66,5 +74,91 @@ describe('fromLegacyHash', (): void => {
   it('ignores an empty hash and an in-page anchor', (): void => {
     expect(fromLegacyHash('')).toBeUndefined();
     expect(fromLegacyHash('#top')).toBeUndefined();
+  });
+});
+
+function decide(query: string, isSignedIn: boolean = false): DialogDecision {
+  return decideDialog(new URLSearchParams(query), isSignedIn);
+}
+
+describe('decideDialog for a guest', (): void => {
+  it('opens Game Details for a game slug', (): void => {
+    expect(decide('game=tukoni-forest-keepers')).toEqual({
+      dialog: { parameter: DialogParameter.Game, slug: 'tukoni-forest-keepers' },
+      correctedQuery: undefined,
+      isAuthBlocked: false,
+    });
+  });
+
+  it('opens the auth dialog in a known mode', (): void => {
+    expect(decide('auth=register').dialog).toEqual({
+      parameter: DialogParameter.Auth,
+      mode: AuthMode.Register,
+    });
+  });
+
+  it('shows the auth dialog over a game and keeps the game in the address', (): void => {
+    expect(decide('game=chess&auth=login')).toEqual({
+      dialog: { parameter: DialogParameter.Auth, mode: AuthMode.Login },
+      correctedQuery: undefined,
+      isAuthBlocked: false,
+    });
+  });
+
+  it('opens nothing without a dialog parameter', (): void => {
+    expect(decide('page=2')).toEqual({
+      dialog: undefined,
+      correctedQuery: undefined,
+      isAuthBlocked: false,
+    });
+  });
+
+  it('removes an unknown auth mode and an empty game, keeping the rest', (): void => {
+    const unknownMode: DialogDecision = decide('page=2&auth=admin&game=chess');
+    expect(unknownMode.dialog).toEqual({ parameter: DialogParameter.Game, slug: 'chess' });
+    expect(unknownMode.correctedQuery?.toString()).toBe('page=2&game=chess');
+
+    expect(decide('game=&sort=name-asc').correctedQuery?.toString()).toBe('sort=name-asc');
+  });
+
+  it('leaves the given query unchanged', (): void => {
+    const query: URLSearchParams = new URLSearchParams('auth=admin');
+
+    decideDialog(query, false);
+
+    expect(query.toString()).toBe('auth=admin');
+  });
+});
+
+describe('decideDialog for a signed-in user', (): void => {
+  it('keeps the auth dialog closed and takes it out of the address', (): void => {
+    expect(decide('auth=login&page=2', true)).toEqual({
+      dialog: undefined,
+      correctedQuery: new URLSearchParams('page=2'),
+      isAuthBlocked: true,
+    });
+  });
+
+  it('shows the game that the auth dialog was asked over', (): void => {
+    const decision: DialogDecision = decide('game=chess&auth=register', true);
+
+    expect(decision.dialog).toEqual({ parameter: DialogParameter.Game, slug: 'chess' });
+    expect(decision.correctedQuery?.toString()).toBe('game=chess');
+    expect(decision.isAuthBlocked).toBe(true);
+  });
+
+  it('removes an unknown auth mode without calling it blocked', (): void => {
+    expect(decide('auth=admin', true)).toEqual({
+      dialog: undefined,
+      correctedQuery: new URLSearchParams(),
+      isAuthBlocked: false,
+    });
+  });
+
+  it('opens Game Details as for a guest', (): void => {
+    expect(decide('game=chess', true).dialog).toEqual({
+      parameter: DialogParameter.Game,
+      slug: 'chess',
+    });
   });
 });
