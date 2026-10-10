@@ -30,6 +30,9 @@ export interface SessionStore {
   // The active session, or undefined for a guest. An expired or broken stored
   // session ends here.
   readonly check: () => AppSession | undefined;
+  // The session of the last check, without reading the storage again: the
+  // user the screen shows right now
+  readonly getCurrent: () => AppSession | undefined;
   // Starts the session of a successful sign-in
   readonly start: (profile: AuthProfile) => AppSession;
   // Ends the session and signs out of Firebase. A failed sign-out rejects,
@@ -130,6 +133,7 @@ export function createSessionStore(options: SessionStoreOptions): SessionStore {
 
   return {
     check,
+    getCurrent: (): AppSession | undefined => state.current,
     start,
     end,
     subscribe: (listener: SessionListener): (() => void) => {
