@@ -43,7 +43,11 @@ export interface GameDetails {
   readonly name: string;
   readonly heroImage: string;
   readonly rating: number;
+  // Every user who has the game among their favorites
   readonly likesCount: number;
+  // Whether the signed-in user has the game among their favorites. Always
+  // false for a guest, whose request names no user.
+  readonly isLikedByCurrentUser: boolean;
   readonly fullDescription: string;
   readonly specs: GameSpecs;
   readonly topRecords: readonly TopRecord[];
