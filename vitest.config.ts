@@ -25,6 +25,8 @@ export default defineConfig((configEnvironment: ConfigEnv): UserConfig =>
           // type declarations only, which compile to no code
           'src/**/*.d.ts',
         ],
+        // the course asks for at least 80 % of the statements: a run below that fails
+        thresholds: { statements: 80 },
       },
     },
   }),
