@@ -29,6 +29,12 @@ export interface GameComment {
   readonly createdAt: string;
 }
 
+// The answer of a like toggle (`POST /api/comments/{commentId}/like`)
+export interface CommentLikeState {
+  readonly isLikedByCurrentUser: boolean;
+  readonly likesCount: number;
+}
+
 // A comment of the signed-in user on its way to the API
 // (`POST /api/games/{slug}/comments`)
 export interface NewComment {
