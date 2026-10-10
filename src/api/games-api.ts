@@ -1,8 +1,8 @@
 import type { Game, GamesPage } from '../types/game.ts';
 import type { GameDetails, GameSpecs, TopRecord } from '../types/game-details.ts';
 import type { LibraryQuery } from '../types/library.ts';
-import { isArrayOf, isNumber, isRecord, isString } from './guards.ts';
-import { getJson } from './http-client.ts';
+import { isArrayOf, isBoolean, isNumber, isRecord, isString } from './guards.ts';
+import { getJson, type QueryParameters } from './http-client.ts';
 import { createInvalidResponseError, readData, readList } from './response.ts';
 
 // The Library shows six games on a page, the page size the task asks for
@@ -67,13 +67,15 @@ function toGameDetails(value: unknown): GameDetails {
   if (!isRecord(value)) {
     throw createInvalidResponseError();
   }
-  const { slug, name, heroImage, rating, likesCount, fullDescription, specs, topRecords } = value;
+  const { slug, name, heroImage, rating, likesCount, isLikedByCurrentUser } = value;
+  const { fullDescription, specs, topRecords } = value;
   if (
     !isString(slug) ||
     !isString(name) ||
     !isString(heroImage) ||
     !isNumber(rating) ||
     !isNumber(likesCount) ||
+    !isBoolean(isLikedByCurrentUser) ||
     !isString(fullDescription) ||
     !isGameSpecs(specs) ||
     !isArrayOf(topRecords, isTopRecord)
@@ -87,6 +89,7 @@ function toGameDetails(value: unknown): GameDetails {
     heroImage: resolveAssetUrl(heroImage),
     rating,
     likesCount,
+    isLikedByCurrentUser,
     fullDescription,
     specs: {
       genre: specs.genre,
@@ -139,10 +142,16 @@ export async function fetchGames(query: LibraryQuery, signal: AbortSignal): Prom
   return { games: readList(body, toGame), ...readPageNumbers(body) };
 }
 
-// The details of one game: the hero, description, specs and top records. An
-// unknown slug fails with a NotFound error.
-export async function fetchGameDetails(slug: string, signal: AbortSignal): Promise<GameDetails> {
-  const body: unknown = await getJson(`/games/${encodeURIComponent(slug)}`, {}, signal);
+// The details of one game: the hero, description, specs and top records. With
+// the email of a signed-in user the answer also says whether the game is among
+// that user's favorites. An unknown slug fails with a NotFound error.
+export async function fetchGameDetails(
+  slug: string,
+  signal: AbortSignal,
+  userEmail?: string,
+): Promise<GameDetails> {
+  const parameters: QueryParameters = userEmail === undefined ? {} : { userEmail };
+  const body: unknown = await getJson(`/games/${encodeURIComponent(slug)}`, parameters, signal);
 
   return toGameDetails(readData(body));
 }
