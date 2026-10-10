@@ -1,14 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { AuthMode } from '../types/auth.ts';
-import { DialogParameter, Route } from '../types/route.ts';
-import {
-  fromLegacyHash,
-  parseDialog,
-  parseRoute,
-  removeUnusedDialogParameters,
-  toAppPath,
-  toBrowserUrl,
-} from './url.ts';
+import { Route } from '../types/route.ts';
+import { fromLegacyHash, parseRoute, toAppPath, toBrowserUrl } from './url.ts';
 
 const BASE: string = '/minigames/';
 
@@ -74,55 +66,5 @@ describe('fromLegacyHash', (): void => {
   it('ignores an empty hash and an in-page anchor', (): void => {
     expect(fromLegacyHash('')).toBeUndefined();
     expect(fromLegacyHash('#top')).toBeUndefined();
-  });
-});
-
-describe('parseDialog', (): void => {
-  it('opens Game Details for a game slug', (): void => {
-    expect(parseDialog(new URLSearchParams('game=tukoni-forest-keepers'))).toEqual({
-      parameter: DialogParameter.Game,
-      slug: 'tukoni-forest-keepers',
-    });
-  });
-
-  it('opens the auth dialog in a known mode', (): void => {
-    expect(parseDialog(new URLSearchParams('auth=register'))).toEqual({
-      parameter: DialogParameter.Auth,
-      mode: AuthMode.Register,
-    });
-  });
-
-  it('prefers the game when both dialogs are asked for', (): void => {
-    expect(parseDialog(new URLSearchParams('auth=login&game=chess'))).toEqual({
-      parameter: DialogParameter.Game,
-      slug: 'chess',
-    });
-  });
-
-  it('opens nothing for an unknown auth mode, an empty game or no dialog', (): void => {
-    expect(parseDialog(new URLSearchParams('auth=admin'))).toBeUndefined();
-    expect(parseDialog(new URLSearchParams('game='))).toBeUndefined();
-    expect(parseDialog(new URLSearchParams('page=2'))).toBeUndefined();
-  });
-});
-
-describe('removeUnusedDialogParameters', (): void => {
-  it('needs no change when every dialog parameter is in use', (): void => {
-    const query: URLSearchParams = new URLSearchParams('page=2&auth=login');
-
-    expect(removeUnusedDialogParameters(query, parseDialog(query))).toBeUndefined();
-  });
-
-  it('removes an unknown auth mode and keeps the other parameters', (): void => {
-    const query: URLSearchParams = new URLSearchParams('page=2&auth=admin');
-
-    expect(removeUnusedDialogParameters(query, parseDialog(query))?.toString()).toBe('page=2');
-  });
-
-  it('removes the auth mode next to a game without changing the given query', (): void => {
-    const query: URLSearchParams = new URLSearchParams('game=chess&auth=login');
-
-    expect(removeUnusedDialogParameters(query, parseDialog(query))?.toString()).toBe('game=chess');
-    expect(query.toString()).toBe('game=chess&auth=login');
   });
 });

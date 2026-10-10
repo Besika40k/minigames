@@ -58,37 +58,45 @@ function isAuthMode(value: string): value is AuthMode {
   return AUTH_MODES.has(value);
 }
 
-// The dialog an address opens over its page. One dialog opens at a time: a
-// game wins over the auth dialog, which also needs a mode it has.
-export function parseDialog(query: URLSearchParams): OpenDialog | undefined {
-  const slug: string = query.get(DialogParameter.Game) ?? '';
-  if (slug !== '') {
-    return { parameter: DialogParameter.Game, slug };
-  }
-  const mode: string = query.get(DialogParameter.Auth) ?? '';
-
-  return isAuthMode(mode) ? { parameter: DialogParameter.Auth, mode } : undefined;
+// What an address asks of the dialogs
+export interface DialogDecision {
+  // The dialog to show, or undefined for none
+  readonly dialog: OpenDialog | undefined;
+  // The query without the dialog parameters that open nothing, or undefined
+  // when every dialog parameter of the address is in use
+  readonly correctedQuery: URLSearchParams | undefined;
+  // A signed-in user asked for the auth dialog, which stays closed
+  readonly isAuthBlocked: boolean;
 }
 
-// The query without the dialog parameters that open nothing, such as an
-// unknown auth mode or an auth mode next to a game. Undefined when every
-// dialog parameter of the query is in use.
-export function removeUnusedDialogParameters(
-  query: URLSearchParams,
-  dialog: OpenDialog | undefined,
-): URLSearchParams | undefined {
-  const unused: DialogParameter[] = Object.values(DialogParameter).filter(
-    (parameter: DialogParameter): boolean =>
-      query.has(parameter) && parameter !== dialog?.parameter,
-  );
-  if (unused.length === 0) {
-    return undefined;
-  }
+// The dialog an address opens over its page. One dialog opens at a time. The
+// auth dialog needs a known mode and a guest; it goes over a game, which stays
+// in the address and comes back when the auth dialog closes. A parameter that
+// opens nothing (an unknown mode, an empty game, or the auth dialog of a
+// signed-in user) leaves the address.
+export function decideDialog(query: URLSearchParams, isSignedIn: boolean): DialogDecision {
+  const slug: string = query.get(DialogParameter.Game) ?? '';
+  const modeText: string = query.get(DialogParameter.Auth) ?? '';
+  const mode: AuthMode | undefined = isAuthMode(modeText) ? modeText : undefined;
+  const isAuthBlocked: boolean = mode !== undefined && isSignedIn;
 
-  const corrected: URLSearchParams = new URLSearchParams(query);
+  const authDialog: OpenDialog | undefined =
+    mode === undefined || isSignedIn ? undefined : { parameter: DialogParameter.Auth, mode };
+  const gameDialog: OpenDialog | undefined =
+    slug === '' ? undefined : { parameter: DialogParameter.Game, slug };
+
+  const unused: DialogParameter[] = [
+    ...(authDialog === undefined && query.has(DialogParameter.Auth) ? [DialogParameter.Auth] : []),
+    ...(gameDialog === undefined && query.has(DialogParameter.Game) ? [DialogParameter.Game] : []),
+  ];
+  const correctedQuery: URLSearchParams = new URLSearchParams(query);
   for (const parameter of unused) {
-    corrected.delete(parameter);
+    correctedQuery.delete(parameter);
   }
 
-  return corrected;
+  return {
+    dialog: authDialog ?? gameDialog,
+    correctedQuery: unused.length === 0 ? undefined : correctedQuery,
+    isAuthBlocked,
+  };
 }
