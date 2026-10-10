@@ -28,7 +28,7 @@ import {
   type RouteDefinition,
 } from '../types/route.ts';
 import { createElement } from '../utils/create-element.ts';
-import { Router } from './router.ts';
+import { Router, type NavigationOptions } from './router.ts';
 import { decideDialog, type DialogDecision } from './url.ts';
 
 // The auth service brings Firebase with it, so it loads only when it is
@@ -64,11 +64,16 @@ export function startApp(): void {
     },
   });
 
+  // The dialogs live in the query: the path and the hash of the page stay
+  const changeQuery = (query: URLSearchParams, options: NavigationOptions): void => {
+    router.navigate({ query, hash: router.location.hash }, options);
+  };
+
   // A dialog opens over the page in a new history entry, so Back closes it
   const openDialog = (parameter: DialogParameter, value: string): void => {
     const query: URLSearchParams = new URLSearchParams(router.location.query);
     query.set(parameter, value);
-    router.navigate({ query }, { state: { isDialogEntry: true } });
+    changeQuery(query, { state: { isDialogEntry: true } });
   };
 
   // A dialog kept in the address closes by leaving the history entry that
@@ -81,7 +86,7 @@ export function startApp(): void {
     }
     const query: URLSearchParams = new URLSearchParams(router.location.query);
     query.delete(parameter);
-    router.navigate({ query }, { isReplace: true });
+    changeQuery(query, { isReplace: true });
   };
 
   const authActions: AuthActions = createAuthActions({
@@ -107,7 +112,7 @@ export function startApp(): void {
     onModeChange: (mode: AuthMode): void => {
       const query: URLSearchParams = new URLSearchParams(router.location.query);
       query.set(DialogParameter.Auth, mode);
-      router.navigate({ query }, { isReplace: true });
+      changeQuery(query, { isReplace: true });
     },
   });
   // The auth dialog is for guests. A guest button may still be on the screen
@@ -215,7 +220,7 @@ export function startApp(): void {
       showAlreadySignedIn();
     }
     if (decision.correctedQuery !== undefined) {
-      router.navigate({ query: decision.correctedQuery, hash: location.hash }, { isReplace: true });
+      changeQuery(decision.correctedQuery, { isReplace: true });
       return;
     }
     showDialog(decision.dialog);
