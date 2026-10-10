@@ -126,13 +126,6 @@ export interface GameDetailsContent {
   readonly noCommentsMessage: string;
 }
 
-// A part of the dialog. `reset` puts it back the way it looks when the dialog
-// opens, because nothing the visitor changes inside is kept at this stage.
-export interface GameDetailsSection {
-  readonly element: HTMLElement;
-  readonly reset: () => void;
-}
-
 // The comments part of the dialog, loaded for one game at a time
 export interface GameCommentsSection {
   readonly element: HTMLElement;

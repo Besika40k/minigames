@@ -249,6 +249,19 @@ $avatar-count: list.length($avatar-colors);
   &[aria-pressed='true'] svg {
     color: get-color(like);
   }
+
+  // While the like is on its way, a turning ring takes the place of the heart
+  &[aria-busy='true'] {
+    cursor: progress;
+
+    svg {
+      display: none;
+    }
+
+    &::before {
+      @include busy-ring($heart-width);
+    }
+  }
 }
 
 // ---------- Loading and empty ----------
