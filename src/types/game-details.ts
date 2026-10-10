@@ -29,6 +29,20 @@ export interface GameComment {
   readonly createdAt: string;
 }
 
+// A comment of the signed-in user on its way to the API
+// (`POST /api/games/{slug}/comments`)
+export interface NewComment {
+  readonly userEmail: string;
+  readonly authorName: string;
+  readonly text: string;
+}
+
+// What the comment form says after a send
+export interface CommentMessages extends ChangeMessages {
+  readonly posted: string;
+  readonly tooLong: string;
+}
+
 // The latest comments of a game, and how many the game has in all
 export interface GameCommentsPage {
   readonly comments: readonly GameComment[];
@@ -90,6 +104,9 @@ export interface GameDetailsContent {
   readonly currentUserInitial: string;
   readonly commentLabel: string;
   readonly commentPlaceholder: string;
+  // The placeholder of a guest's comment form, which is locked
+  readonly commentGuestPlaceholder: string;
+  readonly commentMessages: CommentMessages;
   readonly sendLabel: string;
   readonly messages: LoadMessages;
   // The state of an address whose game does not exist: the sentence around

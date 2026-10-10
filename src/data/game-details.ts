@@ -1,5 +1,8 @@
 import type { GameDetailsContent } from '../types/game-details.ts';
 
+// The API's limit for the text of a comment, counted after trimming
+export const COMMENT_MAX_LENGTH = 500;
+
 export const GAME_DETAILS_CONTENT: GameDetailsContent = {
   dialogLabel: 'Game details',
   closeLabel: 'Close',
@@ -30,6 +33,14 @@ export const GAME_DETAILS_CONTENT: GameDetailsContent = {
   currentUserInitial: 'U',
   commentLabel: 'Your comment',
   commentPlaceholder: 'Write a comment...',
+  commentGuestPlaceholder: 'Log in to write a comment',
+  commentMessages: {
+    loginWarning: 'Log in to write a comment.',
+    unconfirmed:
+      "The comment wasn't confirmed. The latest comments are loaded, so check them before sending it again.",
+    posted: 'Your comment is posted.',
+    tooLong: `A comment can have at most ${String(COMMENT_MAX_LENGTH)} characters.`,
+  },
   sendLabel: 'Send comment',
   messages: {
     errorTitle: "Couldn't load the game",
