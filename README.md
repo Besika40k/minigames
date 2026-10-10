@@ -14,12 +14,13 @@ The layout is responsive and follows the Figma design at three breakpoints: 375p
 - Firebase Authentication (the modular SDK), the only runtime dependency
 - Vite
 - Sass (SCSS)
+- Vitest with happy-dom and v8 coverage for the unit tests
 - ESLint (typescript-eslint, Unicorn) and Prettier
 - Husky and commitlint for Git hooks
 
 ## Getting started
 
-Requires Node.js 22 or newer.
+Requires Node.js 22.12 or newer.
 
 ```bash
 git clone https://github.com/Besika40k/minigames.git
@@ -32,21 +33,23 @@ Signing in needs the web app config of a Firebase project: copy `.env.example` t
 
 ## Scripts
 
-| Script                 | Description                                        |
-| ---------------------- | -------------------------------------------------- |
-| `npm run dev`          | Start the development server                       |
-| `npm run build`        | Type-check and create a production build in `dist` |
-| `npm run build:dev`    | Create a development build with source maps        |
-| `npm run preview`      | Serve the latest build locally                     |
-| `npm run lint`         | Run ESLint on the codebase (fails on warnings)     |
-| `npm run lint:fix`     | Run ESLint and fix what can be fixed automatically |
-| `npm run format`       | Format the codebase with Prettier                  |
-| `npm run format:check` | Check formatting without changing files            |
+| Script                  | Description                                        |
+| ----------------------- | -------------------------------------------------- |
+| `npm run dev`           | Start the development server                       |
+| `npm run build`         | Type-check and create a production build in `dist` |
+| `npm run build:dev`     | Create a development build with source maps        |
+| `npm run preview`       | Serve the latest build locally                     |
+| `npm run lint`          | Run ESLint on the codebase (fails on warnings)     |
+| `npm run lint:fix`      | Run ESLint and fix what can be fixed automatically |
+| `npm run format`        | Format the codebase with Prettier                  |
+| `npm run format:check`  | Check formatting without changing files            |
+| `npm test`              | Run every unit test once                           |
+| `npm run test:coverage` | Run the tests and print the coverage table         |
 
 ## Git hooks
 
 - `commit-msg`: validates commit messages against the RS School Git convention
-- `pre-push`: runs `npm run lint` and `npm run format:check`; the push is aborted on any error or warning
+- `pre-push`: runs `npm run lint`, `npm run format:check` and `npm test`; the push is aborted on any error, warning or failing test
 
 ## Project structure
 
@@ -73,7 +76,7 @@ public/
 └── assets/images/games/  # the course's game pictures, at the paths the API names them by
 ```
 
-Each component and page section keeps its TypeScript and SCSS files together in one folder.
+Each component and page section keeps its TypeScript and SCSS files together in one folder, and a module's unit tests sit next to it as `*.test.ts`.
 
 ## Architecture
 
@@ -202,6 +205,14 @@ The favorite, the comment form and the likes work for a signed-in user only; a g
 - A like button is locked with a turning ring while its request is on its way and then shows the server's state and count.
 - A commenter's avatar shows the first letter of the name and one of the `avatar-random` colors, picked at random and kept for that commenter while the dialog exists.
 - Every opening empties the comment form and scrolls the dialog to the top; a comment interrupted by a sign-in comes back in its game.
+
+## Tests
+
+The unit tests run on Vitest in happy-dom, a browser-like DOM (`vitest.config.ts`): `npm test` runs them once, and `npm run test:coverage` runs them with v8 coverage and prints the table (an HTML report goes to `coverage/`). The coverage includes every file in `src/` except the tests themselves, the bootstrap `src/main.ts` and type declarations, and the run fails when the statements fall below 80%.
+
+- The tests check behavior: the form rules, the session (fake timers for the expiry), the URL decisions and the router, the API requests and how answers and failures are read, and the components through real clicks, keys and input events, down to the whole app started in happy-dom.
+- The tests mock only the boundaries: `fetch` returns prepared answers, Firebase is replaced by a fake module, and snackbars are spied on where a test asks what was said. No test needs a Firebase project or the network.
+- Every change sent to the API is tested for success, a refusal and an unknown outcome, and for being sent only once.
 
 ## Styling
 
