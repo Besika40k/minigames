@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [story-3]
+    branches: [story-4]
   workflow_dispatch:
 
 permissions:
@@ -34,8 +34,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # The Firebase web app config comes from the repository variables, under
+      # the names of .env.example
       - name: Build
         run: npm run build -- --base="${{ steps.pages.outputs.base_path }}/"
+        env:
+          VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ vars.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
 
       # GitHub Pages answers an unknown path with 404.html. As a copy of the app,
       # it opens deep links such as /minigames/library?page=2, and the app's

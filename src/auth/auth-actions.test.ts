@@ -1,0 +1,258 @@
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
+import { showSnackbar } from '../components/snackbar/snackbar.ts';
+import { AUTH_ERROR_MESSAGES, LOGOUT_MESSAGES } from '../data/auth.ts';
+import { AuthMode, type AuthProfile } from '../types/auth.ts';
+import { SnackbarVariant } from '../types/feedback.ts';
+import type { AppSession } from '../types/session.ts';
+import { createAuthActions, type AuthActions, type AuthService } from './auth-actions.ts';
+import * as authService from './auth-service.ts';
+import { SESSION_STORAGE_KEY } from './session.ts';
+import { createSessionStore, type SessionStore } from './session-store.ts';
+
+vi.mock('../components/snackbar/snackbar.ts', () => ({ showSnackbar: vi.fn() }));
+
+// The service keeps its real errors; only its Firebase calls are replaced
+vi.mock('./auth-service.ts', async (importOriginal: () => Promise<AuthService>) => ({
+  ...(await importOriginal()),
+  signInWithEmail: vi.fn(),
+  registerWithEmail: vi.fn(),
+  signInWithGoogle: vi.fn(),
+}));
+
+const NOW: number = Date.UTC(2026, 9, 9, 12, 0, 0);
+
+const PROFILE: AuthProfile = { displayName: 'CozyGamer', email: 'cozy@minigames.com' };
+
+interface TestActions {
+  readonly actions: AuthActions;
+  readonly onSignedIn: Mock<(session: AppSession) => void>;
+  readonly session: SessionStore;
+  readonly signOut: Mock<() => Promise<void>>;
+}
+
+function createTestActions(
+  loadService: () => Promise<AuthService> = (): Promise<AuthService> =>
+    Promise.resolve(authService),
+): TestActions {
+  const signOut: Mock<() => Promise<void>> = vi.fn<() => Promise<void>>().mockResolvedValue();
+  const session: SessionStore = createSessionStore({ signOut, onExpire: vi.fn<() => void>() });
+  const onSignedIn: Mock<(session: AppSession) => void> = vi.fn<(session: AppSession) => void>();
+
+  return {
+    actions: createAuthActions({ session, loadService, onSignedIn }),
+    onSignedIn,
+    session,
+    signOut,
+  };
+}
+
+function readStoredSession(): unknown {
+  return JSON.parse(localStorage.getItem(SESSION_STORAGE_KEY) ?? 'null');
+}
+
+beforeEach((): void => {
+  vi.useFakeTimers({ now: NOW });
+  localStorage.clear();
+});
+
+afterEach((): void => {
+  vi.useRealTimers();
+  localStorage.clear();
+});
+
+describe('email sign-in', (): void => {
+  it('signs in, starts the session, closes the dialog and greets the user', async (): Promise<void> => {
+    vi.mocked(authService.signInWithEmail).mockResolvedValue(PROFILE);
+    const { actions, onSignedIn } = createTestActions();
+
+    await actions.submit({ mode: AuthMode.Login, email: PROFILE.email, password: 'simple' });
+
+    const session: AppSession = { ...PROFILE, authenticatedAt: NOW };
+    expect(authService.signInWithEmail).toHaveBeenCalledExactlyOnceWith(PROFILE.email, 'simple');
+    expect(readStoredSession()).toEqual(session);
+    expect(onSignedIn).toHaveBeenCalledExactlyOnceWith(session);
+    expect(showSnackbar).toHaveBeenCalledExactlyOnceWith({
+      variant: SnackbarVariant.Success,
+      text: 'Welcome back, CozyGamer!',
+    });
+  });
+
+  it('registers with the username and greets the new user', async (): Promise<void> => {
+    vi.mocked(authService.registerWithEmail).mockResolvedValue(PROFILE);
+    const { actions } = createTestActions();
+
+    await actions.submit({
+      mode: AuthMode.Register,
+      username: 'CozyGamer',
+      email: PROFILE.email,
+      password: 'Secret1!',
+    });
+
+    expect(authService.registerWithEmail).toHaveBeenCalledExactlyOnceWith(
+      'CozyGamer',
+      PROFILE.email,
+      'Secret1!',
+    );
+    expect(authService.signInWithEmail).not.toHaveBeenCalled();
+    expect(showSnackbar).toHaveBeenCalledWith({
+      variant: SnackbarVariant.Success,
+      text: 'Welcome to MiniGames, CozyGamer!',
+    });
+  });
+
+  it('shows the error of a failed sign-in and stays a guest', async (): Promise<void> => {
+    vi.mocked(authService.signInWithEmail).mockRejectedValue(
+      new authService.AuthServiceError(
+        authService.AuthErrorKind.Failed,
+        'Wrong email or password.',
+        'auth/invalid-credential',
+      ),
+    );
+    const { actions, onSignedIn } = createTestActions();
+
+    await actions.submit({ mode: AuthMode.Login, email: PROFILE.email, password: 'wrong1' });
+
+    expect(showSnackbar).toHaveBeenCalledExactlyOnceWith({
+      variant: SnackbarVariant.Error,
+      text: 'Wrong email or password.',
+    });
+    expect(localStorage.getItem(SESSION_STORAGE_KEY)).toBeNull();
+    expect(onSignedIn).not.toHaveBeenCalled();
+  });
+
+  it('explains an unexpected failure in general words', async (): Promise<void> => {
+    vi.mocked(authService.signInWithEmail).mockRejectedValue(new Error('boom'));
+    const { actions } = createTestActions();
+
+    await actions.submit({ mode: AuthMode.Login, email: PROFILE.email, password: 'simple' });
+
+    expect(showSnackbar).toHaveBeenCalledWith({
+      variant: SnackbarVariant.Error,
+      text: AUTH_ERROR_MESSAGES.unknown,
+    });
+  });
+
+  it('reports no connection when the sign-in part of the app cannot load offline', async (): Promise<void> => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    const { actions, onSignedIn } = createTestActions((): Promise<AuthService> =>
+      Promise.reject(new TypeError('Failed to fetch dynamically imported module')),
+    );
+
+    await actions.submit({ mode: AuthMode.Login, email: PROFILE.email, password: 'simple' });
+
+    expect(showSnackbar).toHaveBeenCalledWith({
+      variant: SnackbarVariant.Error,
+      text: AUTH_ERROR_MESSAGES.byCode['auth/network-request-failed'],
+    });
+    expect(onSignedIn).not.toHaveBeenCalled();
+  });
+
+  it('asks for a reload when a newer deploy replaced the sign-in part', async (): Promise<void> => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(true);
+    const { actions } = createTestActions((): Promise<AuthService> =>
+      Promise.reject(new TypeError('Failed to fetch dynamically imported module')),
+    );
+
+    await actions.signInWithGoogle();
+
+    expect(showSnackbar).toHaveBeenCalledExactlyOnceWith({
+      variant: SnackbarVariant.Error,
+      text: AUTH_ERROR_MESSAGES.outdated,
+    });
+  });
+});
+
+describe('Google sign-in', (): void => {
+  it('starts the session with the Google picture and greets the user', async (): Promise<void> => {
+    vi.mocked(authService.signInWithGoogle).mockResolvedValue({
+      displayName: 'Alex',
+      email: 'alex@gmail.com',
+      avatarUrl: 'https://photo',
+    });
+    const { actions, onSignedIn } = createTestActions();
+
+    await actions.signInWithGoogle();
+
+    expect(readStoredSession()).toEqual({
+      displayName: 'Alex',
+      email: 'alex@gmail.com',
+      avatarUrl: 'https://photo',
+      authenticatedAt: NOW,
+    });
+    expect(onSignedIn).toHaveBeenCalledOnce();
+    expect(showSnackbar).toHaveBeenCalledExactlyOnceWith({
+      variant: SnackbarVariant.Success,
+      text: 'Welcome, Alex!',
+    });
+  });
+
+  it('tells about a closed Google window without an error', async (): Promise<void> => {
+    vi.mocked(authService.signInWithGoogle).mockRejectedValue(
+      new authService.AuthServiceError(
+        authService.AuthErrorKind.Canceled,
+        AUTH_ERROR_MESSAGES.canceled,
+        'auth/popup-closed-by-user',
+      ),
+    );
+    const { actions, onSignedIn } = createTestActions();
+
+    await actions.signInWithGoogle();
+
+    expect(showSnackbar).toHaveBeenCalledExactlyOnceWith({
+      variant: SnackbarVariant.Info,
+      text: AUTH_ERROR_MESSAGES.canceled,
+    });
+    expect(onSignedIn).not.toHaveBeenCalled();
+    expect(localStorage.getItem(SESSION_STORAGE_KEY)).toBeNull();
+  });
+
+  it('shows an error when the browser blocks the Google window', async (): Promise<void> => {
+    vi.mocked(authService.signInWithGoogle).mockRejectedValue(
+      Object.assign(new Error('Firebase: Error (auth/popup-blocked).'), {
+        code: 'auth/popup-blocked',
+      }),
+    );
+    const { actions } = createTestActions();
+
+    await actions.signInWithGoogle();
+
+    expect(showSnackbar).toHaveBeenCalledWith({
+      variant: SnackbarVariant.Error,
+      text: AUTH_ERROR_MESSAGES.byCode['auth/popup-blocked'],
+    });
+  });
+});
+
+describe('logout', (): void => {
+  it('removes only the session key, signs out and says goodbye', async (): Promise<void> => {
+    localStorage.setItem('other-app', 'kept');
+    const { actions, session, signOut } = createTestActions();
+    session.start(PROFILE);
+
+    await actions.logOut();
+
+    expect(localStorage.getItem(SESSION_STORAGE_KEY)).toBeNull();
+    expect(localStorage.getItem('other-app')).toBe('kept');
+    expect(session.check()).toBeUndefined();
+    expect(signOut).toHaveBeenCalledOnce();
+    expect(showSnackbar).toHaveBeenCalledExactlyOnceWith({
+      variant: SnackbarVariant.Success,
+      text: LOGOUT_MESSAGES.success,
+    });
+  });
+
+  it('stays a guest and shows an error when the Firebase sign-out fails', async (): Promise<void> => {
+    const { actions, session, signOut } = createTestActions();
+    session.start(PROFILE);
+    signOut.mockRejectedValue(new Error('offline'));
+
+    await actions.logOut();
+
+    expect(session.check()).toBeUndefined();
+    expect(localStorage.getItem(SESSION_STORAGE_KEY)).toBeNull();
+    expect(showSnackbar).toHaveBeenCalledExactlyOnceWith({
+      variant: SnackbarVariant.Error,
+      text: LOGOUT_MESSAGES.failure,
+    });
+  });
+});

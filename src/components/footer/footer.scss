@@ -15,6 +15,9 @@ $hover-underline-thickness: 1.5px;
 // The mockup's code glyph is 14px on tablet and mobile, which no size token has
 $code-glyph-size: 14px;
 
+// On mobile the link columns stand two side by side
+$link-columns-mobile: 2;
+
 .footer {
   background-color: get-color(bg-footer);
   color: get-color(on-bg-footer);
@@ -90,7 +93,7 @@ $code-glyph-size: 14px;
   // Two equal columns; the community column takes a row of its own
   @include media-down(mobile) {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat($link-columns-mobile, 1fr);
     gap: get-size(3) get-size(5);
     align-self: stretch;
   }

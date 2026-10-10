@@ -34,3 +34,19 @@ img {
   outline: $border-width solid get-color(tertiary);
   outline-offset: get-size(0.5);
 }
+
+// The busy ring (see the busy-ring mixin) turns, or with reduced motion fades
+// to this strength and back
+$spinner-pulse-opacity: 0.3;
+
+@keyframes spinner-turn {
+  to {
+    rotate: 1turn;
+  }
+}
+
+@keyframes spinner-pulse {
+  50% {
+    opacity: $spinner-pulse-opacity;
+  }
+}

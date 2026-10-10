@@ -59,6 +59,11 @@ $disabled-opacity: 0.5;
   @include hover {
     background-color: get-color(surface);
   }
+
+  // After the hover rule: a disabled button does not react to the pointer
+  &:disabled {
+    background-color: transparent;
+  }
 }
 
 .button--filled {
@@ -66,5 +71,22 @@ $disabled-opacity: 0.5;
 
   @include hover {
     background-color: get-color(primary-high);
+  }
+
+  // After the hover rule: a disabled button does not react to the pointer
+  &:disabled {
+    background-color: get-color(primary);
+  }
+}
+
+// The button of a request under way is disabled, but stays fully visible with
+// a turning ring: it is busy, not unavailable
+.button[aria-busy='true']:disabled {
+  opacity: 1;
+  cursor: progress;
+
+  &::before {
+    @include busy-ring(get-size(2));
+    margin-inline-end: get-size(1);
   }
 }

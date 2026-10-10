@@ -1,4 +1,3 @@
-@use 'sass:list';
 @use 'abstracts' as *;
 
 // The task's limit: the textarea grows with its text up to this height, then
@@ -14,18 +13,18 @@ $avatar-size: get-size(3) + get-size(0.5);
 $heart-width: 14px;
 $heart-height: 13px;
 
-// The avatars take these colors in turn, as in the mockup
-$avatar-colors: (get-color(avatar-random-3), get-color(primary), get-color(avatar-random-1));
-
 .game-details__comments {
   margin-block-start: get-size(3);
 }
 
 // ---------- Form ----------
+// The message of a text that is too long takes a line of its own under the
+// field, closer to it than the avatar is
 .game-details__comment-form {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: get-size(2);
+  gap: get-size(1) get-size(2);
   margin-block-start: get-size(2);
 }
 
@@ -72,6 +71,28 @@ $avatar-colors: (get-color(avatar-random-3), get-color(primary), get-color(avata
   &:focus {
     box-shadow: inset 0 0 0 $border-width-hairline get-color(on-primary);
   }
+
+  // The error state of the UI guide: a red outline
+  &[aria-invalid='true'] {
+    border-color: get-color(error);
+    box-shadow: inset 0 0 0 $border-width-hairline get-color(error);
+  }
+
+  // A guest's form, or one whose comment is on its way, takes no text
+  &:disabled {
+    border-color: get-color(outline-variant);
+    background-color: get-color(bg);
+    cursor: not-allowed;
+  }
+}
+
+// Under the field, from where the field starts: after the avatar and the gap
+.game-details__comment-error {
+  flex-basis: 100%;
+  margin: 0;
+  padding-inline-start: get-size(5) + get-size(2);
+  color: get-color(error);
+  font-size: get-font-size(body-small);
 }
 
 .game-details__send {
@@ -103,6 +124,22 @@ $avatar-colors: (get-color(avatar-random-3), get-color(primary), get-color(avata
     background-color: get-color(outline-variant);
     color: get-color(on-bg);
     cursor: not-allowed;
+  }
+
+  // While the comment is on its way, a turning ring takes the place of the
+  // arrow: the button is busy, not unavailable
+  &[aria-busy='true']:disabled {
+    background-color: get-color(bg-footer-low);
+    color: get-color(white);
+    cursor: progress;
+
+    svg {
+      display: none;
+    }
+
+    &::before {
+      @include busy-ring(get-size(2));
+    }
   }
 }
 
@@ -142,11 +179,19 @@ $avatar-colors: (get-color(avatar-random-3), get-color(primary), get-color(avata
   font-weight: get-font-weight(bold);
 }
 
-$avatar-count: list.length($avatar-colors);
+// The color tokens a commenter's avatar takes one of, at random
+// (AVATAR_COLORS in src/data/game-details.ts)
+$avatar-colors: (
+  avatar-random-1,
+  avatar-random-2,
+  avatar-random-3,
+  avatar-random-4,
+  avatar-random-5
+);
 
-@for $index from 1 through $avatar-count {
-  .game-details__comments-list > li:nth-child(#{$avatar-count}n + #{$index}) .game-details__avatar {
-    background-color: list.nth($avatar-colors, $index);
+@each $name in $avatar-colors {
+  .game-details__avatar--#{$name} {
+    background-color: get-color($name);
   }
 }
 
@@ -207,6 +252,19 @@ $avatar-count: list.length($avatar-colors);
   &[aria-pressed='true'],
   &[aria-pressed='true'] svg {
     color: get-color(like);
+  }
+
+  // While the like is on its way, a turning ring takes the place of the heart
+  &[aria-busy='true'] {
+    cursor: progress;
+
+    svg {
+      display: none;
+    }
+
+    &::before {
+      @include busy-ring($heart-width);
+    }
   }
 }
 

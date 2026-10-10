@@ -12,3 +12,8 @@ export function getPanelId(mode: AuthMode): string {
 export function getFieldId(mode: AuthMode, fieldName: string): string {
   return `auth-${mode}-${fieldName}`;
 }
+
+// The inline error of a field, which its input names as its description
+export function getErrorId(mode: AuthMode, fieldName: string): string {
+  return `${getFieldId(mode, fieldName)}-error`;
+}

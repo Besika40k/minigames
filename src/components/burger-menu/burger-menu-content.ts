@@ -4,16 +4,30 @@ import { AuthMode } from '../../types/auth.ts';
 import { ButtonSize, ButtonVariant } from '../../types/button.ts';
 import type { NavigationLink } from '../../types/navigation.ts';
 import { Route } from '../../types/route.ts';
+import type { AppSession } from '../../types/session.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { createIcon, IconName } from '../../utils/create-icon.ts';
 import type { PageLinks } from '../../utils/page-links.ts';
 import { createButton } from '../button/button.ts';
 import { createLogo } from '../logo/logo.ts';
+import { createProfileSummary } from '../profile/profile.ts';
+
+export interface MenuContent {
+  readonly elements: readonly HTMLElement[];
+  // Shows the profile of a signed-in user in place of the guest buttons
+  readonly setSession: (session: AppSession | undefined) => void;
+}
+
+interface MenuActions {
+  readonly element: HTMLElement;
+  readonly setSession: (session: AppSession | undefined) => void;
+}
 
 export interface MenuContentHandlers {
   readonly onClose: () => void;
   readonly onLinkClick: () => void;
   readonly onAuthClick: (mode: AuthMode) => void;
+  readonly onLogout: () => void;
 }
 
 function createTop(handlers: MenuContentHandlers): HTMLElement {
@@ -60,7 +74,7 @@ function createNavigation(handlers: MenuContentHandlers, pageLinks: PageLinks): 
   });
 }
 
-function createActions(handlers: MenuContentHandlers): HTMLElement {
+function createActions(handlers: MenuContentHandlers): MenuActions {
   const logIn: HTMLButtonElement = createButton({
     variant: ButtonVariant.Outlined,
     size: ButtonSize.Medium,
@@ -79,12 +93,39 @@ function createActions(handlers: MenuContentHandlers): HTMLElement {
     },
   });
 
-  return createElement('div', { className: 'mobile-menu__actions', children: [logIn, signUp] });
+  const logOut: HTMLButtonElement = createButton({
+    variant: ButtonVariant.Outlined,
+    size: ButtonSize.Medium,
+    text: 'Log Out',
+    onClick: handlers.onLogout,
+  });
+
+  const guestButtons: HTMLButtonElement[] = [logIn, signUp];
+  const element: HTMLElement = createElement('div', {
+    className: 'mobile-menu__actions',
+    children: guestButtons,
+  });
+
+  return {
+    element,
+    setSession: (session: AppSession | undefined): void => {
+      element.replaceChildren(
+        ...(session === undefined
+          ? guestButtons
+          : [createProfileSummary(session, 'mobile-menu__profile'), logOut]),
+      );
+    },
+  };
 }
 
 export function createMenuContent(
   handlers: MenuContentHandlers,
   pageLinks: PageLinks,
-): readonly HTMLElement[] {
-  return [createTop(handlers), createNavigation(handlers, pageLinks), createActions(handlers)];
+): MenuContent {
+  const actions: MenuActions = createActions(handlers);
+
+  return {
+    elements: [createTop(handlers), createNavigation(handlers, pageLinks), actions.element],
+    setSession: actions.setSession,
+  };
 }

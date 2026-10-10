@@ -14,7 +14,7 @@ $pulse-opacity: 0.5;
   border-radius: get-radius(small);
   background-color: get-color(outline);
   background-image: linear-gradient(
-    90deg,
+    to right,
     transparent,
     rgba(get-color(white), $shimmer-opacity),
     transparent

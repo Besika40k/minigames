@@ -7,6 +7,7 @@ import type {
   GameDetails,
   GameDetailsDialog,
 } from '../../types/game-details.ts';
+import type { AppSession } from '../../types/session.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { createIcon, IconName } from '../../utils/create-icon.ts';
 import { enableDialogDismiss } from '../../utils/dismiss-dialog.ts';
@@ -28,6 +29,13 @@ const TITLE_ID = 'game-details-title';
 export interface GameDetailsDialogOptions {
   // Asks to close the dialog: the close button, Esc and the backdrop
   readonly onClose: () => void;
+  // The signed-in user, or undefined for a guest. The game of a signed-in user
+  // says whether it is among that user's favorites, and the comments which of
+  // them the user liked.
+  readonly getSession: () => AppSession | undefined;
+  // Checks the session before a change such as a favorite or a comment. A
+  // guest gets undefined, and the auth dialog in place of this one.
+  readonly requireSession: (warning: string) => AppSession | undefined;
 }
 
 // The cover picture of the game. It is decoration: the dialog is named by the
@@ -90,7 +98,10 @@ export function createGameDetailsDialog(options: GameDetailsDialogOptions): Game
   // The comments load next to the game, with states of their own, so a failed
   // comments request leaves the game on the screen. An unknown game has no
   // comments to show at all.
-  const comments: GameCommentsSection = createGameDetailsComments();
+  const comments: GameCommentsSection = createGameDetailsComments({
+    getSession: options.getSession,
+    requireSession: options.requireSession,
+  });
   const bottom: HTMLDivElement = createElement('div', {
     className: 'game-details__content game-details__content--bottom',
     children: [comments.element],
@@ -103,13 +114,20 @@ export function createGameDetailsDialog(options: GameDetailsDialogOptions): Game
   const area: AsyncArea = createAsyncArea({
     container: main,
     messages: GAME_DETAILS_CONTENT.messages,
-    load: (signal: AbortSignal): Promise<GameDetails> => fetchGameDetails(slug, signal),
+    load: (signal: AbortSignal): Promise<GameDetails> =>
+      fetchGameDetails(slug, signal, options.getSession()?.email),
     renderSkeleton: createGameDetailsSkeleton,
-    // Each game is drawn anew, so nothing the visitor changed is kept
+    // Each game is drawn anew from the answer of the server
     renderData: (game: GameDetails): readonly Node[] => {
+      const info: HTMLElement = createGameDetailsInfo(game, TITLE_ID, {
+        requireSession: options.requireSession,
+        onUnconfirmed: (): void => {
+          area.reload();
+        },
+      });
       const content: HTMLDivElement = createElement('div', {
         className: 'game-details__content game-details__content--top',
-        children: [createGameDetailsInfo(game, TITLE_ID).element, createGameDetailsRecords(game)],
+        children: [info, createGameDetailsRecords(game)],
       });
 
       return [createHero(game), content];
@@ -151,5 +169,14 @@ export function createGameDetailsDialog(options: GameDetailsDialogOptions): Game
     }
   };
 
-  return { element: dialog, show, hide };
+  // Another user signed in or out: the open game shows that user's state
+  const refresh = (): void => {
+    if (!dialog.open) {
+      return;
+    }
+    area.reload();
+    comments.show(slug);
+  };
+
+  return { element: dialog, show, hide, refresh };
 }

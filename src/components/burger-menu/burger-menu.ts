@@ -4,7 +4,7 @@ import type { Route } from '../../types/route.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { isDisplayed } from '../../utils/is-displayed.ts';
 import { PageLinks } from '../../utils/page-links.ts';
-import { createMenuContent } from './burger-menu-content.ts';
+import { createMenuContent, type MenuContent } from './burger-menu-content.ts';
 import './burger-menu.scss';
 
 const MENU_ID = 'mobile-menu';
@@ -21,19 +21,22 @@ export function createBurgerMenu(options: BurgerMenuOptions): BurgerMenu {
     dialog.close();
   };
 
-  dialog.append(
-    ...createMenuContent(
-      {
-        onClose: closeMenu,
-        onLinkClick: closeMenu,
-        onAuthClick: (mode: AuthMode): void => {
-          closeMenu();
-          options.onAuthClick?.(mode);
-        },
+  const content: MenuContent = createMenuContent(
+    {
+      onClose: closeMenu,
+      onLinkClick: closeMenu,
+      onAuthClick: (mode: AuthMode): void => {
+        closeMenu();
+        options.onAuthClick?.(mode);
       },
-      pageLinks,
-    ),
+      onLogout: (): void => {
+        closeMenu();
+        options.onLogout?.();
+      },
+    },
+    pageLinks,
   );
+  dialog.append(...content.elements);
 
   options.trigger.setAttribute('aria-haspopup', 'dialog');
   options.trigger.setAttribute('aria-controls', MENU_ID);
@@ -70,5 +73,6 @@ export function createBurgerMenu(options: BurgerMenuOptions): BurgerMenu {
     setCurrentPage: (page: Route | undefined): void => {
       pageLinks.markCurrent(page);
     },
+    setSession: content.setSession,
   };
 }

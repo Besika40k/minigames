@@ -1,8 +1,10 @@
 @use 'abstracts' as *;
 
+// The desktop header in the mockup, between the size-10 and size-11 tokens
+$header-height: 85px;
+
 .header {
-  // 85px in the mockup: size-10 plus 5px, which no size token covers
-  height: get-size(10) + 5px;
+  height: $header-height;
   border-bottom: $border-width solid get-color(on-primary);
   background-color: get-color(bg);
 
@@ -83,6 +85,9 @@
   display: flex;
   align-items: center;
   gap: get-size(2);
+  // Without this the actions keep the full width of a long name: they may
+  // shrink, and the name then ends in an ellipsis
+  min-width: 0;
 
   @include media-down(laptop) {
     gap: get-size(1);
@@ -100,7 +105,32 @@
   }
 }
 
-.header__auth-button--log-in {
+// The guest buttons or the profile, laid out as items of the actions
+.header__account {
+  display: contents;
+}
+
+// The name gives way to the burger button on mobile, where the avatar alone
+// stands for the profile
+.header__profile {
+  color: get-color(on-primary);
+  font-size: get-font-size(body-medium);
+
+  .profile-summary__name {
+    @include media-down(mobile) {
+      display: none;
+    }
+  }
+}
+
+// The buttons keep their size and their one line; the name gives way instead
+.header__auth-button {
+  flex: none;
+  white-space: nowrap;
+}
+
+.header__auth-button--log-in,
+.header__auth-button--log-out {
   @include media-down(tablet) {
     display: none;
   }

@@ -50,6 +50,10 @@
   @return -lookup(tokens.$breakpoints, $name, 'breakpoint');
 }
 
+@function get-layer($name) {
+  @return -lookup(tokens.$layers, $name, 'layer');
+}
+
 @function get-duration($name) {
   @return -lookup(tokens.$durations, $name, 'duration');
 }

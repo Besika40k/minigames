@@ -10,15 +10,17 @@
 // covers everything up to the next whole pixel: media-down(tablet) is
 // `width < 769px` and media-up(tablet) is `width >= 769px`. The two never
 // overlap and never leave a gap, and 768.2px is still a tablet.
+$breakpoint-step: 1px;
+
 @mixin media-up($name) {
-  @media (width >= #{get-breakpoint($name) + 1px}) {
+  @media (width >= #{get-breakpoint($name) + $breakpoint-step}) {
     @content;
   }
 }
 
 // Styles for viewports up to the breakpoint (see media-up).
 @mixin media-down($name) {
-  @media (width < #{get-breakpoint($name) + 1px}) {
+  @media (width < #{get-breakpoint($name) + $breakpoint-step}) {
     @content;
   }
 }
@@ -48,12 +50,15 @@
 }
 
 // Takes an element off the screen but leaves it to screen readers, for a text
-// that a sighted person does not need (or that does not fit)
+// that a sighted person does not need (or that does not fit). A box of one
+// pixel, not zero: some screen readers skip an element without any size.
+$hidden-size: 1px;
+
 @mixin visually-hidden {
   position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
+  width: $hidden-size;
+  height: $hidden-size;
+  margin: -$hidden-size;
   padding: 0;
   overflow: hidden;
   border: 0;
@@ -135,5 +140,27 @@ $backdrop-opacity: 0.75;
     overflow: hidden;
     scrollbar-gutter: stable;
     background-color: $dimmed-page-color;
+  }
+}
+
+// The ring that turns on a control while its request is under way: one turn
+// takes this long. With reduced motion the ring only fades and comes back,
+// over a calmer cycle. The keyframes are in base/_global.scss.
+$spinner-turn-duration: 0.8s;
+$spinner-pulse-duration: 1.6s;
+
+// A ring of $size in the text color, for the ::before of a busy control
+@mixin busy-ring($size) {
+  content: '';
+  width: $size;
+  height: $size;
+  border: tokens.$border-width solid currentcolor;
+  border-inline-end-color: transparent;
+  border-radius: get-radius(full);
+  animation: spinner-turn $spinner-turn-duration linear infinite;
+
+  @include reduced-motion {
+    border-inline-end-color: currentcolor;
+    animation: spinner-pulse $spinner-pulse-duration ease-in-out infinite;
   }
 }

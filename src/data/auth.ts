@@ -1,5 +1,93 @@
-import { AuthMode, type AuthFormContent } from '../types/auth.ts';
+import {
+  AuthFieldName,
+  AuthMode,
+  type AuthErrorMessages,
+  type AuthFormContent,
+  type AuthValidationMessages,
+} from '../types/auth.ts';
 import { IconName } from '../utils/create-icon.ts';
+
+// The limits of the field rules
+export const USERNAME_MIN_LENGTH = 2;
+export const USERNAME_MAX_LENGTH = 30;
+export const PASSWORD_MIN_LENGTH = 6;
+
+export const AUTH_VALIDATION_MESSAGES: AuthValidationMessages = {
+  emailRequired: 'Please enter your email address',
+  emailFormat: 'Please enter a valid email address',
+  usernameRequired: 'Please enter a username',
+  usernameFirstLetter: 'Username must start with an uppercase English letter',
+  usernameCharacters: 'Username may contain only English letters and digits',
+  usernameLength: `Username must be ${String(USERNAME_MIN_LENGTH)} to ${String(USERNAME_MAX_LENGTH)} characters long`,
+  passwordRequired: 'Please enter your password',
+  passwordLength: `Password must be at least ${String(PASSWORD_MIN_LENGTH)} characters long`,
+  passwordCharacters: 'Password may contain only English letters, digits and special characters',
+  passwordUppercase: 'Password must contain an uppercase English letter',
+  passwordDigit: 'Password must contain a digit',
+  passwordSpecial: 'Password must contain a special character, such as ! or #',
+  confirmPasswordRequired: 'Please repeat your password',
+  confirmPasswordMismatch: 'Passwords do not match',
+};
+
+// What a failed sign-in, sign-up or sign-out says, by Firebase error code
+const WRONG_CREDENTIALS = 'Wrong email or password.';
+const SIGN_IN_UNAVAILABLE = 'Sign-in is not available right now. Please try again later.';
+
+export const AUTH_ERROR_MESSAGES: AuthErrorMessages = {
+  canceled: 'Google sign-in was canceled.',
+  unknown: 'Something went wrong. Please try again.',
+  outdated: 'MiniGames has been updated. Reload the page and try again.',
+  byCode: {
+    'auth/invalid-credential': WRONG_CREDENTIALS,
+    'auth/wrong-password': WRONG_CREDENTIALS,
+    'auth/user-not-found': WRONG_CREDENTIALS,
+    'auth/invalid-email': 'This email address is not valid.',
+    'auth/user-disabled': 'This account is disabled.',
+    'auth/email-already-in-use': 'An account with this email already exists. Log in instead.',
+    'auth/weak-password': 'This password is too weak. Choose a stronger one.',
+    'auth/too-many-requests': 'Too many attempts. Wait a moment and try again.',
+    'auth/network-request-failed':
+      'The sign-in service cannot be reached. Check your connection and try again.',
+    'auth/popup-blocked':
+      'The browser blocked the Google window. Allow pop-ups for this site and try again.',
+    'auth/account-exists-with-different-credential':
+      'This email already has an account with a password. Log in with your email instead.',
+    // The project config is missing or does not allow this sign-in
+    'auth/invalid-api-key': SIGN_IN_UNAVAILABLE,
+    'auth/configuration-not-found': SIGN_IN_UNAVAILABLE,
+    'auth/operation-not-allowed': SIGN_IN_UNAVAILABLE,
+    'auth/unauthorized-domain': SIGN_IN_UNAVAILABLE,
+  },
+};
+
+// The codes of a Google window the visitor closed or replaced with another one
+export const CANCELED_AUTH_CODES: ReadonlySet<string> = new Set([
+  'auth/popup-closed-by-user',
+  'auth/cancelled-popup-request',
+  'auth/user-cancelled',
+]);
+
+// The start of the message after a sign-in or sign-up, followed by the name
+export const AUTH_SUCCESS_MESSAGES: Readonly<Record<AuthMode, string>> = {
+  [AuthMode.Login]: 'Welcome back',
+  [AuthMode.Register]: 'Welcome to MiniGames',
+};
+
+// The start of the message after a Google sign-in, which may also be the
+// first visit
+export const GOOGLE_SUCCESS_MESSAGE = 'Welcome';
+
+// What logging out says. A failed Firebase sign-out still ends the app session.
+export const LOGOUT_MESSAGES: Readonly<{ success: string; failure: string }> = {
+  success: 'You have logged out.',
+  failure: 'Signing out of your account failed, but you are logged out of MiniGames.',
+};
+
+// The warning when the app session runs out (see src/auth/session.ts)
+export const SESSION_EXPIRED_MESSAGE = 'Your session has expired. Please log in again.';
+
+// Why the auth dialog stays closed for a signed-in user
+export const ALREADY_SIGNED_IN_MESSAGE = 'You are already logged in.';
 
 export const AUTH_DIALOG_LABEL = 'Log in or sign up';
 export const AUTH_TABS_LABEL = 'Account form';
@@ -14,7 +102,7 @@ export const AUTH_CONTENT: Readonly<Record<AuthMode, AuthFormContent>> = {
     description: 'Sign in to resume your games and progress.',
     fields: [
       {
-        name: 'email',
+        name: AuthFieldName.Email,
         label: 'Email Address',
         type: 'email',
         icon: IconName.Mail,
@@ -22,18 +110,21 @@ export const AUTH_CONTENT: Readonly<Record<AuthMode, AuthFormContent>> = {
         autocomplete: 'email',
       },
       {
-        name: 'password',
+        name: AuthFieldName.Password,
         label: 'Password',
         type: 'password',
         icon: IconName.Lock,
         placeholder: '••••••••',
         autocomplete: 'current-password',
+        minLength: PASSWORD_MIN_LENGTH,
         canRevealPassword: true,
       },
     ],
     forgotPasswordText: 'Forgot Password?',
     submitText: 'Login',
+    pendingText: 'Logging in…',
     googleText: 'Continue with Google',
+    googlePendingText: 'Waiting for Google…',
     switchQuestion: "Don't have an account?",
     switchLinkText: 'Register',
   },
@@ -43,7 +134,7 @@ export const AUTH_CONTENT: Readonly<Record<AuthMode, AuthFormContent>> = {
     description: 'Join MiniGames to track your score & streak.',
     fields: [
       {
-        name: 'username',
+        name: AuthFieldName.Username,
         label: 'Username',
         type: 'text',
         icon: IconName.Person,
@@ -51,7 +142,7 @@ export const AUTH_CONTENT: Readonly<Record<AuthMode, AuthFormContent>> = {
         autocomplete: 'username',
       },
       {
-        name: 'email',
+        name: AuthFieldName.Email,
         label: 'Email Address',
         type: 'email',
         icon: IconName.Mail,
@@ -59,16 +150,16 @@ export const AUTH_CONTENT: Readonly<Record<AuthMode, AuthFormContent>> = {
         autocomplete: 'email',
       },
       {
-        name: 'password',
+        name: AuthFieldName.Password,
         label: 'Password',
         type: 'password',
         icon: IconName.Lock,
-        placeholder: 'Min. 8 characters',
+        placeholder: `Min. ${String(PASSWORD_MIN_LENGTH)} characters`,
         autocomplete: 'new-password',
-        minLength: 8,
+        minLength: PASSWORD_MIN_LENGTH,
       },
       {
-        name: 'confirm-password',
+        name: AuthFieldName.ConfirmPassword,
         label: 'Confirm Password',
         type: 'password',
         icon: IconName.Lock,
@@ -77,7 +168,9 @@ export const AUTH_CONTENT: Readonly<Record<AuthMode, AuthFormContent>> = {
       },
     ],
     submitText: 'Create Account',
+    pendingText: 'Creating account…',
     googleText: 'Sign up with Google',
+    googlePendingText: 'Waiting for Google…',
     switchQuestion: 'Already have an account?',
     switchLinkText: 'Login',
   },

@@ -1,76 +1,44 @@
 import { fetchGameComments } from '../../api/comments-api.ts';
-import { GAME_DETAILS_CONTENT } from '../../data/game-details.ts';
+import { AVATAR_COLORS, GAME_DETAILS_CONTENT } from '../../data/game-details.ts';
 import type {
   GameComment,
   GameCommentsPage,
   GameCommentsSection,
-  GameDetailsSection,
 } from '../../types/game-details.ts';
+import type { AppSession } from '../../types/session.ts';
 import { createElement } from '../../utils/create-element.ts';
-import { createIcon, IconName } from '../../utils/create-icon.ts';
 import { formatRelativeTime } from '../../utils/format-relative-time.ts';
+import { pickRandom } from '../../utils/pick-random.ts';
+import { getNameInitial } from '../../utils/profile-name.ts';
 import { createAsyncArea, type AsyncArea } from '../feedback/async-area.ts';
 import { createEmptyState } from '../feedback/empty-state.ts';
 import { createSkeleton } from '../skeleton/skeleton.ts';
+import { createCommentForm, type CommentForm } from './game-details-comment-form.ts';
+import { createLikeButton, type LikeButtonOptions } from './game-details-like.ts';
 import './game-details-comments.scss';
 
 const TITLE_ID = 'game-details-comments-title';
-const INPUT_ID = 'game-details-comment-input';
 
 // The API sends at most three comments, and the skeleton holds their place
 const SKELETON_COMMENTS = 3;
 
-// A round avatar with the first letter of a name. It is decoration: the name
-// is written next to it.
+// A round avatar with the first character of a name. It is decoration: the
+// name is written next to it.
 function createAvatar(name: string, className: string): HTMLSpanElement {
   return createElement('span', {
     className,
-    text: name.charAt(0).toUpperCase(),
+    text: getNameInitial(name),
     attributes: { 'aria-hidden': 'true' },
   });
 }
 
-// The heart and the number of likes. A click likes or unlikes the comment and
-// changes the number by one; nothing is sent anywhere yet.
-function createLikeButton(comment: GameComment): GameDetailsSection {
-  // The API counts the current user's like in the total
-  const othersLikes: number = comment.likesCount - (comment.isLikedByCurrentUser ? 1 : 0);
-  let isLiked: boolean = comment.isLikedByCurrentUser;
-
-  const count: HTMLSpanElement = createElement('span');
-  const element: HTMLButtonElement = createElement('button', {
-    className: 'game-details__like',
-    attributes: { type: 'button' },
-    children: [
-      createIcon(IconName.Heart),
-      createElement('span', {
-        className: 'game-details__hidden',
-        text: `${GAME_DETAILS_CONTENT.likesLabel}: `,
-      }),
-      count,
-    ],
-  });
-
-  const show = (): void => {
-    element.setAttribute('aria-pressed', String(isLiked));
-    count.textContent = String(othersLikes + (isLiked ? 1 : 0));
-  };
-
-  element.addEventListener('click', (): void => {
-    isLiked = !isLiked;
-    show();
-  });
-
-  const reset = (): void => {
-    isLiked = comment.isLikedByCurrentUser;
-    show();
-  };
-  reset();
-
-  return { element, reset };
+// What a list of comments needs besides the comments
+interface CommentListOptions extends Omit<LikeButtonOptions, 'comment'> {
+  // The classes of a commenter's avatar, with its color
+  readonly getAvatarClass: (name: string) => string;
 }
 
-function createComment(comment: GameComment, likeButton: HTMLElement): HTMLLIElement {
+function createComment(comment: GameComment, options: CommentListOptions): HTMLLIElement {
   const nameId: string = `game-details-comment-${comment.commentId}`;
   const date: HTMLTimeElement = createElement('time', {
     className: 'game-details__comment-date',
@@ -81,7 +49,7 @@ function createComment(comment: GameComment, likeButton: HTMLElement): HTMLLIEle
   const header: HTMLDivElement = createElement('div', {
     className: 'game-details__comment-header',
     children: [
-      createAvatar(comment.authorName, 'game-details__avatar'),
+      createAvatar(comment.authorName, options.getAvatarClass(comment.authorName)),
       createElement('h4', {
         className: 'game-details__author',
         text: comment.authorName,
@@ -97,66 +65,11 @@ function createComment(comment: GameComment, likeButton: HTMLElement): HTMLLIEle
     children: [
       header,
       createElement('p', { className: 'game-details__comment-text', text: comment.text }),
-      likeButton,
+      createLikeButton({ ...options, comment }),
     ],
   });
 
   return createElement('li', { children: [article] });
-}
-
-// The form for a new comment: the textarea grows with its text (see the
-// styles) and the send button works only when there is something to send.
-// Sending comes in a later story, so the form does nothing yet.
-function createCommentForm(): GameDetailsSection {
-  const label: HTMLLabelElement = createElement('label', {
-    className: 'game-details__hidden',
-    text: GAME_DETAILS_CONTENT.commentLabel,
-    attributes: { for: INPUT_ID },
-  });
-
-  const input: HTMLTextAreaElement = createElement('textarea', {
-    className: 'game-details__comment-input',
-    attributes: {
-      id: INPUT_ID,
-      name: 'comment',
-      rows: '1',
-      placeholder: GAME_DETAILS_CONTENT.commentPlaceholder,
-    },
-  });
-
-  const sendButton: HTMLButtonElement = createElement('button', {
-    className: 'game-details__send',
-    attributes: { type: 'submit', 'aria-label': GAME_DETAILS_CONTENT.sendLabel },
-    children: [createIcon(IconName.Send)],
-  });
-
-  const element: HTMLFormElement = createElement('form', {
-    className: 'game-details__comment-form',
-    attributes: { novalidate: '' },
-    children: [
-      createAvatar(GAME_DETAILS_CONTENT.currentUserInitial, 'game-details__user'),
-      label,
-      input,
-      sendButton,
-    ],
-  });
-
-  const updateSendButton = (): void => {
-    sendButton.disabled = input.value.trim() === '';
-  };
-  input.addEventListener('input', updateSendButton);
-
-  element.addEventListener('submit', (event: SubmitEvent): void => {
-    event.preventDefault();
-  });
-
-  const reset = (): void => {
-    input.value = '';
-    updateSendButton();
-  };
-  reset();
-
-  return { element, reset };
 }
 
 function createSkeletonList(): HTMLElement {
@@ -168,23 +81,46 @@ function createSkeletonList(): HTMLElement {
   });
 }
 
-function createCommentList(comments: readonly GameComment[]): HTMLUListElement {
+function createCommentList(
+  comments: readonly GameComment[],
+  options: CommentListOptions,
+): HTMLUListElement {
   return createElement('ul', {
     className: 'game-details__comments-list',
     children: comments.map((comment: GameComment): HTMLLIElement =>
-      createComment(comment, createLikeButton(comment).element),
+      createComment(comment, options),
     ),
   });
 }
 
+export interface GameCommentsOptions {
+  // The signed-in user, or undefined for a guest
+  readonly getSession: () => AppSession | undefined;
+  // Checks the session before a comment is sent or liked
+  readonly requireSession: (warning: string) => AppSession | undefined;
+}
+
 // The comments of a game: the form for a new one, and the latest comments
 // from the API with the total count in the heading. Every game starts with an
-// empty form and the likes as the API sends them.
-export function createGameDetailsComments(): GameCommentsSection {
+// empty form and the likes as the API sends them for the current visitor.
+export function createGameDetailsComments(options: GameCommentsOptions): GameCommentsSection {
   // The slug whose comments are on the screen or on their way
   let slug: string = '';
 
-  const form: GameDetailsSection = createCommentForm();
+  // A commenter keeps the avatar color picked at random for as long as the
+  // dialog exists, however often the comments load again
+  const avatarColors: Map<string, string> = new Map<string, string>();
+  const getAvatarClass = (name: string): string => {
+    const key: string = name.trim();
+    const color: string | undefined = avatarColors.get(key) ?? pickRandom(AVATAR_COLORS);
+    if (color === undefined) {
+      return 'game-details__avatar';
+    }
+    avatarColors.set(key, color);
+
+    return `game-details__avatar game-details__avatar--${color}`;
+  };
+
   const title: HTMLHeadingElement = createElement('h3', {
     className: 'game-details__subtitle',
     text: GAME_DETAILS_CONTENT.commentsTitle,
@@ -201,12 +137,21 @@ export function createGameDetailsComments(): GameCommentsSection {
   const area: AsyncArea = createAsyncArea({
     container: list,
     messages: GAME_DETAILS_CONTENT.commentsMessages,
-    load: (signal: AbortSignal): Promise<GameCommentsPage> => fetchGameComments(slug, signal),
+    load: (signal: AbortSignal): Promise<GameCommentsPage> =>
+      fetchGameComments(slug, signal, options.getSession()?.email),
     renderSkeleton: (): readonly Node[] => {
       title.textContent = GAME_DETAILS_CONTENT.commentsTitle;
       return [createSkeletonList()];
     },
-    renderData: (page: GameCommentsPage): readonly Node[] => [createCommentList(page.comments)],
+    renderData: (page: GameCommentsPage): readonly Node[] => [
+      createCommentList(page.comments, {
+        getAvatarClass,
+        requireSession: options.requireSession,
+        onUnconfirmed: (): void => {
+          area.reload();
+        },
+      }),
+    ],
     isEmpty: (page: GameCommentsPage): boolean => page.comments.length === 0,
     renderEmpty: (): readonly Node[] => [
       createEmptyState({
@@ -219,6 +164,15 @@ export function createGameDetailsComments(): GameCommentsSection {
     onLoad: showCount,
   });
 
+  // A sent comment, or one that may have been sent, shows in the list loaded
+  // again, with the new total in the heading
+  const form: CommentForm = createCommentForm({
+    requireSession: options.requireSession,
+    onSent: (): void => {
+      area.reload();
+    },
+  });
+
   const element: HTMLElement = createElement('section', {
     className: 'game-details__comments',
     attributes: { 'aria-labelledby': TITLE_ID },
@@ -229,7 +183,7 @@ export function createGameDetailsComments(): GameCommentsSection {
     element,
     show: (nextSlug: string): void => {
       slug = nextSlug;
-      form.reset();
+      form.show(slug, options.getSession());
       area.reload();
     },
     abort: (): void => {

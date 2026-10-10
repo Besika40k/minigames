@@ -27,6 +27,9 @@ $link-underline-offset: 3px;
 // The text of the submit button: 20px tall for its 16px type in the mockup
 $submit-line-height: 1.25;
 
+// A locked control fades as much as a disabled button
+$locked-opacity: 0.5;
+
 // ---------- Dialog ----------
 // A modal dialog is centered by the browser. The animation comes from the
 // animated-dialog mixin, and the backdrop from the modal-backdrop mixin.
@@ -194,6 +197,25 @@ $submit-line-height: 1.25;
   color: get-color(on-primary);
 }
 
+// The error state of the UI guide: an invalid field has a red outline and
+// icon, after the rules above so that focus and text do not darken the icon
+.auth-dialog__input[aria-invalid='true'] {
+  border-color: get-color(error);
+}
+
+.auth-dialog__input[aria-invalid='true'] ~ .auth-dialog__icon {
+  color: get-color(error);
+}
+
+// The message under an invalid field, centered as in the UI guide. It sits
+// closer to its input than the label above it.
+.auth-dialog__error {
+  margin-block-start: get-size(0.5) - get-size(1);
+  color: get-color(error);
+  font-size: get-font-size(label-medium);
+  text-align: center;
+}
+
 // The button is bigger than its icon to be easy to hit, and sits so that the
 // icon is where the mockup has it
 .auth-dialog__reveal {
@@ -249,6 +271,26 @@ $submit-line-height: 1.25;
   box-shadow: get-shadow(button-edge);
   font-size: get-font-size(body-medium);
   line-height: $submit-line-height;
+}
+
+// While a request is under way the controls stand still: they fade and do not
+// react to the pointer, and only the busy button stays bright
+.auth-dialog[aria-busy='true'] {
+  cursor: progress;
+
+  :is(.auth-dialog__tabs, .auth-dialog__panels) :is(input, button) {
+    pointer-events: none;
+  }
+
+  :is(.auth-dialog__tabs, .auth-dialog__panels)
+    :is(input, button):disabled:not([aria-busy='true']) {
+    opacity: $locked-opacity;
+  }
+}
+
+// While Google's window is open, the turning ring takes the place of the logo
+.auth-dialog__google[aria-busy='true'] img {
+  display: none;
 }
 
 .auth-dialog__divider {
