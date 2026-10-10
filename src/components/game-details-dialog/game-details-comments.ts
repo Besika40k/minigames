@@ -6,16 +6,17 @@ import type {
   GameCommentsSection,
   GameDetailsSection,
 } from '../../types/game-details.ts';
+import type { AppSession } from '../../types/session.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { createIcon, IconName } from '../../utils/create-icon.ts';
 import { formatRelativeTime } from '../../utils/format-relative-time.ts';
 import { createAsyncArea, type AsyncArea } from '../feedback/async-area.ts';
 import { createEmptyState } from '../feedback/empty-state.ts';
 import { createSkeleton } from '../skeleton/skeleton.ts';
+import { createCommentForm, type CommentForm } from './game-details-comment-form.ts';
 import './game-details-comments.scss';
 
 const TITLE_ID = 'game-details-comments-title';
-const INPUT_ID = 'game-details-comment-input';
 
 // The API sends at most three comments, and the skeleton holds their place
 const SKELETON_COMMENTS = 3;
@@ -104,61 +105,6 @@ function createComment(comment: GameComment, likeButton: HTMLElement): HTMLLIEle
   return createElement('li', { children: [article] });
 }
 
-// The form for a new comment: the textarea grows with its text (see the
-// styles) and the send button works only when there is something to send.
-// Sending comes in a later story, so the form does nothing yet.
-function createCommentForm(): GameDetailsSection {
-  const label: HTMLLabelElement = createElement('label', {
-    className: 'game-details__hidden',
-    text: GAME_DETAILS_CONTENT.commentLabel,
-    attributes: { for: INPUT_ID },
-  });
-
-  const input: HTMLTextAreaElement = createElement('textarea', {
-    className: 'game-details__comment-input',
-    attributes: {
-      id: INPUT_ID,
-      name: 'comment',
-      rows: '1',
-      placeholder: GAME_DETAILS_CONTENT.commentPlaceholder,
-    },
-  });
-
-  const sendButton: HTMLButtonElement = createElement('button', {
-    className: 'game-details__send',
-    attributes: { type: 'submit', 'aria-label': GAME_DETAILS_CONTENT.sendLabel },
-    children: [createIcon(IconName.Send)],
-  });
-
-  const element: HTMLFormElement = createElement('form', {
-    className: 'game-details__comment-form',
-    attributes: { novalidate: '' },
-    children: [
-      createAvatar(GAME_DETAILS_CONTENT.currentUserInitial, 'game-details__user'),
-      label,
-      input,
-      sendButton,
-    ],
-  });
-
-  const updateSendButton = (): void => {
-    sendButton.disabled = input.value.trim() === '';
-  };
-  input.addEventListener('input', updateSendButton);
-
-  element.addEventListener('submit', (event: SubmitEvent): void => {
-    event.preventDefault();
-  });
-
-  const reset = (): void => {
-    input.value = '';
-    updateSendButton();
-  };
-  reset();
-
-  return { element, reset };
-}
-
 function createSkeletonList(): HTMLElement {
   return createElement('div', {
     className: 'game-details__comments-list',
@@ -177,14 +123,20 @@ function createCommentList(comments: readonly GameComment[]): HTMLUListElement {
   });
 }
 
+export interface GameCommentsOptions {
+  // The signed-in user, or undefined for a guest
+  readonly getSession: () => AppSession | undefined;
+  // Checks the session before a comment is sent (see createCommentForm)
+  readonly requireSession: (warning: string) => AppSession | undefined;
+}
+
 // The comments of a game: the form for a new one, and the latest comments
 // from the API with the total count in the heading. Every game starts with an
-// empty form and the likes as the API sends them.
-export function createGameDetailsComments(): GameCommentsSection {
+// empty form and the likes as the API sends them for the current visitor.
+export function createGameDetailsComments(options: GameCommentsOptions): GameCommentsSection {
   // The slug whose comments are on the screen or on their way
   let slug: string = '';
 
-  const form: GameDetailsSection = createCommentForm();
   const title: HTMLHeadingElement = createElement('h3', {
     className: 'game-details__subtitle',
     text: GAME_DETAILS_CONTENT.commentsTitle,
@@ -201,7 +153,8 @@ export function createGameDetailsComments(): GameCommentsSection {
   const area: AsyncArea = createAsyncArea({
     container: list,
     messages: GAME_DETAILS_CONTENT.commentsMessages,
-    load: (signal: AbortSignal): Promise<GameCommentsPage> => fetchGameComments(slug, signal),
+    load: (signal: AbortSignal): Promise<GameCommentsPage> =>
+      fetchGameComments(slug, signal, options.getSession()?.email),
     renderSkeleton: (): readonly Node[] => {
       title.textContent = GAME_DETAILS_CONTENT.commentsTitle;
       return [createSkeletonList()];
@@ -219,6 +172,15 @@ export function createGameDetailsComments(): GameCommentsSection {
     onLoad: showCount,
   });
 
+  // A sent comment, or one that may have been sent, shows in the list loaded
+  // again, with the new total in the heading
+  const form: CommentForm = createCommentForm({
+    requireSession: options.requireSession,
+    onSent: (): void => {
+      area.reload();
+    },
+  });
+
   const element: HTMLElement = createElement('section', {
     className: 'game-details__comments',
     attributes: { 'aria-labelledby': TITLE_ID },
@@ -229,7 +191,7 @@ export function createGameDetailsComments(): GameCommentsSection {
     element,
     show: (nextSlug: string): void => {
       slug = nextSlug;
-      form.reset();
+      form.show(slug, options.getSession());
       area.reload();
     },
     abort: (): void => {

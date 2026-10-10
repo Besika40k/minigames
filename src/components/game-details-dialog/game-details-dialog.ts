@@ -29,11 +29,12 @@ const TITLE_ID = 'game-details-title';
 export interface GameDetailsDialogOptions {
   // Asks to close the dialog: the close button, Esc and the backdrop
   readonly onClose: () => void;
-  // The email of the signed-in user, or undefined for a guest. The game of a
-  // signed-in user says whether it is among that user's favorites.
-  readonly getUserEmail: () => string | undefined;
-  // Checks the session before a change such as a favorite. A guest gets
-  // undefined, and the auth dialog in place of this one.
+  // The signed-in user, or undefined for a guest. The game of a signed-in user
+  // says whether it is among that user's favorites, and the comments which of
+  // them the user liked.
+  readonly getSession: () => AppSession | undefined;
+  // Checks the session before a change such as a favorite or a comment. A
+  // guest gets undefined, and the auth dialog in place of this one.
   readonly requireSession: (warning: string) => AppSession | undefined;
 }
 
@@ -97,7 +98,10 @@ export function createGameDetailsDialog(options: GameDetailsDialogOptions): Game
   // The comments load next to the game, with states of their own, so a failed
   // comments request leaves the game on the screen. An unknown game has no
   // comments to show at all.
-  const comments: GameCommentsSection = createGameDetailsComments();
+  const comments: GameCommentsSection = createGameDetailsComments({
+    getSession: options.getSession,
+    requireSession: options.requireSession,
+  });
   const bottom: HTMLDivElement = createElement('div', {
     className: 'game-details__content game-details__content--bottom',
     children: [comments.element],
@@ -111,7 +115,7 @@ export function createGameDetailsDialog(options: GameDetailsDialogOptions): Game
     container: main,
     messages: GAME_DETAILS_CONTENT.messages,
     load: (signal: AbortSignal): Promise<GameDetails> =>
-      fetchGameDetails(slug, signal, options.getUserEmail()),
+      fetchGameDetails(slug, signal, options.getSession()?.email),
     renderSkeleton: createGameDetailsSkeleton,
     // Each game is drawn anew from the answer of the server
     renderData: (game: GameDetails): readonly Node[] => {

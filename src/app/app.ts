@@ -166,7 +166,7 @@ export function startApp(): void {
     onClose: (): void => {
       closeDialog(DialogParameter.Game);
     },
-    getUserEmail: (): string | undefined => session.getCurrent()?.email,
+    getSession: session.getCurrent,
     requireSession,
   });
   // Game Details shows the favorite of whoever is signed in, or none for a guest
