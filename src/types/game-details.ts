@@ -111,6 +111,8 @@ export interface GameDetailsContent {
   // The placeholder of a guest's comment form, which is locked
   readonly commentGuestPlaceholder: string;
   readonly commentMessages: CommentMessages;
+  // What a like button says besides its new state
+  readonly likeMessages: ChangeMessages;
   readonly sendLabel: string;
   readonly messages: LoadMessages;
   // The state of an address whose game does not exist: the sentence around
