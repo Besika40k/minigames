@@ -86,6 +86,9 @@ export const LOGOUT_MESSAGES: Readonly<{ success: string; failure: string }> = {
 // The warning when the app session runs out (see src/auth/session.ts)
 export const SESSION_EXPIRED_MESSAGE = 'Your session has expired. Please log in again.';
 
+// Why the auth dialog stays closed for a signed-in user
+export const ALREADY_SIGNED_IN_MESSAGE = 'You are already logged in.';
+
 export const AUTH_DIALOG_LABEL = 'Log in or sign up';
 export const AUTH_TABS_LABEL = 'Account form';
 

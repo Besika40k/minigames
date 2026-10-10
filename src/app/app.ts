@@ -7,7 +7,7 @@ import { createFooter } from '../components/footer/footer.ts';
 import { createGameDetailsDialog } from '../components/game-details-dialog/game-details-dialog.ts';
 import { createHeader, type Header } from '../components/header/header.ts';
 import { showSnackbar } from '../components/snackbar/snackbar.ts';
-import { SESSION_EXPIRED_MESSAGE } from '../data/auth.ts';
+import { ALREADY_SIGNED_IN_MESSAGE, SESSION_EXPIRED_MESSAGE } from '../data/auth.ts';
 import { PAGE_TITLES } from '../data/pages.ts';
 import { renderHomePage } from '../pages/home/home-page.ts';
 import { renderLibraryPage } from '../pages/library/library-page.ts';
@@ -45,6 +45,11 @@ async function preloadAuthService(): Promise<void> {
   } catch {
     // A sign-in reports a service that cannot load
   }
+}
+
+// Why the auth dialog did not open
+function showAlreadySignedIn(): void {
+  showSnackbar({ variant: SnackbarVariant.Info, text: ALREADY_SIGNED_IN_MESSAGE });
 }
 
 export function startApp(): void {
@@ -105,7 +110,13 @@ export function startApp(): void {
       router.navigate({ query }, { isReplace: true });
     },
   });
+  // The auth dialog is for guests. A guest button may still be on the screen
+  // of a user who has just signed in from another tab.
   const openAuth = (mode: AuthMode): void => {
+    if (session.check() !== undefined) {
+      showAlreadySignedIn();
+      return;
+    }
     openDialog(DialogParameter.Auth, mode);
   };
   const logOut = (): void => {
@@ -200,6 +211,9 @@ export function startApp(): void {
     // comes back here without it. For a signed-in user that includes the
     // auth dialog, whatever asked for it: a link, a typed address or Back.
     const decision: DialogDecision = decideDialog(location.query, current !== undefined);
+    if (decision.isAuthBlocked) {
+      showAlreadySignedIn();
+    }
     if (decision.correctedQuery !== undefined) {
       router.navigate({ query: decision.correctedQuery, hash: location.hash }, { isReplace: true });
       return;
