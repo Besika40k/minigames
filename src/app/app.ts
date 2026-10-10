@@ -169,6 +169,10 @@ export function startApp(): void {
     getUserEmail: (): string | undefined => session.getCurrent()?.email,
     requireSession,
   });
+  // Game Details shows the favorite of whoever is signed in, or none for a guest
+  session.subscribe((): void => {
+    gameDetails.refresh();
+  });
   const openGame = (game: Game): void => {
     openDialog(DialogParameter.Game, game.slug);
   };

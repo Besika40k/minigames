@@ -124,6 +124,8 @@ export interface GameDetailsDialog {
   // Opens the dialog and loads the game of a slug. The game that is already
   // open stays as it is.
   readonly show: (slug: string) => void;
+  // Loads the open game again, for the user who is signed in now or a guest
+  readonly refresh: () => void;
   // Closes the dialog and cancels its request
   readonly hide: () => void;
 }

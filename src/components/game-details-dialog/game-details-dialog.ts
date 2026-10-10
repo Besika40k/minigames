@@ -165,5 +165,14 @@ export function createGameDetailsDialog(options: GameDetailsDialogOptions): Game
     }
   };
 
-  return { element: dialog, show, hide };
+  // Another user signed in or out: the open game shows that user's state
+  const refresh = (): void => {
+    if (!dialog.open) {
+      return;
+    }
+    area.reload();
+    comments.show(slug);
+  };
+
+  return { element: dialog, show, hide, refresh };
 }
