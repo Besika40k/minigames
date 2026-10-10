@@ -142,3 +142,25 @@ $backdrop-opacity: 0.75;
     background-color: $dimmed-page-color;
   }
 }
+
+// The ring that turns on a control while its request is under way: one turn
+// takes this long. With reduced motion the ring only fades and comes back,
+// over a calmer cycle. The keyframes are in base/_global.scss.
+$spinner-turn-duration: 0.8s;
+$spinner-pulse-duration: 1.6s;
+
+// A ring of $size in the text color, for the ::before of a busy control
+@mixin busy-ring($size) {
+  content: '';
+  width: $size;
+  height: $size;
+  border: tokens.$border-width solid currentcolor;
+  border-inline-end-color: transparent;
+  border-radius: get-radius(full);
+  animation: spinner-turn $spinner-turn-duration linear infinite;
+
+  @include reduced-motion {
+    border-inline-end-color: currentcolor;
+    animation: spinner-pulse $spinner-pulse-duration ease-in-out infinite;
+  }
+}
