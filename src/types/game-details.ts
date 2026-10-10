@@ -53,6 +53,12 @@ export interface GameDetails {
   readonly topRecords: readonly TopRecord[];
 }
 
+// The answer of a favorite toggle (`POST /api/games/{slug}/favorite`)
+export interface FavoriteState {
+  readonly isFavorited: boolean;
+  readonly likesCount: number;
+}
+
 export interface GameDetailsContent {
   // The name of the dialog while it has no game title to show
   readonly dialogLabel: string;
