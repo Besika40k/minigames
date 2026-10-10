@@ -4,16 +4,15 @@ import type {
   GameComment,
   GameCommentsPage,
   GameCommentsSection,
-  GameDetailsSection,
 } from '../../types/game-details.ts';
 import type { AppSession } from '../../types/session.ts';
 import { createElement } from '../../utils/create-element.ts';
-import { createIcon, IconName } from '../../utils/create-icon.ts';
 import { formatRelativeTime } from '../../utils/format-relative-time.ts';
 import { createAsyncArea, type AsyncArea } from '../feedback/async-area.ts';
 import { createEmptyState } from '../feedback/empty-state.ts';
 import { createSkeleton } from '../skeleton/skeleton.ts';
 import { createCommentForm, type CommentForm } from './game-details-comment-form.ts';
+import { createLikeButton, type LikeButtonOptions } from './game-details-like.ts';
 import './game-details-comments.scss';
 
 const TITLE_ID = 'game-details-comments-title';
@@ -31,47 +30,10 @@ function createAvatar(name: string, className: string): HTMLSpanElement {
   });
 }
 
-// The heart and the number of likes. A click likes or unlikes the comment and
-// changes the number by one; nothing is sent anywhere yet.
-function createLikeButton(comment: GameComment): GameDetailsSection {
-  // The API counts the current user's like in the total
-  const othersLikes: number = comment.likesCount - (comment.isLikedByCurrentUser ? 1 : 0);
-  let isLiked: boolean = comment.isLikedByCurrentUser;
+// What a list of comments needs besides the comments
+type CommentListOptions = Omit<LikeButtonOptions, 'comment'>;
 
-  const count: HTMLSpanElement = createElement('span');
-  const element: HTMLButtonElement = createElement('button', {
-    className: 'game-details__like',
-    attributes: { type: 'button' },
-    children: [
-      createIcon(IconName.Heart),
-      createElement('span', {
-        className: 'game-details__hidden',
-        text: `${GAME_DETAILS_CONTENT.likesLabel}: `,
-      }),
-      count,
-    ],
-  });
-
-  const show = (): void => {
-    element.setAttribute('aria-pressed', String(isLiked));
-    count.textContent = String(othersLikes + (isLiked ? 1 : 0));
-  };
-
-  element.addEventListener('click', (): void => {
-    isLiked = !isLiked;
-    show();
-  });
-
-  const reset = (): void => {
-    isLiked = comment.isLikedByCurrentUser;
-    show();
-  };
-  reset();
-
-  return { element, reset };
-}
-
-function createComment(comment: GameComment, likeButton: HTMLElement): HTMLLIElement {
+function createComment(comment: GameComment, options: CommentListOptions): HTMLLIElement {
   const nameId: string = `game-details-comment-${comment.commentId}`;
   const date: HTMLTimeElement = createElement('time', {
     className: 'game-details__comment-date',
@@ -98,7 +60,7 @@ function createComment(comment: GameComment, likeButton: HTMLElement): HTMLLIEle
     children: [
       header,
       createElement('p', { className: 'game-details__comment-text', text: comment.text }),
-      likeButton,
+      createLikeButton({ ...options, comment }),
     ],
   });
 
@@ -114,11 +76,14 @@ function createSkeletonList(): HTMLElement {
   });
 }
 
-function createCommentList(comments: readonly GameComment[]): HTMLUListElement {
+function createCommentList(
+  comments: readonly GameComment[],
+  options: CommentListOptions,
+): HTMLUListElement {
   return createElement('ul', {
     className: 'game-details__comments-list',
     children: comments.map((comment: GameComment): HTMLLIElement =>
-      createComment(comment, createLikeButton(comment).element),
+      createComment(comment, options),
     ),
   });
 }
@@ -126,7 +91,7 @@ function createCommentList(comments: readonly GameComment[]): HTMLUListElement {
 export interface GameCommentsOptions {
   // The signed-in user, or undefined for a guest
   readonly getSession: () => AppSession | undefined;
-  // Checks the session before a comment is sent (see createCommentForm)
+  // Checks the session before a comment is sent or liked
   readonly requireSession: (warning: string) => AppSession | undefined;
 }
 
@@ -159,7 +124,14 @@ export function createGameDetailsComments(options: GameCommentsOptions): GameCom
       title.textContent = GAME_DETAILS_CONTENT.commentsTitle;
       return [createSkeletonList()];
     },
-    renderData: (page: GameCommentsPage): readonly Node[] => [createCommentList(page.comments)],
+    renderData: (page: GameCommentsPage): readonly Node[] => [
+      createCommentList(page.comments, {
+        requireSession: options.requireSession,
+        onUnconfirmed: (): void => {
+          area.reload();
+        },
+      }),
+    ],
     isEmpty: (page: GameCommentsPage): boolean => page.comments.length === 0,
     renderEmpty: (): readonly Node[] => [
       createEmptyState({
