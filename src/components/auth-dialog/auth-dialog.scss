@@ -27,13 +27,6 @@ $link-underline-offset: 3px;
 // The text of the submit button: 20px tall for its 16px type in the mockup
 $submit-line-height: 1.25;
 
-// The ring that turns on a button while its request is under way: one turn
-// takes this long. With reduced motion the ring only fades to this strength
-// and back, over a calmer cycle.
-$spinner-turn-duration: 0.8s;
-$spinner-pulse-duration: 1.6s;
-$spinner-pulse-opacity: 0.3;
-
 // A locked control fades as much as a disabled button
 $locked-opacity: 0.5;
 
@@ -300,29 +293,6 @@ $locked-opacity: 0.5;
   display: none;
 }
 
-// The button of a request under way is disabled like every other control, but
-// stays fully visible with a turning ring: it is busy, not unavailable
-.button[aria-busy='true']:disabled {
-  opacity: 1;
-  cursor: progress;
-
-  &::before {
-    content: '';
-    width: get-size(2);
-    height: get-size(2);
-    margin-inline-end: get-size(1);
-    border: $border-width solid currentcolor;
-    border-inline-end-color: transparent;
-    border-radius: get-radius(full);
-    animation: auth-spinner-turn $spinner-turn-duration linear infinite;
-
-    @include reduced-motion {
-      border-inline-end-color: currentcolor;
-      animation: auth-spinner-pulse $spinner-pulse-duration ease-in-out infinite;
-    }
-  }
-}
-
 .auth-dialog__divider {
   display: flex;
   align-items: center;
@@ -382,18 +352,6 @@ $locked-opacity: 0.5;
 
 .auth-dialog__panel--entering {
   animation: auth-panel-enter get-duration(medium) ease;
-}
-
-@keyframes auth-spinner-turn {
-  to {
-    rotate: 1turn;
-  }
-}
-
-@keyframes auth-spinner-pulse {
-  50% {
-    opacity: $spinner-pulse-opacity;
-  }
 }
 
 @keyframes auth-panel-enter {
