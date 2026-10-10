@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, type Mock } from 'vitest';
 import { API_BASE_URL } from './api-config.ts';
 import { ApiError, ApiErrorKind } from './api-error.ts';
-import { getJson } from './http-client.ts';
+import { getJson, postJson } from './http-client.ts';
 
 type FetchMock = Mock<typeof fetch>;
 
@@ -115,5 +115,44 @@ describe('getJson', (): void => {
     controller.abort();
 
     expect(signal?.aborted).toBe(true);
+  });
+});
+
+describe('postJson', (): void => {
+  it('sends the body as JSON with POST and returns the answer', async (): Promise<void> => {
+    const fetchMock: FetchMock = stubFetch(jsonResponse({ data: { isFavorited: true } }));
+
+    const answer: unknown = await postJson('/games/chess/favorite', { userEmail: 'a@b.co' });
+
+    const [input, init] = fetchMock.mock.calls[0] ?? [];
+    expect(input instanceof URL ? input.href : undefined).toBe(
+      `${API_BASE_URL}/games/chess/favorite`,
+    );
+    expect(init?.method).toBe('POST');
+    expect(init?.headers).toEqual({ 'Content-Type': 'application/json' });
+    expect(init?.body).toBe('{"userEmail":"a@b.co"}');
+    expect(answer).toEqual({ data: { isFavorited: true } });
+  });
+
+  it('turns a refusal into an ApiError with the server message', async (): Promise<void> => {
+    stubFetch(jsonResponse({ error: 'Authentication required: userEmail is missing' }, 401));
+
+    await expect(postJson('/games/chess/favorite', {})).rejects.toMatchObject({
+      kind: ApiErrorKind.Unauthorized,
+      status: 401,
+      message: 'Authentication required: userEmail is missing',
+    });
+  });
+
+  it('fails as a network error when no answer arrives, without a second try', async (): Promise<void> => {
+    const fetchMock: FetchMock = vi
+      .fn<typeof fetch>()
+      .mockRejectedValue(new DOMException('The operation timed out.', 'TimeoutError'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(postJson('/comments/1/like', { userEmail: 'a@b.co' })).rejects.toMatchObject({
+      kind: ApiErrorKind.Network,
+    });
+    expect(fetchMock).toHaveBeenCalledOnce();
   });
 });
