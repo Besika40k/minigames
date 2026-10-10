@@ -1,5 +1,5 @@
 import { fetchGameComments } from '../../api/comments-api.ts';
-import { GAME_DETAILS_CONTENT } from '../../data/game-details.ts';
+import { AVATAR_COLORS, GAME_DETAILS_CONTENT } from '../../data/game-details.ts';
 import type {
   GameComment,
   GameCommentsPage,
@@ -8,6 +8,8 @@ import type {
 import type { AppSession } from '../../types/session.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { formatRelativeTime } from '../../utils/format-relative-time.ts';
+import { pickRandom } from '../../utils/pick-random.ts';
+import { getNameInitial } from '../../utils/profile-name.ts';
 import { createAsyncArea, type AsyncArea } from '../feedback/async-area.ts';
 import { createEmptyState } from '../feedback/empty-state.ts';
 import { createSkeleton } from '../skeleton/skeleton.ts';
@@ -20,18 +22,21 @@ const TITLE_ID = 'game-details-comments-title';
 // The API sends at most three comments, and the skeleton holds their place
 const SKELETON_COMMENTS = 3;
 
-// A round avatar with the first letter of a name. It is decoration: the name
-// is written next to it.
+// A round avatar with the first character of a name. It is decoration: the
+// name is written next to it.
 function createAvatar(name: string, className: string): HTMLSpanElement {
   return createElement('span', {
     className,
-    text: name.charAt(0).toUpperCase(),
+    text: getNameInitial(name),
     attributes: { 'aria-hidden': 'true' },
   });
 }
 
 // What a list of comments needs besides the comments
-type CommentListOptions = Omit<LikeButtonOptions, 'comment'>;
+interface CommentListOptions extends Omit<LikeButtonOptions, 'comment'> {
+  // The classes of a commenter's avatar, with its color
+  readonly getAvatarClass: (name: string) => string;
+}
 
 function createComment(comment: GameComment, options: CommentListOptions): HTMLLIElement {
   const nameId: string = `game-details-comment-${comment.commentId}`;
@@ -44,7 +49,7 @@ function createComment(comment: GameComment, options: CommentListOptions): HTMLL
   const header: HTMLDivElement = createElement('div', {
     className: 'game-details__comment-header',
     children: [
-      createAvatar(comment.authorName, 'game-details__avatar'),
+      createAvatar(comment.authorName, options.getAvatarClass(comment.authorName)),
       createElement('h4', {
         className: 'game-details__author',
         text: comment.authorName,
@@ -102,6 +107,20 @@ export function createGameDetailsComments(options: GameCommentsOptions): GameCom
   // The slug whose comments are on the screen or on their way
   let slug: string = '';
 
+  // A commenter keeps the avatar color picked at random for as long as the
+  // dialog exists, however often the comments load again
+  const avatarColors: Map<string, string> = new Map<string, string>();
+  const getAvatarClass = (name: string): string => {
+    const key: string = name.trim();
+    const color: string | undefined = avatarColors.get(key) ?? pickRandom(AVATAR_COLORS);
+    if (color === undefined) {
+      return 'game-details__avatar';
+    }
+    avatarColors.set(key, color);
+
+    return `game-details__avatar game-details__avatar--${color}`;
+  };
+
   const title: HTMLHeadingElement = createElement('h3', {
     className: 'game-details__subtitle',
     text: GAME_DETAILS_CONTENT.commentsTitle,
@@ -126,6 +145,7 @@ export function createGameDetailsComments(options: GameCommentsOptions): GameCom
     },
     renderData: (page: GameCommentsPage): readonly Node[] => [
       createCommentList(page.comments, {
+        getAvatarClass,
         requireSession: options.requireSession,
         onUnconfirmed: (): void => {
           area.reload();
