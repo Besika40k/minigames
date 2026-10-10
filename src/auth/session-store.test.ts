@@ -175,6 +175,19 @@ describe('session store', (): void => {
     expect(signOut).not.toHaveBeenCalled();
   });
 
+  it('tells the session of the last check without reading the storage again', (): void => {
+    const { store } = createTestStore();
+    expect(store.getCurrent()).toBeUndefined();
+
+    const session: AppSession = store.start(PROFILE);
+    // Removed behind the store's back: only the next check notices
+    localStorage.clear();
+
+    expect(store.getCurrent()).toEqual(session);
+    expect(store.check()).toBeUndefined();
+    expect(store.getCurrent()).toBeUndefined();
+  });
+
   it('stops telling a listener that unsubscribed', (): void => {
     const { store } = createTestStore();
     const listener: Mock<SessionListener> = vi.fn<SessionListener>();
