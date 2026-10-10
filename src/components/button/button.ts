@@ -53,6 +53,28 @@ export function createButton(options: ButtonOptions): HTMLButtonElement {
   return button;
 }
 
+// The busy buttons that had the keyboard focus when they were locked
+const focusedWhileBusy: WeakSet<HTMLButtonElement> = new WeakSet<HTMLButtonElement>();
+
+// A button whose request is under way is locked against a second click and
+// shows the turning ring of the styles. The browser takes the focus away from
+// a disabled button, so a button that had it gets it back once it is free,
+// unless the focus has moved on to something else in the meantime.
+export function setButtonBusy(button: HTMLButtonElement, isBusy: boolean): void {
+  if (isBusy && document.activeElement === button) {
+    focusedWhileBusy.add(button);
+  }
+  button.disabled = isBusy;
+  button.setAttribute('aria-busy', String(isBusy));
+
+  if (isBusy || !focusedWhileBusy.delete(button)) {
+    return;
+  }
+  if (document.activeElement === null || document.activeElement === document.body) {
+    button.focus();
+  }
+}
+
 // A link that looks like a button: it leads to another page, so it is a real
 // link that also opens in a new tab
 export function createButtonLink(options: ButtonLinkOptions): HTMLAnchorElement {
