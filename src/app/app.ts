@@ -12,7 +12,7 @@ import { PAGE_TITLES } from '../data/pages.ts';
 import { renderHomePage } from '../pages/home/home-page.ts';
 import { renderLibraryPage } from '../pages/library/library-page.ts';
 import { renderNotFoundPage } from '../pages/not-found/not-found-page.ts';
-import type { AuthDialog, AuthMode } from '../types/auth.ts';
+import { AuthMode, type AuthDialog } from '../types/auth.ts';
 import type { BurgerMenu } from '../types/burger-menu.ts';
 import { SnackbarVariant } from '../types/feedback.ts';
 import type { Game } from '../types/game.ts';
@@ -53,6 +53,10 @@ function showAlreadySignedIn(): void {
 }
 
 export function startApp(): void {
+  // How many sessions have expired, so a protected action can tell whether its
+  // own check has just said so
+  const expiries: { count: number } = { count: 0 };
+
   // Whether the visitor is signed in
   const session: SessionStore = createSessionStore({
     signOut: async (): Promise<void> => {
@@ -60,6 +64,7 @@ export function startApp(): void {
       await signOutUser();
     },
     onExpire: (): void => {
+      expiries.count += 1;
       showSnackbar({ variant: SnackbarVariant.Warning, text: SESSION_EXPIRED_MESSAGE });
     },
   });
@@ -139,10 +144,30 @@ export function startApp(): void {
     menu.setSession(current);
   });
 
+  // A change such as a favorite needs an active session. Without one, the auth
+  // dialog takes the place of Game Details, whose game stays in the address
+  // and comes back when the auth dialog closes. One warning says why: the
+  // expiry message when this check has just ended the session. The change is
+  // not repeated after a sign-in; the user can make it again.
+  const requireSession = (warning: string): AppSession | undefined => {
+    const expiredBefore: number = expiries.count;
+    const current: AppSession | undefined = session.check();
+    if (current === undefined) {
+      if (expiries.count === expiredBefore) {
+        showSnackbar({ variant: SnackbarVariant.Warning, text: warning });
+      }
+      openDialog(DialogParameter.Auth, AuthMode.Login);
+    }
+
+    return current;
+  };
+
   const gameDetails: GameDetailsDialog = createGameDetailsDialog({
     onClose: (): void => {
       closeDialog(DialogParameter.Game);
     },
+    getUserEmail: (): string | undefined => session.getCurrent()?.email,
+    requireSession,
   });
   const openGame = (game: Game): void => {
     openDialog(DialogParameter.Game, game.slug);
