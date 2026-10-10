@@ -29,7 +29,7 @@ import {
 } from '../types/route.ts';
 import { createElement } from '../utils/create-element.ts';
 import { Router } from './router.ts';
-import { parseDialog, removeUnusedDialogParameters } from './url.ts';
+import { decideDialog, type DialogDecision } from './url.ts';
 
 // The auth service brings Firebase with it, so it loads only when it is
 // needed, and a guest's visit never downloads it
@@ -85,7 +85,7 @@ export function startApp(): void {
     // The dialog closes like any other close, unless the visitor has already
     // left it, for example with Back
     onSignedIn: (): void => {
-      if (parseDialog(router.location.query)?.parameter === DialogParameter.Auth) {
+      if (router.location.query.has(DialogParameter.Auth)) {
         closeDialog(DialogParameter.Auth);
       }
     },
@@ -189,7 +189,7 @@ export function startApp(): void {
   router.onChange((location: AppLocation): void => {
     // An expired session ends before a dialog of the new address shows, and
     // the navigation goes on in guest mode
-    session.check();
+    const current: AppSession | undefined = session.check();
     header.setCurrentPage(location.route);
     menu.setCurrentPage(location.route);
     // The menu is not in the address, so a new address (for example the
@@ -197,14 +197,14 @@ export function startApp(): void {
     menu.element.close();
 
     // A dialog parameter that opens nothing leaves the address, which then
-    // comes back here without it
-    const dialog: OpenDialog | undefined = parseDialog(location.query);
-    const query: URLSearchParams | undefined = removeUnusedDialogParameters(location.query, dialog);
-    if (query !== undefined) {
-      router.navigate({ query }, { isReplace: true });
+    // comes back here without it. For a signed-in user that includes the
+    // auth dialog, whatever asked for it: a link, a typed address or Back.
+    const decision: DialogDecision = decideDialog(location.query, current !== undefined);
+    if (decision.correctedQuery !== undefined) {
+      router.navigate({ query: decision.correctedQuery, hash: location.hash }, { isReplace: true });
       return;
     }
-    showDialog(dialog);
+    showDialog(decision.dialog);
   });
 
   // Timers run late in a hidden tab, so a session may have expired by the
