@@ -3,6 +3,10 @@ import type { AuthProfile } from '../types/auth.ts';
 
 const INITIALS_WORDS = 2;
 
+// The API takes the author name of a comment from 2 to 30 characters long
+const AUTHOR_NAME_MIN_LENGTH = 2;
+const AUTHOR_NAME_MAX_LENGTH = 30;
+
 // The first letter or digit of a word, in any alphabet
 const ALPHANUMERIC_PATTERN: RegExp = /[\p{L}\p{N}]/u;
 const WHITESPACE_PATTERN: RegExp = /\s+/u;
@@ -31,4 +35,21 @@ export function getProfileInitials(name: string): string | undefined {
     .toUpperCase();
 
   return initials === '' ? undefined : initials;
+}
+
+// The name a comment is posted under: the shown name when the API takes it,
+// else its first 30 characters, else the generic name for a name too short
+export function getCommentAuthorName(profile: AuthProfile): string {
+  const name: string = getProfileName(profile);
+  const shortened: string = name.slice(0, AUTHOR_NAME_MAX_LENGTH).trim();
+
+  return shortened.length < AUTHOR_NAME_MIN_LENGTH ? GENERIC_PROFILE_NAME : shortened;
+}
+
+// The letter of a round comment avatar: the first character of the name after
+// any spaces, in uppercase. A character such as an emoji stays whole.
+export function getNameInitial(name: string): string {
+  const [initial = ''] = name.trim();
+
+  return initial.toUpperCase();
 }
