@@ -3,6 +3,8 @@ export enum ApiErrorKind {
   Network = 'network',
   // The server rejected a parameter (400)
   BadRequest = 'bad-request',
+  // A change was sent without the email of a user (401)
+  Unauthorized = 'unauthorized',
   // The game does not exist (404)
   NotFound = 'not-found',
   // Too many requests in a short time (429)
@@ -15,6 +17,7 @@ export enum ApiErrorKind {
 
 const KINDS_BY_STATUS: ReadonlyMap<number, ApiErrorKind> = new Map([
   [400, ApiErrorKind.BadRequest],
+  [401, ApiErrorKind.Unauthorized],
   [404, ApiErrorKind.NotFound],
   [429, ApiErrorKind.RateLimit],
 ]);
@@ -36,4 +39,18 @@ export class ApiError extends Error {
 
 export function getErrorKind(status: number): ApiErrorKind {
   return KINDS_BY_STATUS.get(status) ?? ApiErrorKind.Server;
+}
+
+// The failures of a change that may have happened all the same: no answer
+// came, the server broke down on the way, or its answer could not be read
+const UNKNOWN_OUTCOME_KINDS: ReadonlySet<ApiErrorKind> = new Set([
+  ApiErrorKind.Network,
+  ApiErrorKind.Server,
+  ApiErrorKind.InvalidResponse,
+]);
+
+// Whether a failed change leaves its outcome unknown. Only a refusal of the
+// server (such as 404 or 429) means for sure that nothing changed.
+export function isOutcomeUnknown(error: unknown): boolean {
+  return !(error instanceof ApiError) || UNKNOWN_OUTCOME_KINDS.has(error.kind);
 }

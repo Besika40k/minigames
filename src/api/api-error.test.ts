@@ -4,6 +4,7 @@ import { ApiError, ApiErrorKind, getErrorKind } from './api-error.ts';
 describe('getErrorKind', (): void => {
   it('names the statuses the API documents', (): void => {
     expect(getErrorKind(400)).toBe(ApiErrorKind.BadRequest);
+    expect(getErrorKind(401)).toBe(ApiErrorKind.Unauthorized);
     expect(getErrorKind(404)).toBe(ApiErrorKind.NotFound);
     expect(getErrorKind(429)).toBe(ApiErrorKind.RateLimit);
   });
@@ -11,7 +12,7 @@ describe('getErrorKind', (): void => {
   it('treats any other status as a server failure', (): void => {
     expect(getErrorKind(500)).toBe(ApiErrorKind.Server);
     expect(getErrorKind(503)).toBe(ApiErrorKind.Server);
-    expect(getErrorKind(401)).toBe(ApiErrorKind.Server);
+    expect(getErrorKind(403)).toBe(ApiErrorKind.Server);
   });
 });
 
