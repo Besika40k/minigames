@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ApiError, ApiErrorKind, getErrorKind } from './api-error.ts';
+import { ApiError, ApiErrorKind, getErrorKind, isOutcomeUnknown } from './api-error.ts';
 
 describe('getErrorKind', (): void => {
   it('names the statuses the API documents', (): void => {
@@ -29,5 +29,25 @@ describe('ApiError', (): void => {
 
   it('has no status when the server did not answer', (): void => {
     expect(new ApiError(ApiErrorKind.Network, 'No connection.').status).toBeUndefined();
+  });
+});
+
+describe('isOutcomeUnknown', (): void => {
+  it('is sure that nothing changed when the server refused', (): void => {
+    for (const kind of [
+      ApiErrorKind.BadRequest,
+      ApiErrorKind.Unauthorized,
+      ApiErrorKind.NotFound,
+      ApiErrorKind.RateLimit,
+    ]) {
+      expect(isOutcomeUnknown(new ApiError(kind, 'Refused.'))).toBe(false);
+    }
+  });
+
+  it('cannot tell after no answer, a server failure or an unreadable answer', (): void => {
+    for (const kind of [ApiErrorKind.Network, ApiErrorKind.Server, ApiErrorKind.InvalidResponse]) {
+      expect(isOutcomeUnknown(new ApiError(kind, 'Unknown.'))).toBe(true);
+    }
+    expect(isOutcomeUnknown(new TypeError('A bug on the way'))).toBe(true);
   });
 });
