@@ -1,4 +1,4 @@
-import type { LoadMessages } from './feedback.ts';
+import type { ChangeMessages, LoadMessages } from './feedback.ts';
 
 // The facts shown in the four boxes under the description
 export interface GameSpecs {
@@ -59,6 +59,12 @@ export interface FavoriteState {
   readonly likesCount: number;
 }
 
+// What the Favorites button says after a click
+export interface FavoriteMessages extends ChangeMessages {
+  readonly added: string;
+  readonly removed: string;
+}
+
 export interface GameDetailsContent {
   // The name of the dialog while it has no game title to show
   readonly dialogLabel: string;
@@ -73,6 +79,7 @@ export interface GameDetailsContent {
   // The Favorites button says what a click will do
   readonly addFavoriteLabel: string;
   readonly removeFavoriteLabel: string;
+  readonly favoriteMessages: FavoriteMessages;
   readonly recordsTitle: string;
   readonly recordsIcon: string;
   // The medals of the first, second and third places

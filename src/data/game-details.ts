@@ -15,6 +15,13 @@ export const GAME_DETAILS_CONTENT: GameDetailsContent = {
   buyLabel: 'Buy Now',
   addFavoriteLabel: 'Add to Favorites',
   removeFavoriteLabel: 'Remove from Favorites',
+  favoriteMessages: {
+    loginWarning: 'Log in to add games to your favorites.',
+    unconfirmed:
+      "The change wasn't confirmed, so the game is loaded again to show where it stands.",
+    added: 'Added to your favorites.',
+    removed: 'Removed from your favorites.',
+  },
   recordsTitle: 'Top Records',
   recordsIcon: '🏆',
   medals: ['🥇', '🥈', '🥉'],
