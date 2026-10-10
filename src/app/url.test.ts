@@ -45,6 +45,12 @@ describe('toBrowserUrl', (): void => {
     expect(toBrowserUrl('/', new URLSearchParams(), BASE)).toBe('/minigames/');
     expect(toBrowserUrl('/library', new URLSearchParams(), '/')).toBe('/library');
   });
+
+  it('ends with the hash it is given', (): void => {
+    expect(toBrowserUrl('/library', new URLSearchParams('page=2'), BASE, '#top')).toBe(
+      '/minigames/library?page=2#top',
+    );
+  });
 });
 
 describe('parseRoute', (): void => {
