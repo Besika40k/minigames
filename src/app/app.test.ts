@@ -1,7 +1,8 @@
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { SESSION_STORAGE_KEY } from '../auth/session.ts';
 import { showSnackbar } from '../components/snackbar/snackbar.ts';
 import { ALREADY_SIGNED_IN_MESSAGE, SESSION_EXPIRED_MESSAGE } from '../data/auth.ts';
+import { GAME_DETAILS_CONTENT } from '../data/game-details.ts';
 import { SnackbarVariant } from '../types/feedback.ts';
 import { startApp } from './app.ts';
 
@@ -10,14 +11,70 @@ vi.mock('../components/snackbar/snackbar.ts', () => ({ showSnackbar: vi.fn() }))
 // sign in and out
 vi.mock('../auth/auth-service.ts', () => ({ signOutUser: vi.fn() }));
 
+type FetchMock = Mock<typeof fetch>;
+
 const SESSION_LIFETIME: number = 5 * 60 * 1000;
+
+const NEVER: Promise<Response> = new Promise<Response>((): void => {
+  // Never settles
+});
 
 // The pages keep loading: these tests are about the dialogs
 function stubPendingFetch(): void {
-  const pending: Promise<Response> = new Promise<Response>((): void => {
-    // Never settles
+  vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockReturnValue(NEVER));
+}
+
+// The game "chess" as the API sends it: a favorite of the user a request names
+function createChessAnswer(url: URL): Response {
+  return Response.json({
+    data: {
+      slug: 'chess',
+      name: 'Chess',
+      heroImage: '/chess.jpg',
+      rating: 4.8,
+      likesCount: 1200,
+      isLikedByCurrentUser: url.searchParams.has('userEmail'),
+      fullDescription: 'The classic.',
+      specs: { genre: 'Strategy', players: 'Two', duration: '30 min', price: 'Free' },
+      topRecords: [],
+    },
   });
-  vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockReturnValue(pending));
+}
+
+// The API answers for the game "chess" and its comments, which are none; the
+// pages keep loading
+function stubGameApi(): FetchMock {
+  const fetchMock: FetchMock = vi.fn<typeof fetch>(
+    (input: URL | RequestInfo): Promise<Response> => {
+      const url: URL = input instanceof URL ? input : new URL('about:blank');
+      if (url.pathname.endsWith('/games/chess/comments')) {
+        return Promise.resolve(Response.json({ data: [], meta: { totalComments: 0 } }));
+      }
+
+      return url.pathname.endsWith('/games/chess')
+        ? Promise.resolve(createChessAnswer(url))
+        : NEVER;
+    },
+  );
+  vi.stubGlobal('fetch', fetchMock);
+
+  return fetchMock;
+}
+
+// The addresses the app asked the API for, with the method of each request
+function getRequests(fetchMock: FetchMock): string[] {
+  return fetchMock.mock.calls.map(([input, init]: Parameters<typeof fetch>): string => {
+    const url: string = input instanceof URL ? `${input.pathname}${input.search}` : '';
+
+    return `${init?.method ?? 'GET'} ${url}`;
+  });
+}
+
+// Lets the answers and the history changes arrive
+async function settle(): Promise<void> {
+  await new Promise<void>((resolve: () => void): void => {
+    setTimeout(resolve, 0);
+  });
 }
 
 // An address reached the way Back and Forward reach one
@@ -146,5 +203,84 @@ describe('auth dialog address for a signed-in user', (): void => {
       variant: SnackbarVariant.Info,
       text: ALREADY_SIGNED_IN_MESSAGE,
     });
+  });
+});
+
+describe('Game Details and the session', (): void => {
+  it('loads the game of a signed-in user with the user named', async (): Promise<void> => {
+    saveSession(Date.now());
+    const fetchMock: FetchMock = stubGameApi();
+
+    visit('/?game=chess');
+    await settle();
+
+    expect(getRequests(fetchMock)).toContain('GET /api/games/chess?userEmail=alex%40minigames.com');
+    expect(document.querySelector('.game-details__favorite')?.textContent).toBe(
+      GAME_DETAILS_CONTENT.removeFavoriteLabel,
+    );
+  });
+
+  it('shows the auth dialog in place of the game when a guest adds a favorite', async (): Promise<void> => {
+    const fetchMock: FetchMock = stubGameApi();
+    visit('/?game=chess');
+    await settle();
+
+    document.querySelector<HTMLButtonElement>('.game-details__favorite')?.click();
+
+    expect(getAddress()).toBe('/?game=chess&auth=login');
+    expect(isOpen('.auth-dialog')).toBe(true);
+    expect(isOpen('.game-details')).toBe(false);
+    expect(showSnackbar).toHaveBeenCalledExactlyOnceWith({
+      variant: SnackbarVariant.Warning,
+      text: GAME_DETAILS_CONTENT.favoriteMessages.loginWarning,
+    });
+
+    // Closing the auth dialog goes back to the game, still as a guest
+    pressEscape('.auth-dialog');
+    await settle();
+
+    expect(getAddress()).toBe('/?game=chess');
+    expect(isOpen('.game-details')).toBe(true);
+    expect(
+      getRequests(fetchMock).filter((request: string): boolean => request.startsWith('POST')),
+    ).toEqual([]);
+  });
+
+  it('only says that the session expired when it ends at the click', async (): Promise<void> => {
+    saveSession(Date.now());
+    const fetchMock: FetchMock = stubGameApi();
+    visit('/?game=chess');
+    await settle();
+    // The session ran out while the dialog was open
+    saveSession(Date.now() - SESSION_LIFETIME - 1000);
+
+    document.querySelector<HTMLButtonElement>('.game-details__favorite')?.click();
+
+    expect(showSnackbar).toHaveBeenCalledExactlyOnceWith({
+      variant: SnackbarVariant.Warning,
+      text: SESSION_EXPIRED_MESSAGE,
+    });
+    expect(isOpen('.auth-dialog')).toBe(true);
+    expect(getAddress()).toBe('/?game=chess&auth=login');
+    expect(
+      getRequests(fetchMock).filter((request: string): boolean => request.startsWith('POST')),
+    ).toEqual([]);
+  });
+
+  it('loads the open game again as a guest when the session ends', async (): Promise<void> => {
+    saveSession(Date.now());
+    const fetchMock: FetchMock = stubGameApi();
+    visit('/?game=chess');
+    await settle();
+
+    // Logged out in another tab
+    localStorage.removeItem(SESSION_STORAGE_KEY);
+    globalThis.dispatchEvent(new StorageEvent('storage', { key: SESSION_STORAGE_KEY }));
+    await settle();
+
+    expect(getRequests(fetchMock).at(-2)).toBe('GET /api/games/chess');
+    expect(document.querySelector('.game-details__favorite')?.textContent).toBe(
+      GAME_DETAILS_CONTENT.addFavoriteLabel,
+    );
   });
 });
