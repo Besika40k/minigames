@@ -30,12 +30,17 @@ export function toAppPath(pathname: string, base: string): string | undefined {
   return path === '' ? '/' : path;
 }
 
-// The browser address of an app path and its query. Under the base
+// The browser address of an app path, its query and its hash. Under the base
 // "/minigames/", "/library" with "page=2" is "/minigames/library?page=2".
-export function toBrowserUrl(path: string, query: URLSearchParams, base: string): string {
+export function toBrowserUrl(
+  path: string,
+  query: URLSearchParams,
+  base: string,
+  hash: string = '',
+): string {
   const search: string = query.toString();
 
-  return `${trimTrailingSlashes(base)}${path}${search === '' ? '' : `?${search}`}`;
+  return `${trimTrailingSlashes(base)}${path}${search === '' ? '' : `?${search}`}${hash}`;
 }
 
 // The page of an app path, or undefined when no page has that path
