@@ -1,14 +1,17 @@
 # MiniGames
 
-MiniGames is a single-page web app for browsing and playing small browser games. The Home page features a slider of featured games, a leaderboard of top players, and a section inviting game developers to publish their games. The Library page lists the games with category filters, sorting and pagination, and the details of a game open in a dialog with its top records and latest comments. Users can sign in or register through an auth dialog.
+MiniGames is a single-page web app for browsing and playing small browser games. The Home page features a slider of featured games, a leaderboard of top players, and a section inviting game developers to publish their games. The Library page lists the games with category filters, sorting and pagination, and the details of a game open in a dialog with its top records and latest comments.
 
 The games, the categories, the leaderboard and the comments come from the course's REST API. Every page, Library filter and open dialog is kept in the URL, so any screen can be bookmarked, shared and reached again with Back and Forward.
+
+Visitors can register and sign in with an email and a password or with Google (Firebase Authentication). A signed-in user can add games to the favorites, write comments and like them; a guest can browse everything and is asked to log in for those actions. The sign-in lasts five minutes.
 
 The layout is responsive and follows the Figma design at three breakpoints: 375px, 768px and 1920px.
 
 ## Tech stack
 
-- TypeScript (strict mode), no frameworks and no runtime dependencies
+- TypeScript (strict mode), no frameworks
+- Firebase Authentication (the modular SDK), the only runtime dependency
 - Vite
 - Sass (SCSS)
 - ESLint (typescript-eslint, Unicorn) and Prettier
@@ -24,6 +27,8 @@ cd minigames
 npm install
 npm run dev
 ```
+
+Signing in needs the web app config of a Firebase project: copy `.env.example` to `.env.local` (git ignores it) and fill in the values from the Firebase console (Project settings, Your apps). The project needs the Email/Password and Google sign-in methods, and the address the app runs on among its authorized domains (`localhost` is there by default). Everything else, the tests included, works without it.
 
 ## Scripts
 
@@ -50,6 +55,7 @@ src/
 ├── main.ts            # entry point
 ├── app/               # app bootstrap, the History API router and the URL helpers
 ├── api/               # the REST API client: requests, answer checks and errors
+├── auth/              # Firebase, sign-in and sign-out, the form rules and the app session
 ├── components/        # UI reused across pages (button, logo, header, burger menu, footer, section title, auth dialog, game details dialog, skeleton, snackbar, and the loading, error and empty states)
 ├── pages/             # one folder per page, each section in its own subfolder
 │   ├── home/          # hero, games slider, leaderboard, game developers section
@@ -127,9 +133,35 @@ Snackbars (`src/components/snackbar`) tell what happened: an error when a reques
 
 ## Auth dialog
 
-The auth dialog (`src/components/auth-dialog`) is a native `<dialog>` opened with `showModal()`, so the browser centers it, dims the page behind it, traps the focus and returns the focus to the button that opened it. It follows the `auth` parameter of the URL: Log In in the header or the mobile menu opens `?auth=login`, Sign Up opens `?auth=register`, and a deep link opens the dialog over its page. `createAuthDialog({ onClose, onModeChange })` returns the dialog with `show(mode)` and `hide()`, which `app.ts` calls when the URL changes.
+The auth dialog (`src/components/auth-dialog`) is a native `<dialog>` opened with `showModal()`, so the browser centers it, dims the page behind it, traps the focus and returns the focus to the button that opened it. It follows the `auth` parameter of the URL: Log In in the header or the mobile menu opens `?auth=login`, Sign Up opens `?auth=register`, and a deep link opens the dialog over its page. `createAuthDialog` returns the dialog with `show(mode)` and `hide()`, which `app.ts` calls when the URL changes.
 
-Inside, a tab bar (ARIA tabs, arrow keys move between the tabs) switches between the two forms, and each switch replaces the mode in the URL. The forms cross-fade while the box around them eases to the new height. The dialog closes with Esc or a click on the backdrop, which take `auth` out of the URL, and both the opening and the closing are animated (only a fade when the system asks for reduced motion). The content of the forms lives in `src/data/auth.ts`. Checking the fields and sending them come in Story 4, so a form only stays on the page when it is submitted.
+Inside, a tab bar (ARIA tabs, arrow keys move between the tabs) switches between the two forms, and each switch replaces the mode in the URL and empties the fields. The forms cross-fade while the box around them eases to the new height. The dialog closes with Esc or a click on the backdrop, which take `auth` out of the URL, and both the opening and the closing are animated (only a fade when the system asks for reduced motion). The content of the forms lives in `src/data/auth.ts`.
+
+- The fields are checked as the visitor types and when a field is left (`src/auth/validation.ts`): an email address; a username of 2 to 30 letters and digits that starts with a capital letter; a registration password of at least 6 characters with a capital letter, a digit and a special character; a login password of at least 6 characters; and a matching confirmation. An invalid field shows its message under it (`aria-invalid`, `aria-describedby`), and the submit button works only for a valid form.
+- While a sign-in is under way, every control of the dialog is locked, the pressed button shows a turning ring, and Esc and the backdrop do not close it. A success closes the dialog and greets the user with a snackbar; a failure unlocks the form with the values kept and says why in a snackbar.
+
+## Authentication and the app session
+
+Firebase Authentication (`src/auth/firebase.ts`, `src/auth/auth-service.ts`) signs the visitor in with an email and a password, registers a new account with its username as the display name, or signs in with Google in a popup window. The service loads only when the auth dialog opens, so a guest's visit never downloads Firebase. Firebase error codes become plain messages, and closing Google's window is not an error.
+
+A successful sign-in starts the app session (`src/auth/session.ts`, `src/auth/session-store.ts`): one JSON object in `localStorage` under the key **`minigames:besika40k:app-session`**:
+
+```json
+{
+  "displayName": "Alex Pro",
+  "email": "alex@minigames.com",
+  "authenticatedAt": 1791580800000,
+  "avatarUrl": "https://lh3.googleusercontent.com/..."
+}
+```
+
+`avatarUrl` is there only when the account has a photo. No password or token is stored. The session lasts five minutes from `authenticatedAt`, which never moves, and the app never signs a user in from Firebase's own stored sign-in alone.
+
+- The stored session is read and checked at startup, when the tab becomes visible again, before every page or dialog change, before every protected action, and when another tab changes it (the `storage` event). A timer also ends it at its exact expiry while the page is open.
+- An expired session removes only its key, signs out of Firebase, turns the UI to guest mode and shows one warning snackbar. Data that is not a valid session (not JSON, missing or wrong fields, a sign-in time in the future) is removed the same way, without a message.
+- The header and the mobile menu show the signed-in user (the Google photo, or the initials of the name) and a Log Out button. Logging out removes only the session key and signs out of Firebase; if that sign-out fails, the app still stays in guest mode and says so.
+- The auth dialog is for guests only. For a signed-in user, `?auth=...` is removed from the URL in place (the path, the other parameters and the hash stay) with one snackbar, whether it comes from a button, a link, a typed address or Back and Forward.
+- A protected action (a favorite, a comment or a like) checks the session first. A guest, or a user whose session has just expired, gets the auth dialog in place of Game Details, whose game stays in the URL (`?game=palia&auth=login`): closing the dialog or signing in brings Game Details back, for a guest or for the signed-in user. The action is never repeated by itself.
 
 ## Home slider
 
