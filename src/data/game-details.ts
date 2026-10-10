@@ -40,6 +40,11 @@ export const GAME_DETAILS_CONTENT: GameDetailsContent = {
     posted: 'Your comment is posted.',
     tooLong: `A comment can have at most ${String(COMMENT_MAX_LENGTH)} characters.`,
   },
+  likeMessages: {
+    loginWarning: 'Log in to like comments.',
+    unconfirmed:
+      "The like wasn't confirmed, so the comments are loaded again to show where they stand.",
+  },
   sendLabel: 'Send comment',
   messages: {
     errorTitle: "Couldn't load the game",
