@@ -30,7 +30,6 @@ export const GAME_DETAILS_CONTENT: GameDetailsContent = {
   medals: ['🥇', '🥈', '🥉'],
   pointsSuffix: 'pts',
   commentsTitle: 'Comments',
-  currentUserInitial: 'U',
   commentLabel: 'Your comment',
   commentPlaceholder: 'Write a comment...',
   commentGuestPlaceholder: 'Log in to write a comment',

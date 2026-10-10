@@ -100,8 +100,6 @@ export interface GameDetailsContent {
   readonly medals: readonly string[];
   readonly pointsSuffix: string;
   readonly commentsTitle: string;
-  // The initial shown in the comment form's avatar until users can sign in
-  readonly currentUserInitial: string;
   readonly commentLabel: string;
   readonly commentPlaceholder: string;
   // The placeholder of a guest's comment form, which is locked
