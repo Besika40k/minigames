@@ -12,6 +12,8 @@ export interface AppLocation {
   readonly path: string;
   readonly route: Route | undefined;
   readonly query: URLSearchParams;
+  // "#section" or an empty string, kept when only the query changes
+  readonly hash: string;
 }
 
 // The query keys of the dialogs that open over any page

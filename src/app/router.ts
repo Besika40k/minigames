@@ -18,6 +18,8 @@ export interface NavigationTarget {
   readonly path?: string;
   // The whole new query; an empty one when it is left out
   readonly query?: URLSearchParams;
+  // "#section"; none when it is left out
+  readonly hash?: string;
 }
 
 export interface NavigationOptions {
@@ -38,13 +40,14 @@ export function getRouteHref(route: Route): string {
 
 // Where the browser is now, in the app's terms
 function readLocation(): AppLocation {
-  const { pathname, search } = globalThis.location;
+  const { pathname, search, hash } = globalThis.location;
   const path: string | undefined = toAppPath(pathname, BASE_PATH);
 
   return {
     path: path ?? pathname,
     route: path === undefined ? undefined : parseRoute(path),
     query: new URLSearchParams(search),
+    hash,
   };
 }
 
@@ -201,6 +204,7 @@ export class Router {
       target.path ?? this.current.path,
       target.query ?? new URLSearchParams(),
       BASE_PATH,
+      target.hash,
     );
 
     if (options.isReplace === true) {
