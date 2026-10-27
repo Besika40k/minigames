@@ -229,7 +229,7 @@ A number that no token covers (a size measured from a mockup, a line height the 
 
 The app is deployed to GitHub Pages: <https://besika40k.github.io/minigames/>
 
-Every push to `story-4` runs `.github/workflows/deploy.yml`, which builds the project and publishes the `dist` folder. The workflow builds with `--base` set to the Pages base path (`/minigames/`), so `npm run dev` and a plain `npm run build` keep using `/`. The router and the picture paths read the base from `import.meta.env.BASE_URL`.
+Every push to `creative-extension` runs `.github/workflows/deploy.yml`, which builds the project and publishes the `dist` folder. The `github-pages` environment takes deploys only from the branches its rules list (Settings, Environments, github-pages), so `creative-extension` is listed there. The workflow builds with `--base` set to the Pages base path (`/minigames/`), so `npm run dev` and a plain `npm run build` keep using `/`. The router and the picture paths read the base from `import.meta.env.BASE_URL`.
 
 The build reads the Firebase config from the repository variables (Settings, Secrets and variables, Actions, Variables) with the names of `.env.example`. The Firebase project lists `besika40k.github.io` among its authorized domains, so sign-in works on the deployed site.
 
