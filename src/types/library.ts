@@ -49,6 +49,9 @@ export interface LibraryContent {
   readonly sortListLabel: string;
   // The heading of the card list, for screen readers only
   readonly gamesTitle: string;
+  // The heading and the line of the games of MiniGames itself, above the list
+  readonly ownGamesTitle: string;
+  readonly ownGamesDescription: string;
   readonly detailsText: string;
   // Read out before the numbers and the tag, which show no words on the screen
   readonly categoryLabel: string;
