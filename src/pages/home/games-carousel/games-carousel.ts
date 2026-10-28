@@ -6,6 +6,7 @@ import { createEmptyState } from '../../../components/feedback/empty-state.ts';
 import { createSectionTitle } from '../../../components/section-title/section-title.ts';
 import { createSkeleton } from '../../../components/skeleton/skeleton.ts';
 import { CAROUSEL_CONTENT } from '../../../data/carousel.ts';
+import { OWN_GAMES } from '../../../data/own-games.ts';
 import { ButtonSize, ButtonVariant } from '../../../types/button.ts';
 import { SlideRole } from '../../../types/carousel.ts';
 import type { Game } from '../../../types/game.ts';
@@ -164,6 +165,12 @@ function createArrow(variant: ButtonVariant, label: string, icon: IconName): HTM
   });
 }
 
+// The games of MiniGames itself lead the featured games of the API, so the
+// first of them is the active card when the slider opens
+async function loadSlides(signal: AbortSignal): Promise<readonly Game[]> {
+  return [...OWN_GAMES, ...(await fetchFeaturedGames(signal))];
+}
+
 export interface GamesCarouselOptions {
   // Opens the details of a game (a click on its card)
   readonly onGameOpen?: (game: Game) => void;
@@ -310,7 +317,7 @@ export function createGamesCarousel(options: GamesCarouselOptions = {}): GamesCa
   const area: AsyncArea = createAsyncArea({
     container: body,
     messages: CAROUSEL_CONTENT.messages,
-    load: fetchFeaturedGames,
+    load: loadSlides,
     renderSkeleton: showSkeleton,
     renderData: showSlides,
     isEmpty: (games: readonly Game[]): boolean => games.length === 0,
