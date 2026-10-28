@@ -13,7 +13,7 @@ import { Route } from '../../../types/route.ts';
 import { AutoplayTimer } from '../../../utils/autoplay-timer.ts';
 import { createElement } from '../../../utils/create-element.ts';
 import { createIcon, IconName } from '../../../utils/create-icon.ts';
-import { formatCompactNumber } from '../../../utils/format-number.ts';
+import { formatCompactNumber, formatRating } from '../../../utils/format-number.ts';
 import { enableSwipe, SwipeDirection } from './carousel-swipe.ts';
 import './games-carousel.scss';
 
@@ -22,8 +22,6 @@ const TITLE_ID = 'games-carousel-title';
 // The size of the card photos, so the browser can reserve their space
 const IMAGE_WIDTH = '460';
 const IMAGE_HEIGHT = '215';
-
-const RATING_FRACTION_DIGITS = 1;
 
 // The slider moves one card to the left every four seconds
 const AUTOPLAY_INTERVAL = 4000;
@@ -56,7 +54,7 @@ function createStats(game: Game): HTMLParagraphElement {
     children: [
       createIcon(IconName.Star),
       createHiddenLabel(CAROUSEL_CONTENT.ratingLabel),
-      game.rating.toFixed(RATING_FRACTION_DIGITS),
+      formatRating(game.rating),
     ],
   });
 
