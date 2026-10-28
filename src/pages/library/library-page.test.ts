@@ -155,6 +155,57 @@ describe('Library page', (): void => {
     );
   });
 
+  it('pins the games of MiniGames itself above the first page', async (): Promise<void> => {
+    stubApi();
+    const { onGameOpen } = renderPage('category=puzzle');
+    await settle();
+
+    expect(document.querySelector<HTMLElement>('.own-games')?.hidden).toBe(false);
+    expect(getText('.own-games .game-card__title')).toEqual(["Alchemist's Cauldron"]);
+    expect(getText('.game-list .game-card__title')).toEqual(['Cat Mail Co.', 'Palia']);
+
+    document.querySelector<HTMLElement>('.own-games .game-card__details')?.click();
+
+    expect(onGameOpen).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ slug: 'alchemists-cauldron' }),
+    );
+  });
+
+  it('shows the pinned games while the categories still load', (): void => {
+    const never: Promise<Response> = new Promise<Response>((): void => {
+      // Never settles
+    });
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockReturnValue(never));
+    renderPage('');
+
+    expect(document.querySelector<HTMLElement>('.own-games')?.hidden).toBe(false);
+  });
+
+  it('keeps the pinned card while the chosen category still holds it', async (): Promise<void> => {
+    stubApi();
+    const { view } = renderPage('');
+    await settle();
+    const card: Element | null = document.querySelector('.own-games .game-card');
+
+    view.update?.(createLocation('category=puzzle'));
+    await settle();
+
+    expect(document.querySelector('.own-games .game-card')).toBe(card);
+  });
+
+  it('leaves the pinned games out of other pages and categories', async (): Promise<void> => {
+    stubApi();
+    const { view } = renderPage('category=card');
+    await settle();
+
+    expect(document.querySelector<HTMLElement>('.own-games')?.hidden).toBe(true);
+
+    view.update?.(createLocation('category=all&page=2'));
+    await settle();
+
+    expect(document.querySelector<HTMLElement>('.own-games')?.hidden).toBe(true);
+  });
+
   it('puts the default in place of an unknown category, with a warning', async (): Promise<void> => {
     stubApi();
     const { onNavigate } = renderPage('category=bogus&sort=name-desc');
