@@ -105,6 +105,8 @@ export interface GameDetailsContent {
   readonly favoriteMessages: FavoriteMessages;
   readonly recordsTitle: string;
   readonly recordsIcon: string;
+  // The text of a game whose list of records is empty
+  readonly noRecordsText: string;
   // The medals of the first, second and third places
   readonly medals: readonly string[];
   readonly pointsSuffix: string;

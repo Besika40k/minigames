@@ -20,6 +20,19 @@ $record-height: 49px;
   list-style: none;
 }
 
+// A row of the list's size, for a game without records
+.game-details__no-records {
+  display: flex;
+  align-items: center;
+  min-height: $record-height;
+  margin: get-size(1) + get-size(0.5) 0 0;
+  padding: 0 get-size(2);
+  border-radius: get-radius(small);
+  background-color: get-color(white);
+  color: get-color(on-bg);
+  font-size: get-font-size(label-large);
+}
+
 // The medal, the name, then the score and the date on the right
 .game-details__record {
   display: flex;
