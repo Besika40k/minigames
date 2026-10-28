@@ -148,7 +148,7 @@ describe('Library page', (): void => {
     const { onGameOpen } = renderPage('');
     await settle();
 
-    document.querySelector<HTMLElement>('.game-card__details')?.click();
+    document.querySelector<HTMLElement>('.game-list .game-card__details')?.click();
 
     expect(onGameOpen).toHaveBeenCalledExactlyOnceWith(
       expect.objectContaining({ slug: 'cat-mail-co', name: 'Cat Mail Co.' }),

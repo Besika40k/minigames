@@ -8,6 +8,7 @@ import { createGameList, type GameList } from './game-list/game-list.ts';
 import { createCategoryFilter, type CategoryFilter } from './library-intro/category-filter.ts';
 import { createLibraryIntro } from './library-intro/library-intro.ts';
 import { createSortSelect, type SortSelect } from './library-intro/sort-select.ts';
+import { createOwnGamesSection, type OwnGamesSection } from './own-games/own-games.ts';
 import {
   ALL_CATEGORIES,
   buildLibraryQuery,
@@ -83,6 +84,7 @@ export function renderLibraryPage(location: AppLocation, options: LibraryPageOpt
     list.element.scrollIntoView({ block: 'start', behavior: isReduced ? 'instant' : 'smooth' });
   };
 
+  const ownGames: OwnGamesSection = createOwnGamesSection(options.onGameOpen);
   const list: GameList = createGameList({
     onDetailsClick: options.onGameOpen,
     onLoad: (result: GamesPage): void => {
@@ -126,6 +128,9 @@ export function renderLibraryPage(location: AppLocation, options: LibraryPageOpt
     const parsed: ParsedLibraryQuery = parseLibraryQuery(address);
     sortSelect.setSelected(parsed.sort);
     if (categories === undefined) {
+      // The pinned games need no categories, so they show the address's
+      // choice while the list waits
+      ownGames.show(getCurrentQuery());
       return;
     }
 
@@ -146,6 +151,7 @@ export function renderLibraryPage(location: AppLocation, options: LibraryPageOpt
       pagination.render(resolved.query.page, totalPages);
     }
     shown = resolved.query;
+    ownGames.show(shown);
     list.show(shown);
   }
 
@@ -154,6 +160,7 @@ export function renderLibraryPage(location: AppLocation, options: LibraryPageOpt
   return {
     elements: [
       createLibraryIntro([filter.element, sortSelect.element]),
+      ownGames.element,
       list.element,
       pagination.element,
     ],

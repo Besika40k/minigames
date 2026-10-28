@@ -13,6 +13,8 @@ export const LIBRARY_CONTENT: LibraryContent = {
   sortPrefix: 'Sort by:',
   sortListLabel: 'Sort games by',
   gamesTitle: 'Games',
+  ownGamesTitle: 'MiniGames Originals',
+  ownGamesDescription: 'Made by the MiniGames team and ready to play.',
   detailsText: 'Details',
   categoryLabel: 'Category',
   ratingLabel: 'Rating',
