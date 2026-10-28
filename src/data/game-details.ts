@@ -37,6 +37,7 @@ export const GAME_DETAILS_CONTENT: GameDetailsContent = {
   },
   recordsTitle: 'Top Records',
   recordsIcon: '🏆',
+  noRecordsText: 'No records yet.',
   medals: ['🥇', '🥈', '🥉'],
   pointsSuffix: 'pts',
   commentsTitle: 'Comments',

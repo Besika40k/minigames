@@ -35,6 +35,19 @@ function createRecord(record: TopRecord): HTMLLIElement {
   });
 }
 
+// The ranked records, or a line that says there are none yet
+function createRecordsList(records: readonly TopRecord[]): HTMLElement {
+  return records.length === 0
+    ? createElement('p', {
+        className: 'game-details__no-records',
+        text: GAME_DETAILS_CONTENT.noRecordsText,
+      })
+    : createElement('ol', {
+        className: 'game-details__records-list',
+        children: records.map((record: TopRecord): HTMLLIElement => createRecord(record)),
+      });
+}
+
 // The best scores of the game. Nothing here can be clicked.
 export function createGameDetailsRecords(game: GameDetails): HTMLElement {
   const title: HTMLHeadingElement = createElement('h3', {
@@ -50,14 +63,9 @@ export function createGameDetailsRecords(game: GameDetails): HTMLElement {
     ],
   });
 
-  const list: HTMLOListElement = createElement('ol', {
-    className: 'game-details__records-list',
-    children: game.topRecords.map((record: TopRecord): HTMLLIElement => createRecord(record)),
-  });
-
   return createElement('section', {
     className: 'game-details__records',
     attributes: { 'aria-labelledby': TITLE_ID },
-    children: [title, list],
+    children: [title, createRecordsList(game.topRecords)],
   });
 }
