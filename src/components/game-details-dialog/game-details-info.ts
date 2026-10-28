@@ -4,12 +4,10 @@ import { ButtonSize, ButtonVariant } from '../../types/button.ts';
 import type { GameDetails, GameSpecs } from '../../types/game-details.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { createIcon, IconName } from '../../utils/create-icon.ts';
-import { formatCompactNumber } from '../../utils/format-number.ts';
+import { formatCompactNumber, formatRating } from '../../utils/format-number.ts';
 import { createButton } from '../button/button.ts';
 import { createFavoriteButton, type FavoriteButtonOptions } from './game-details-favorite.ts';
 import './game-details-info.scss';
-
-const RATING_FRACTION_DIGITS = 1;
 
 const SPEC_NAMES: readonly (keyof GameSpecs)[] = ['genre', 'players', 'duration', 'price'];
 
@@ -27,7 +25,7 @@ function createStats(game: GameDetails, likesCount: HTMLSpanElement): HTMLParagr
     children: [
       createIcon(IconName.Star),
       createHiddenLabel(GAME_DETAILS_CONTENT.ratingLabel),
-      game.rating.toFixed(RATING_FRACTION_DIGITS),
+      formatRating(game.rating),
     ],
   });
 

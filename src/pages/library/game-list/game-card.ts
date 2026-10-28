@@ -5,14 +5,12 @@ import { ButtonSize, ButtonVariant } from '../../../types/button.ts';
 import type { Game } from '../../../types/game.ts';
 import { createElement } from '../../../utils/create-element.ts';
 import { createIcon, IconName } from '../../../utils/create-icon.ts';
-import { formatCompactNumber } from '../../../utils/format-number.ts';
+import { formatCompactNumber, formatRating } from '../../../utils/format-number.ts';
 import './game-card.scss';
 
 // The size of the card photos, so the browser can reserve their space
 const IMAGE_WIDTH = '460';
 const IMAGE_HEIGHT = '215';
-
-const RATING_FRACTION_DIGITS = 1;
 
 // A text that is only read out, for the numbers and the tag
 function createHiddenText(text: string): HTMLSpanElement {
@@ -31,7 +29,7 @@ function createStats(game: Game): HTMLParagraphElement {
     children: [
       createIcon(IconName.Star),
       createHiddenText(`${LIBRARY_CONTENT.ratingLabel}: `),
-      game.rating.toFixed(RATING_FRACTION_DIGITS),
+      formatRating(game.rating),
     ],
   });
 
