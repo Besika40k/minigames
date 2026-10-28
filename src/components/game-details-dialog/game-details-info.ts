@@ -5,7 +5,7 @@ import type { GameDetails, GameSpecs } from '../../types/game-details.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { createIcon, IconName } from '../../utils/create-icon.ts';
 import { formatCompactNumber, formatRating } from '../../utils/format-number.ts';
-import { createButton } from '../button/button.ts';
+import { createButton, createButtonLink } from '../button/button.ts';
 import { createFavoriteButton, type FavoriteButtonOptions } from './game-details-favorite.ts';
 import './game-details-info.scss';
 
@@ -66,18 +66,14 @@ function createSpecs(specs: GameSpecs): HTMLDListElement {
   return createElement('dl', { className: 'game-details__specs', children: items });
 }
 
-// The title, rating and likes, description, specs, and the Play Now (or Buy
-// Now) and Favorites buttons. Play Now does nothing yet. The likes count the
-// users who have the game among their favorites, so they follow the
-// Favorites button.
-export function createGameDetailsInfo(
+// Play Now (or Buy Now) and Favorites, for a game of the API. Play Now does
+// nothing yet. The likes count the users who have the game among their
+// favorites, so they follow the Favorites button.
+function createApiGameActions(
   game: GameDetails,
-  titleId: string,
+  likesCount: HTMLSpanElement,
   options: GameInfoOptions,
-): HTMLElement {
-  const likesCount: HTMLSpanElement = createElement('span', {
-    text: formatCompactNumber(game.likesCount),
-  });
+): readonly HTMLElement[] {
   const favoriteButton: HTMLButtonElement = createFavoriteButton({
     ...options,
     game,
@@ -92,6 +88,37 @@ export function createGameDetailsInfo(
     text: getPlayText(game.specs.price),
     className: 'game-details__play',
   });
+
+  return [playButton, favoriteButton];
+}
+
+// Play Now of a game of MiniGames itself: a link to the site the game is played
+// on. The API keeps favorites only for its own games, so this game has no
+// Favorites button.
+function createPlayLink(playUrl: string): HTMLAnchorElement {
+  return createButtonLink({
+    variant: ButtonVariant.Filled,
+    size: ButtonSize.Medium,
+    text: GAME_DETAILS_CONTENT.playLabel,
+    href: playUrl,
+    className: 'game-details__play',
+  });
+}
+
+// The title, rating and likes, description, specs, and the buttons to play
+// the game and to add it to the favorites
+export function createGameDetailsInfo(
+  game: GameDetails,
+  titleId: string,
+  options: GameInfoOptions,
+): HTMLElement {
+  const likesCount: HTMLSpanElement = createElement('span', {
+    text: formatCompactNumber(game.likesCount),
+  });
+  const actions: readonly HTMLElement[] =
+    game.playUrl === undefined
+      ? createApiGameActions(game, likesCount, options)
+      : [createPlayLink(game.playUrl)];
 
   const header: HTMLDivElement = createElement('div', {
     className: 'game-details__header',
@@ -112,10 +139,7 @@ export function createGameDetailsInfo(
       header,
       createElement('p', { className: 'game-details__description', text: game.fullDescription }),
       createSpecs(game.specs),
-      createElement('div', {
-        className: 'game-details__actions',
-        children: [playButton, favoriteButton],
-      }),
+      createElement('div', { className: 'game-details__actions', children: actions }),
     ],
   });
 }
