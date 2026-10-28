@@ -1,7 +1,9 @@
 import { ApiError, ApiErrorKind } from '../../api/api-error.ts';
 import { fetchGameDetails } from '../../api/games-api.ts';
+import { findOwnGame, getOwnGameDetails } from '../../api/own-games.ts';
 import { GAME_DETAILS_CONTENT } from '../../data/game-details.ts';
 import { ButtonSize, ButtonVariant } from '../../types/button.ts';
+import type { OwnGame } from '../../types/game.ts';
 import type {
   GameCommentsSection,
   GameDetails,
@@ -72,11 +74,14 @@ function createNotFound(slug: string, onClose: () => void): HTMLElement {
 }
 
 // The dialog with the details of a game, loaded from the API for the slug it
-// is shown with. It closes only through `onClose`, so the owner decides what a
-// close means (the dialog lives in the address).
+// is shown with. A game of MiniGames itself comes from the app's own data. The
+// dialog closes only through `onClose`, so the owner decides what a close
+// means (the dialog lives in the address).
 export function createGameDetailsDialog(options: GameDetailsDialogOptions): GameDetailsDialog {
   // The slug whose game the dialog shows or loads
   let slug: string = '';
+  // The game of MiniGames itself with that slug, if it is one
+  let ownGame: OwnGame | undefined;
 
   const dialog: HTMLDialogElement = createElement('dialog', {
     className: 'game-details',
@@ -115,7 +120,9 @@ export function createGameDetailsDialog(options: GameDetailsDialogOptions): Game
     container: main,
     messages: GAME_DETAILS_CONTENT.messages,
     load: (signal: AbortSignal): Promise<GameDetails> =>
-      fetchGameDetails(slug, signal, options.getSession()?.email),
+      ownGame === undefined
+        ? fetchGameDetails(slug, signal, options.getSession()?.email)
+        : Promise.resolve(getOwnGameDetails(ownGame)),
     renderSkeleton: createGameDetailsSkeleton,
     // Each game is drawn anew from the answer of the server
     renderData: (game: GameDetails): readonly Node[] => {
@@ -146,14 +153,23 @@ export function createGameDetailsDialog(options: GameDetailsDialogOptions): Game
     },
   });
 
+  // The API keeps comments only for its own games, so a game of MiniGames
+  // itself has none to show
+  const showComments = (): void => {
+    bottom.hidden = ownGame !== undefined;
+    if (ownGame === undefined) {
+      comments.show(slug);
+    }
+  };
+
   const show = (nextSlug: string): void => {
     if (nextSlug === slug && dialog.open) {
       return;
     }
     slug = nextSlug;
-    bottom.hidden = false;
+    ownGame = findOwnGame(slug);
     area.reload();
-    comments.show(slug);
+    showComments();
     if (!dialog.open) {
       dialog.showModal();
     }
@@ -175,7 +191,7 @@ export function createGameDetailsDialog(options: GameDetailsDialogOptions): Game
       return;
     }
     area.reload();
-    comments.show(slug);
+    showComments();
   };
 
   return { element: dialog, show, hide, refresh };
