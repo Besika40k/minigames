@@ -71,6 +71,9 @@ export interface GameDetails {
   readonly fullDescription: string;
   readonly specs: GameSpecs;
   readonly topRecords: readonly TopRecord[];
+  // The site the game is played on. Only the games of MiniGames itself have
+  // one; the Play Now button of any other game does nothing.
+  readonly playUrl?: string;
 }
 
 // The answer of a favorite toggle (`POST /api/games/{slug}/favorite`)
