@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { formatCompactNumber, formatNumber } from './format-number.ts';
+import { UNRATED_TEXT } from '../data/games.ts';
+import { formatCompactNumber, formatNumber, formatRating } from './format-number.ts';
 
 describe('formatNumber', (): void => {
   it('groups the thousands with commas', (): void => {
@@ -27,5 +28,16 @@ describe('formatCompactNumber', (): void => {
   it('drops a zero decimal and keeps numbers under a thousand whole', (): void => {
     expect(formatCompactNumber(2000)).toBe('2K');
     expect(formatCompactNumber(870)).toBe('870');
+  });
+});
+
+describe('formatRating', (): void => {
+  it('shows a rating with one decimal', (): void => {
+    expect(formatRating(4.8)).toBe('4.8');
+    expect(formatRating(5)).toBe('5.0');
+  });
+
+  it('marks a game nobody has rated yet as new', (): void => {
+    expect(formatRating(0)).toBe(UNRATED_TEXT);
   });
 });
