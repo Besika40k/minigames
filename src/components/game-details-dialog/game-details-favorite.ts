@@ -1,5 +1,5 @@
 import { ApiError, isOutcomeUnknown } from '../../api/api-error.ts';
-import { toggleFavorite } from '../../api/favorites-api.ts';
+import { getGameBackend } from '../../api/game-backend.ts';
 import { GAME_DETAILS_CONTENT } from '../../data/game-details.ts';
 import { ButtonSize, ButtonVariant } from '../../types/button.ts';
 import { SnackbarVariant } from '../../types/feedback.ts';
@@ -59,7 +59,10 @@ export function createFavoriteButton(options: FavoriteButtonOptions): HTMLButton
   const toggle = async (session: AppSession): Promise<void> => {
     setPending(true);
     try {
-      const result: FavoriteState = await toggleFavorite(options.game.slug, session.email);
+      const result: FavoriteState = await getGameBackend(options.game.slug).toggleFavorite(
+        options.game.slug,
+        session.email,
+      );
       state.isFavorite = result.isFavorited;
       show();
       options.onLikesChange(result.likesCount);
