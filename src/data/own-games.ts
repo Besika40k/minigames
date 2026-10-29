@@ -1,4 +1,5 @@
 import type { OwnGame } from '../types/game.ts';
+import type { OwnGameErrorMessages } from '../types/game-backend.ts';
 import { FREE_PRICE } from './games.ts';
 
 // The pictures ship in public/assets next to the API's, so they are read from
@@ -6,7 +7,8 @@ import { FREE_PRICE } from './games.ts';
 const IMAGE_FOLDER = `${import.meta.env.BASE_URL}assets/images/games/`;
 
 // The games made for MiniGames itself, shown before the API's games. Nobody
-// has rated or liked them yet.
+// has rated them yet. Their likes are counted in Firestore: the number here
+// only shows until the count arrives, or when it cannot load.
 export const OWN_GAMES: readonly OwnGame[] = [
   {
     slug: 'alchemists-cauldron',
@@ -25,3 +27,14 @@ export const OWN_GAMES: readonly OwnGame[] = [
     playUrl: 'https://besika40k.github.io/alchemists-cauldron/',
   },
 ];
+
+// What a failure of Firestore says, as the snackbars and error banners show it
+export const OWN_GAME_ERROR_MESSAGES: OwnGameErrorMessages = {
+  signedOut: 'Your sign-in has ended. Log in again and try once more.',
+  refused: "This wasn't allowed. If you are signed in, log in again and try once more.",
+  rateLimit: 'Too many changes in a short time. Wait a moment and try again.',
+  notFound: 'There is no such game.',
+  network: 'The game data could not be reached.',
+  failed: 'The game data failed to load.',
+  invalidData: 'The game data has an unexpected shape.',
+};
