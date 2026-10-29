@@ -1,5 +1,5 @@
 import { ApiError, isOutcomeUnknown } from '../../api/api-error.ts';
-import { toggleCommentLike } from '../../api/likes-api.ts';
+import { getGameBackend } from '../../api/game-backend.ts';
 import { GAME_DETAILS_CONTENT } from '../../data/game-details.ts';
 import { SnackbarVariant, type ChangeMessages } from '../../types/feedback.ts';
 import type { CommentLikeState, GameComment } from '../../types/game-details.ts';
@@ -12,6 +12,8 @@ import { showSnackbar } from '../snackbar/snackbar.ts';
 const MESSAGES: ChangeMessages = GAME_DETAILS_CONTENT.likeMessages;
 
 export interface LikeButtonOptions {
+  // The game the comment belongs to
+  readonly slug: string;
   readonly comment: GameComment;
   // Checks the session before a like. A guest gets undefined, and the auth
   // dialog in place of Game Details.
@@ -58,7 +60,8 @@ export function createLikeButton(options: LikeButtonOptions): HTMLButtonElement 
   const toggle = async (session: AppSession): Promise<void> => {
     setPending(true);
     try {
-      const result: CommentLikeState = await toggleCommentLike(
+      const result: CommentLikeState = await getGameBackend(options.slug).toggleCommentLike(
+        options.slug,
         options.comment.commentId,
         session.email,
       );

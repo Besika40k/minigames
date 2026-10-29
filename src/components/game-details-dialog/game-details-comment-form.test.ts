@@ -8,7 +8,7 @@ import type { AppSession } from '../../types/session.ts';
 import { showSnackbar } from '../snackbar/snackbar.ts';
 import { createCommentForm, type CommentForm } from './game-details-comment-form.ts';
 
-vi.mock('../../api/comments-api.ts', () => ({ postComment: vi.fn() }));
+vi.mock('../../api/comments-api.ts', () => ({ fetchGameComments: vi.fn(), postComment: vi.fn() }));
 vi.mock('../snackbar/snackbar.ts', () => ({ showSnackbar: vi.fn() }));
 
 const SESSION: AppSession = {
