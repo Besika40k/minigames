@@ -1,3 +1,4 @@
+import { loadOwnGames } from '../../../api/game-backend.ts';
 import { fetchFeaturedGames } from '../../../api/games-api.ts';
 import { getRouteHref } from '../../../app/router.ts';
 import { createButton, createButtonLink } from '../../../components/button/button.ts';
@@ -6,7 +7,6 @@ import { createEmptyState } from '../../../components/feedback/empty-state.ts';
 import { createSectionTitle } from '../../../components/section-title/section-title.ts';
 import { createSkeleton } from '../../../components/skeleton/skeleton.ts';
 import { CAROUSEL_CONTENT } from '../../../data/carousel.ts';
-import { OWN_GAMES } from '../../../data/own-games.ts';
 import { ButtonSize, ButtonVariant } from '../../../types/button.ts';
 import { SlideRole } from '../../../types/carousel.ts';
 import type { Game } from '../../../types/game.ts';
@@ -166,9 +166,12 @@ function createArrow(variant: ButtonVariant, label: string, icon: IconName): HTM
 }
 
 // The games of MiniGames itself lead the featured games of the API, so the
-// first of them is the active card when the slider opens
+// first of them is the active card when the slider opens. Their likes come
+// from Firestore at the same time as the API's answer.
 async function loadSlides(signal: AbortSignal): Promise<readonly Game[]> {
-  return [...OWN_GAMES, ...(await fetchFeaturedGames(signal))];
+  const [ownGames, featuredGames] = await Promise.all([loadOwnGames(), fetchFeaturedGames(signal)]);
+
+  return [...ownGames, ...featuredGames];
 }
 
 export interface GamesCarouselOptions {

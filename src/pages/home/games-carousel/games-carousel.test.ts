@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi, type Mock } from 'vitest';
+import { loadOwnGames } from '../../../api/game-backend.ts';
 import { fetchFeaturedGames } from '../../../api/games-api.ts';
-import type { Game } from '../../../types/game.ts';
+import { OWN_GAMES } from '../../../data/own-games.ts';
+import type { Game, OwnGame } from '../../../types/game.ts';
 import { createGamesCarousel, type GamesCarousel } from './games-carousel.ts';
 
 vi.mock('../../../api/games-api.ts', () => ({ fetchFeaturedGames: vi.fn() }));
+vi.mock('../../../api/game-backend.ts', () => ({ loadOwnGames: vi.fn() }));
 
 const PALIA: Game = {
   slug: 'palia',
@@ -42,6 +45,10 @@ function getTitles(): string[] {
 
 beforeEach((): void => {
   vi.mocked(fetchFeaturedGames).mockResolvedValue([PALIA]);
+  // Firestore counts seven likes of the own game
+  vi.mocked(loadOwnGames).mockResolvedValue(
+    OWN_GAMES.map((game: OwnGame): OwnGame => ({ ...game, likesCount: 7 })),
+  );
 });
 
 afterEach((): void => {
@@ -57,6 +64,7 @@ describe('games carousel', (): void => {
     expect(getTitles()).toEqual(["Alchemist's Cauldron", 'Palia']);
     const active: HTMLElement | null = document.querySelector('.games-carousel__card--active');
     expect(active?.textContent).toContain("Alchemist's Cauldron");
+    expect(active?.querySelector('.games-carousel__likes')?.textContent).toBe('Likes: 7');
 
     active?.querySelector<HTMLButtonElement>('.games-carousel__open')?.click();
 
