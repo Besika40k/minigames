@@ -1,5 +1,5 @@
 import { ApiError, isOutcomeUnknown } from '../../api/api-error.ts';
-import { postComment } from '../../api/comments-api.ts';
+import { getGameBackend } from '../../api/game-backend.ts';
 import { COMMENT_MAX_LENGTH, GAME_DETAILS_CONTENT } from '../../data/game-details.ts';
 import { SnackbarVariant } from '../../types/feedback.ts';
 import type { CommentMessages } from '../../types/game-details.ts';
@@ -135,7 +135,7 @@ export function createCommentForm(options: CommentFormOptions): CommentForm {
   const send = async (session: AppSession, text: string): Promise<void> => {
     setPending(true);
     try {
-      await postComment(state.slug, {
+      await getGameBackend(state.slug).postComment(state.slug, {
         userEmail: session.email,
         authorName: getCommentAuthorName(session),
         text,

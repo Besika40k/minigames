@@ -37,7 +37,12 @@ function renderButton(session: AppSession | undefined, comment: GameComment): Te
     .fn<(warning: string) => AppSession | undefined>()
     .mockReturnValue(session);
   const onUnconfirmed: Mock<() => void> = vi.fn<() => void>();
-  const button: HTMLButtonElement = createLikeButton({ comment, requireSession, onUnconfirmed });
+  const button: HTMLButtonElement = createLikeButton({
+    slug: 'chess',
+    comment,
+    requireSession,
+    onUnconfirmed,
+  });
 
   return { button, requireSession, onUnconfirmed };
 }

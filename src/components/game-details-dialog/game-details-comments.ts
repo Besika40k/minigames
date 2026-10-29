@@ -1,4 +1,4 @@
-import { fetchGameComments } from '../../api/comments-api.ts';
+import { getGameBackend } from '../../api/game-backend.ts';
 import { AVATAR_COLORS, GAME_DETAILS_CONTENT } from '../../data/game-details.ts';
 import type {
   GameComment,
@@ -101,8 +101,8 @@ export interface GameCommentsOptions {
 }
 
 // The comments of a game: the form for a new one, and the latest comments
-// from the API with the total count in the heading. Every game starts with an
-// empty form and the likes as the API sends them for the current visitor.
+// from the game's backend with the total count in the heading. Every game starts with an
+// empty form and the likes as its backend sends them for the current visitor.
 export function createGameDetailsComments(options: GameCommentsOptions): GameCommentsSection {
   // The slug whose comments are on the screen or on their way
   let slug: string = '';
@@ -138,13 +138,14 @@ export function createGameDetailsComments(options: GameCommentsOptions): GameCom
     container: list,
     messages: GAME_DETAILS_CONTENT.commentsMessages,
     load: (signal: AbortSignal): Promise<GameCommentsPage> =>
-      fetchGameComments(slug, signal, options.getSession()?.email),
+      getGameBackend(slug).fetchComments(slug, signal, options.getSession()?.email),
     renderSkeleton: (): readonly Node[] => {
       title.textContent = GAME_DETAILS_CONTENT.commentsTitle;
       return [createSkeletonList()];
     },
     renderData: (page: GameCommentsPage): readonly Node[] => [
       createCommentList(page.comments, {
+        slug,
         getAvatarClass,
         requireSession: options.requireSession,
         onUnconfirmed: (): void => {
