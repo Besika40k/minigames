@@ -1,0 +1,61 @@
+rules_version = '2';
+
+// The rules of the MiniGames Firestore database. Paste them in the Firebase
+// console (Firestore Database, Rules) and publish them; this file keeps the
+// published version with the code that depends on it (src/api/own-game-store.ts).
+//
+// Everyone may read. A signed-in user may add or remove only their own
+// favorite or like, a document named by their user id, and may add comments
+// in their own name. Nothing can be changed afterwards, and every document
+// carries the server's time.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // The games of MiniGames itself: no other game has data here
+    function isOwnGame(slug) {
+      return slug in ['alchemists-cauldron'];
+    }
+
+    function isUser(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // A favorite or a like holds only the time it was made
+    function isStamp() {
+      return request.resource.data.keys().hasOnly(['createdAt'])
+        && request.resource.data.createdAt == request.time;
+    }
+
+    function isComment() {
+      let comment = request.resource.data;
+      return comment.keys().hasOnly(['authorId', 'authorName', 'text', 'createdAt'])
+        && comment.authorId == request.auth.uid
+        && comment.authorName is string
+        && comment.authorName.size() > 0
+        && comment.authorName.size() <= 100
+        && comment.text is string
+        && comment.text.size() > 0
+        && comment.text.size() <= 500
+        && comment.createdAt == request.time;
+    }
+
+    match /games/{slug}/favorites/{userId} {
+      allow read: if isOwnGame(slug);
+      allow create: if isOwnGame(slug) && isUser(userId) && isStamp();
+      allow delete: if isOwnGame(slug) && isUser(userId);
+    }
+
+    match /games/{slug}/comments/{commentId} {
+      allow read: if isOwnGame(slug);
+      allow create: if isOwnGame(slug) && request.auth != null && isComment();
+
+      match /likes/{userId} {
+        allow read: if isOwnGame(slug);
+        allow create: if isOwnGame(slug)
+          && isUser(userId)
+          && isStamp()
+          && exists(/databases/$(database)/documents/games/$(slug)/comments/$(commentId));
+        allow delete: if isOwnGame(slug) && isUser(userId);
+      }
+    }
+  }
+}
