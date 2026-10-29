@@ -1,13 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
+import { loadOwnGames } from '../../api/game-backend.ts';
 import { showSnackbar } from '../../components/snackbar/snackbar.ts';
 import { LIBRARY_CONTENT } from '../../data/library.ts';
+import { OWN_GAMES } from '../../data/own-games.ts';
 import { SnackbarVariant } from '../../types/feedback.ts';
-import type { Game } from '../../types/game.ts';
+import type { Game, OwnGame } from '../../types/game.ts';
 import { LibraryParameter } from '../../types/library.ts';
 import { Route, type AppLocation, type PageView } from '../../types/route.ts';
 import { renderLibraryPage } from './library-page.ts';
 
 vi.mock('../../components/snackbar/snackbar.ts', () => ({ showSnackbar: vi.fn() }));
+vi.mock('../../api/game-backend.ts', () => ({ loadOwnGames: vi.fn() }));
 
 type FetchMock = Mock<typeof fetch>;
 type Navigate = Mock<(query: URLSearchParams, isReplace: boolean) => void>;
@@ -106,6 +109,7 @@ async function settle(): Promise<void> {
 
 beforeEach((): void => {
   vi.clearAllMocks();
+  vi.mocked(loadOwnGames).mockResolvedValue(OWN_GAMES);
 });
 
 afterEach((): void => {
@@ -191,6 +195,17 @@ describe('Library page', (): void => {
     await settle();
 
     expect(document.querySelector('.own-games .game-card')).toBe(card);
+  });
+
+  it('shows the likes Firestore counts on the pinned card', async (): Promise<void> => {
+    vi.mocked(loadOwnGames).mockResolvedValue(
+      OWN_GAMES.map((game: OwnGame): OwnGame => ({ ...game, likesCount: 12 })),
+    );
+    stubApi();
+    renderPage('');
+    await settle();
+
+    expect(getText('.own-games .game-card__likes')).toEqual(['Likes: 12']);
   });
 
   it('leaves the pinned games out of other pages and categories', async (): Promise<void> => {

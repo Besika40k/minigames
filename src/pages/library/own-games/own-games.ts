@@ -1,3 +1,4 @@
+import { loadOwnGames } from '../../../api/game-backend.ts';
 import { LIBRARY_CONTENT } from '../../../data/library.ts';
 import { OWN_GAMES } from '../../../data/own-games.ts';
 import type { Game, OwnGame } from '../../../types/game.ts';
@@ -19,9 +20,9 @@ export interface OwnGamesSection {
 // The games of MiniGames itself in the chosen category. They stand above the
 // first page only: the API knows nothing of them, so they are pinned there
 // instead of being sorted into its pages.
-function getPinnedGames(query: LibraryQuery): readonly OwnGame[] {
+function getPinnedGames(games: readonly OwnGame[], query: LibraryQuery): readonly OwnGame[] {
   return query.page === FIRST_PAGE
-    ? OWN_GAMES.filter(
+    ? games.filter(
         (game: OwnGame): boolean =>
           query.category === ALL_CATEGORIES || game.category === query.category,
       )
@@ -55,12 +56,17 @@ export function createOwnGamesSection(onDetailsClick?: (game: Game) => void): Ow
     attributes: { 'aria-labelledby': TITLE_ID },
     children: [createElement('div', { className: 'own-games__inner', children: [panel] })],
   });
-  // The games whose cards are in the section
+  // The games with their likes, once Firestore has counted them
+  let ownGames: readonly OwnGame[] = OWN_GAMES;
+  // The state of the Library the section shows, and the games whose cards
+  // are in it
+  let shownQuery: LibraryQuery | undefined;
   let shownGames: readonly OwnGame[] = [];
   element.hidden = true;
 
   const show = (query: LibraryQuery): void => {
-    const games: readonly OwnGame[] = getPinnedGames(query);
+    shownQuery = query;
+    const games: readonly OwnGame[] = getPinnedGames(ownGames, query);
     element.hidden = games.length === 0;
     // The same games keep their cards, so the pictures are not drawn again
     const isSame: boolean =
@@ -79,6 +85,16 @@ export function createOwnGamesSection(onDetailsClick?: (game: Game) => void): Ow
       ),
     );
   };
+
+  // The cards show at once with the likes of the games' data, and again with
+  // the likes Firestore counts
+  const showCountedLikes = async (): Promise<void> => {
+    ownGames = await loadOwnGames();
+    if (shownQuery !== undefined) {
+      show(shownQuery);
+    }
+  };
+  void showCountedLikes();
 
   return { element, show };
 }
