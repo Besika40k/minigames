@@ -66,35 +66,19 @@ function createSpecs(specs: GameSpecs): HTMLDListElement {
   return createElement('dl', { className: 'game-details__specs', children: items });
 }
 
-// Play Now (or Buy Now) and Favorites, for a game of the API. Play Now does
-// nothing yet. The likes count the users who have the game among their
-// favorites, so they follow the Favorites button.
-function createApiGameActions(
-  game: GameDetails,
-  likesCount: HTMLSpanElement,
-  options: GameInfoOptions,
-): readonly HTMLElement[] {
-  const favoriteButton: HTMLButtonElement = createFavoriteButton({
-    ...options,
-    game,
-    onLikesChange: (count: number): void => {
-      likesCount.textContent = formatCompactNumber(count);
-    },
-  });
-
-  const playButton: HTMLButtonElement = createButton({
+// Play Now of a game of the API, or Buy Now for one that is not free. It does
+// nothing yet.
+function createPlayButton(price: string): HTMLButtonElement {
+  return createButton({
     variant: ButtonVariant.Filled,
     size: ButtonSize.Medium,
-    text: getPlayText(game.specs.price),
+    text: getPlayText(price),
     className: 'game-details__play',
   });
-
-  return [playButton, favoriteButton];
 }
 
-// Play Now of a game of MiniGames itself: a link to the site the game is played
-// on. The API keeps favorites only for its own games, so this game has no
-// Favorites button.
+// Play Now of a game of MiniGames itself: a link to the site the game is
+// played on
 function createPlayLink(playUrl: string): HTMLAnchorElement {
   return createButtonLink({
     variant: ButtonVariant.Filled,
@@ -115,10 +99,17 @@ export function createGameDetailsInfo(
   const likesCount: HTMLSpanElement = createElement('span', {
     text: formatCompactNumber(game.likesCount),
   });
-  const actions: readonly HTMLElement[] =
-    game.playUrl === undefined
-      ? createApiGameActions(game, likesCount, options)
-      : [createPlayLink(game.playUrl)];
+  // The likes count the users who have the game among their favorites, so
+  // they follow the Favorites button
+  const favoriteButton: HTMLButtonElement = createFavoriteButton({
+    ...options,
+    game,
+    onLikesChange: (count: number): void => {
+      likesCount.textContent = formatCompactNumber(count);
+    },
+  });
+  const playButton: HTMLElement =
+    game.playUrl === undefined ? createPlayButton(game.specs.price) : createPlayLink(game.playUrl);
 
   const header: HTMLDivElement = createElement('div', {
     className: 'game-details__header',
@@ -139,7 +130,10 @@ export function createGameDetailsInfo(
       header,
       createElement('p', { className: 'game-details__description', text: game.fullDescription }),
       createSpecs(game.specs),
-      createElement('div', { className: 'game-details__actions', children: actions }),
+      createElement('div', {
+        className: 'game-details__actions',
+        children: [playButton, favoriteButton],
+      }),
     ],
   });
 }
