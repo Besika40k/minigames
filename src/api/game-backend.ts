@@ -14,7 +14,7 @@ import { fetchGameDetails } from './games-api.ts';
 import { toggleCommentLike } from './likes-api.ts';
 import { findOwnGame } from './own-games.ts';
 
-type OwnGameStore = typeof import('./own-game-store.ts');
+export type OwnGameStore = typeof import('./own-game-store.ts');
 
 // The store, once it has started to load
 const loading: { store?: Promise<OwnGameStore> } = {};
@@ -23,7 +23,7 @@ const loading: { store?: Promise<OwnGameStore> } = {};
 // itself needs it. The details and the comments ask for it at the same time,
 // and both wait for the one download. A download that fails is tried again on
 // the next call.
-async function loadOwnGameStore(): Promise<OwnGameStore> {
+export async function loadOwnGameStore(): Promise<OwnGameStore> {
   loading.store ??= import('./own-game-store.ts');
   try {
     return await loading.store;
