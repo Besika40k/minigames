@@ -19,6 +19,7 @@ import {
   type QueryDocumentSnapshot,
 } from 'firebase/firestore/lite';
 import { FIRESTORE_ERROR_MESSAGES } from '../data/firestore.ts';
+import { OWN_GAMES } from '../data/own-games.ts';
 import type { OwnGame } from '../types/game.ts';
 import type {
   CommentLikeState,
@@ -220,5 +221,22 @@ export async function toggleOwnGameCommentLike(
     const { isOn, count } = await toggleDocument(likes, userId);
 
     return { isLikedByCurrentUser: isOn, likesCount: count };
+  });
+}
+
+// The slugs of the games of MiniGames itself the user has among their
+// favorites
+export async function listOwnGameFavorites(userEmail: string): Promise<readonly string[]> {
+  return run(async (): Promise<readonly string[]> => {
+    const userId: string = await requireUserId(userEmail);
+    const favoriteFlags: readonly boolean[] = await Promise.all(
+      OWN_GAMES.map((game: OwnGame): Promise<boolean> =>
+        hasDocument(getFavorites(game.slug), userId),
+      ),
+    );
+
+    return OWN_GAMES.filter(
+      (_game: OwnGame, index: number): boolean => favoriteFlags[index] === true,
+    ).map((game: OwnGame): string => game.slug);
   });
 }
