@@ -1,8 +1,9 @@
 import { describe, expect, it, vi, type Mock } from 'vitest';
+import type { Game } from '../types/game.ts';
 import type { GameDetails } from '../types/game-details.ts';
 import { API_BASE_URL } from './api-config.ts';
 import { ApiErrorKind } from './api-error.ts';
-import { fetchGameDetails } from './games-api.ts';
+import { fetchAllGames, fetchGameDetails } from './games-api.ts';
 
 type FetchMock = Mock<typeof fetch>;
 
@@ -77,5 +78,44 @@ describe('fetchGameDetails', (): void => {
     await expect(fetchGameDetails('chess', new AbortController().signal)).rejects.toMatchObject({
       kind: ApiErrorKind.InvalidResponse,
     });
+  });
+});
+
+// A game of a list answer, as GET /api/games sends it
+function createListGame(slug: string): Record<string, unknown> {
+  return {
+    slug,
+    name: slug,
+    category: 'puzzle',
+    price: 'Free',
+    shortDescription: 'Short.',
+    rating: 4.5,
+    likesCount: 10,
+    cardImage: `/assets/images/games/${slug}-card.jpg`,
+  };
+}
+
+describe('fetchAllGames', (): void => {
+  it('asks for every page of the catalog and joins the games', async (): Promise<void> => {
+    const fetchMock: FetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        Response.json({ data: [createListGame('a')], meta: { page: 1, totalPages: 2 } }),
+      )
+      .mockResolvedValueOnce(
+        Response.json({ data: [createListGame('b')], meta: { page: 2, totalPages: 2 } }),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const games: readonly Game[] = await fetchAllGames(new AbortController().signal);
+
+    expect(games.map((game: Game): string => game.slug)).toEqual(['a', 'b']);
+    const queries: string[] = fetchMock.mock.calls.map(
+      ([input]: Parameters<typeof fetch>): string => (input instanceof URL ? input.search : ''),
+    );
+    expect(queries).toEqual([
+      '?category=all&sort=name-asc&page=1&limit=50',
+      '?category=all&sort=name-asc&page=2&limit=50',
+    ]);
   });
 });

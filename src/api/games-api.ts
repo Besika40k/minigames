@@ -1,12 +1,19 @@
 import type { Game, GamesPage } from '../types/game.ts';
 import type { GameDetails, GameSpecs, TopRecord } from '../types/game-details.ts';
-import type { LibraryQuery } from '../types/library.ts';
+import { SortOrder, type LibraryQuery } from '../types/library.ts';
 import { isArrayOf, isBoolean, isNumber, isRecord, isString } from './guards.ts';
 import { getJson, type QueryParameters } from './http-client.ts';
 import { createInvalidResponseError, readData, readList } from './response.ts';
 
 // The Library shows six games on a page, the page size the task asks for
 const PAGE_SIZE = 6;
+
+// The whole catalog comes in pages this large, as few requests as the API's
+// pages allow
+const ALL_GAMES_PAGE_SIZE = 50;
+
+// The category the API gives every game
+const ALL_GAMES_CATEGORY = 'all';
 
 // The API names its images by paths such as "/assets/images/games/palia-card.jpg"
 // but does not serve them. The app ships the same files in public/assets, so a
@@ -154,4 +161,25 @@ export async function fetchGameDetails(
   const body: unknown = await getJson(`/games/${encodeURIComponent(slug)}`, parameters, signal);
 
   return toGameDetails(readData(body));
+}
+
+// Every game of the API, page by page in the order of their names
+export async function fetchAllGames(signal: AbortSignal): Promise<readonly Game[]> {
+  const games: Game[] = [];
+  let page: number = 1;
+  let totalPages: number = 1;
+  while (page <= totalPages) {
+    const parameters: QueryParameters = {
+      category: ALL_GAMES_CATEGORY,
+      sort: SortOrder.NameAscending,
+      page: String(page),
+      limit: String(ALL_GAMES_PAGE_SIZE),
+    };
+    const body: unknown = await getJson('/games', parameters, signal);
+    games.push(...readList(body, toGame));
+    totalPages = readPageNumbers(body).totalPages;
+    page += 1;
+  }
+
+  return games;
 }
