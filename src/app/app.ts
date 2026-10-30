@@ -1,3 +1,4 @@
+import { fetchUserProfile } from '../api/profile-api.ts';
 import { createAuthActions, type AuthActions, type AuthService } from '../auth/auth-actions.ts';
 import { SESSION_STORAGE_KEY } from '../auth/session.ts';
 import { createSessionStore, type SessionStore } from '../auth/session-store.ts';
@@ -12,11 +13,13 @@ import { PAGE_TITLES } from '../data/pages.ts';
 import { renderHomePage } from '../pages/home/home-page.ts';
 import { renderLibraryPage } from '../pages/library/library-page.ts';
 import { renderNotFoundPage } from '../pages/not-found/not-found-page.ts';
+import { renderProfilePage } from '../pages/profile/profile-page.ts';
 import { AuthMode, type AuthDialog } from '../types/auth.ts';
 import type { BurgerMenu } from '../types/burger-menu.ts';
 import { SnackbarVariant } from '../types/feedback.ts';
 import type { Game } from '../types/game.ts';
 import type { GameDetailsDialog } from '../types/game-details.ts';
+import type { UserProfile } from '../types/profile.ts';
 import type { AppSession } from '../types/session.ts';
 import {
   DialogParameter,
@@ -138,10 +141,50 @@ export function startApp(): void {
     onAuthClick: openAuth,
     onLogout: logOut,
   });
+  // The picture of the signed-in user's profile, which the header and the
+  // menu show in place of the account's photo
+  const profilePhoto: { email?: string; photo?: string } = {};
+
   // The header and the menu show the signed-in profile or the guest buttons
+  const showSession = (current: AppSession | undefined): void => {
+    const shown: AppSession | undefined =
+      current !== undefined &&
+      current.email === profilePhoto.email &&
+      profilePhoto.photo !== undefined
+        ? { ...current, avatarUrl: profilePhoto.photo }
+        : current;
+    header.setSession(shown);
+    menu.setSession(shown);
+  };
+
+  // A picture that belongs to the user signed in now
+  const setProfilePhoto = (email: string, photo: string | undefined): void => {
+    if (email !== profilePhoto.email || photo === profilePhoto.photo) {
+      return;
+    }
+    profilePhoto.photo = photo;
+    showSession(session.getCurrent());
+  };
+
+  // The picture loads once for each user who signs in. Without it the header
+  // keeps the account's photo or the initials.
+  const loadProfilePhoto = async (current: AppSession | undefined): Promise<void> => {
+    if (current === undefined || current.email === profilePhoto.email) {
+      return;
+    }
+    profilePhoto.email = current.email;
+    profilePhoto.photo = undefined;
+    try {
+      const profile: UserProfile = await fetchUserProfile(current.email);
+      setProfilePhoto(current.email, profile.photo);
+    } catch {
+      // The header shows what the account has
+    }
+  };
+
   session.subscribe((current: AppSession | undefined): void => {
-    header.setSession(current);
-    menu.setSession(current);
+    showSession(current);
+    void loadProfilePhoto(current);
   });
 
   // A change such as a favorite needs an active session. Without one, the auth
@@ -222,6 +265,26 @@ export function startApp(): void {
           onGameOpen: openGame,
           onNavigate: (query: URLSearchParams, isReplace: boolean): void => {
             router.navigate({ query }, { isReplace });
+          },
+        }),
+    },
+    {
+      path: Route.Profile,
+      title: PAGE_TITLES.profile,
+      render: (location: AppLocation): PageView =>
+        renderProfilePage(location, {
+          getSession: session.getCurrent,
+          subscribe: session.subscribe,
+          requireSession,
+          onLogin: (): void => {
+            openAuth(AuthMode.Login);
+          },
+          onGameOpen: openGame,
+          onPhotoChange: (photo: string | undefined): void => {
+            const current: AppSession | undefined = session.getCurrent();
+            if (current !== undefined) {
+              setProfilePhoto(current.email, photo);
+            }
           },
         }),
     },

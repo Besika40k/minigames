@@ -54,10 +54,11 @@ describe('toBrowserUrl', (): void => {
 });
 
 describe('parseRoute', (): void => {
-  it('knows both paths of the Home page and the Library page', (): void => {
+  it('knows both paths of the Home page, the Library page and the profile', (): void => {
     expect(parseRoute('/')).toBe(Route.Home);
     expect(parseRoute('/home')).toBe(Route.Home);
     expect(parseRoute('/library')).toBe(Route.Library);
+    expect(parseRoute('/profile')).toBe(Route.Profile);
   });
 
   it('has no page for an unknown path', (): void => {
