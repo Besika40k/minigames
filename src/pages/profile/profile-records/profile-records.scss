@@ -1,0 +1,7 @@
+@use 'abstracts' as *;
+
+.profile-records {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(3);
+}

@@ -1,0 +1,71 @@
+@use 'abstracts' as *;
+@use 'sass:list';
+
+// The tiles are as wide as the space gives, never narrower than this
+$tile-min-width: 240px;
+$image-ratio: list.slash(460, 215);
+
+.profile-favorites {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(3);
+}
+
+.profile-favorites__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, $tile-min-width), 1fr));
+  gap: get-size(3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include media-down(mobile) {
+    gap: get-size(2);
+  }
+}
+
+// The photo and the name of a game, as one button with the site's card look
+.profile-favorites__tile {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: $border-width solid get-color(on-primary);
+  border-radius: get-radius(large);
+  background-color: get-color(white);
+  box-shadow: get-shadow(small-card);
+  color: get-color(on-primary);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: transform get-duration(fast);
+
+  @include hover {
+    transform: translateY(-1 * get-size(0.5));
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+.profile-favorites__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: $image-ratio;
+  object-fit: cover;
+}
+
+.profile-favorites__name {
+  padding: get-size(1) + get-size(0.5) get-size(2);
+  font-size: get-font-size(body-medium);
+  font-weight: get-font-weight(bold);
+}
+
+.profile-favorites__skeleton {
+  display: block;
+  aspect-ratio: $image-ratio;
+  border-radius: get-radius(large);
+}
