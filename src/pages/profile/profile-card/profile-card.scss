@@ -1,0 +1,203 @@
+@use 'abstracts' as *;
+
+// The avatar of the page is the header's avatar, larger
+$avatar-size: 120px;
+$avatar-size-mobile: 88px;
+$avatar-initials-size: 40px;
+$avatar-initials-size-mobile: 28px;
+$bio-max-width: 720px;
+$bio-line-height: 1.5;
+// The bars of the loading bio
+$skeleton-short-width: 60%;
+
+// A white card with the stroke and hard shadow of the site's cards
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(4);
+  padding: get-size(4);
+  border: $border-width solid get-color(on-primary);
+  border-radius: get-radius(extra-large);
+  background-color: get-color(white);
+  box-shadow: get-shadow(level-1);
+
+  @include media-down(mobile) {
+    gap: get-size(3);
+    padding: get-size(2);
+    border-radius: get-radius(large);
+  }
+}
+
+.profile-card__top {
+  display: flex;
+  align-items: center;
+  gap: get-size(3);
+
+  @include media-down(mobile) {
+    flex-direction: column;
+    gap: get-size(2);
+    text-align: center;
+  }
+}
+
+.profile-card__avatar .profile-avatar {
+  width: $avatar-size;
+  height: $avatar-size;
+  font-size: $avatar-initials-size;
+
+  svg {
+    width: get-size(6);
+    height: get-size(6);
+  }
+
+  @include media-down(mobile) {
+    width: $avatar-size-mobile;
+    height: $avatar-size-mobile;
+    font-size: $avatar-initials-size-mobile;
+  }
+}
+
+.profile-card__identity {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(1);
+  min-width: 0;
+
+  @include media-down(mobile) {
+    align-items: center;
+  }
+}
+
+.profile-card__name {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: get-color(on-primary);
+  font-size: get-font-size(display-medium);
+  font-weight: get-font-weight(bold);
+
+  @include media-down(mobile) {
+    font-size: get-font-size(display-small);
+  }
+}
+
+.profile-card__email {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: get-color(on-bg);
+  font-size: get-font-size(body-medium);
+}
+
+.profile-card__picture-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: get-size(1);
+  margin-block-start: get-size(1);
+
+  @include media-down(mobile) {
+    justify-content: center;
+  }
+}
+
+// The file field opens from the Change picture button
+.profile-card__file {
+  display: none;
+}
+
+.profile-card__about {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(2);
+  padding-block-start: get-size(3);
+  border-block-start: $border-width-hairline solid get-color(outline);
+}
+
+.profile-card__about-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: get-size(2);
+}
+
+.profile-card__subtitle {
+  margin: 0;
+  color: get-color(on-primary);
+  font-size: get-font-size(headline-small);
+  font-weight: get-font-weight(bold);
+}
+
+.profile-card__bio {
+  max-width: $bio-max-width;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: get-color(on-primary);
+  font-size: get-font-size(body-medium);
+  line-height: $bio-line-height;
+  white-space: pre-line;
+}
+
+.profile-card__bio--empty {
+  color: get-color(on-bg-low);
+}
+
+.profile-card__bio-form {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(1);
+  max-width: $bio-max-width;
+}
+
+.profile-card__bio-input {
+  padding: get-size(1) + get-size(0.5) get-size(2);
+  border: $border-width solid get-color(on-primary);
+  border-radius: get-radius(medium);
+  color: get-color(on-primary);
+  font: inherit;
+  font-size: get-font-size(body-medium);
+  line-height: $bio-line-height;
+  resize: vertical;
+
+  &[aria-invalid='true'] {
+    border-color: get-color(error);
+  }
+}
+
+.profile-card__counter {
+  margin: 0;
+  color: get-color(on-bg);
+  font-size: get-font-size(label-large);
+}
+
+.profile-card__counter--error {
+  color: get-color(error);
+}
+
+.profile-card__form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: get-size(1);
+}
+
+.profile-card__hidden {
+  @include visually-hidden;
+}
+
+.profile-card__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(1);
+  max-width: $bio-max-width;
+}
+
+.profile-card__skeleton-line {
+  height: get-size(2);
+}
+
+.profile-card__skeleton-line--short {
+  width: $skeleton-short-width;
+}
+
+// The buttons and the bio form set their own display, so a hidden one needs
+// this to stay out of sight
+.profile-card [hidden] {
+  display: none;
+}
