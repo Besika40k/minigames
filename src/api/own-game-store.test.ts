@@ -9,7 +9,7 @@ import {
   Timestamp,
 } from 'firebase/firestore/lite';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { OWN_GAME_ERROR_MESSAGES } from '../data/own-games.ts';
+import { FIRESTORE_ERROR_MESSAGES } from '../data/firestore.ts';
 import { ApiError, ApiErrorKind } from './api-error.ts';
 import {
   countOwnGameLikes,
@@ -174,7 +174,7 @@ describe('toggleOwnGameFavorite', (): void => {
     auth.currentUser = undefined;
 
     await expect(toggleOwnGameFavorite(SLUG, EMAIL)).rejects.toEqual(
-      new ApiError(ApiErrorKind.Unauthorized, OWN_GAME_ERROR_MESSAGES.signedOut),
+      new ApiError(ApiErrorKind.Unauthorized, FIRESTORE_ERROR_MESSAGES.signedOut),
     );
     expect(setDoc).not.toHaveBeenCalled();
   });
@@ -183,7 +183,7 @@ describe('toggleOwnGameFavorite', (): void => {
     vi.mocked(setDoc).mockRejectedValue(new FirebaseError('permission-denied', 'denied'));
 
     await expect(toggleOwnGameFavorite(SLUG, EMAIL)).rejects.toEqual(
-      new ApiError(ApiErrorKind.Unauthorized, OWN_GAME_ERROR_MESSAGES.refused),
+      new ApiError(ApiErrorKind.Unauthorized, FIRESTORE_ERROR_MESSAGES.refused),
     );
   });
 

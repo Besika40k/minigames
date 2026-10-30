@@ -1,4 +1,3 @@
-import { FirebaseError } from 'firebase/app';
 import {
   addDoc,
   collection,
@@ -7,7 +6,6 @@ import {
   getCount,
   getDoc,
   getDocs,
-  getFirestore,
   limit,
   orderBy,
   query,
@@ -17,11 +15,10 @@ import {
   type CollectionReference,
   type DocumentReference,
   type DocumentSnapshot,
-  type Firestore,
   type Query,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore/lite';
-import { OWN_GAME_ERROR_MESSAGES } from '../data/own-games.ts';
+import { FIRESTORE_ERROR_MESSAGES } from '../data/firestore.ts';
 import type { OwnGame } from '../types/game.ts';
 import type {
   CommentLikeState,
@@ -32,7 +29,7 @@ import type {
   NewComment,
 } from '../types/game-details.ts';
 import { ApiError, ApiErrorKind } from './api-error.ts';
-import { getFirebaseApp } from './firebase-app.ts';
+import { getDatabase, getUserId, requireUserId, run } from './firestore.ts';
 import { isRecord, isString } from './guards.ts';
 import { findOwnGame, getOwnGameDetails } from './own-games.ts';
 
@@ -57,92 +54,13 @@ const LIKES = 'likes';
 // The dialog shows the three newest comments of a game, as for the API's games
 const LATEST_COMMENTS = 3;
 
-// Firestore starts once: later calls get the same instance
-const started: { firestore?: Firestore } = {};
-
-function getDatabase(): Firestore {
-  started.firestore ??= getFirestore(getFirebaseApp());
-
-  return started.firestore;
-}
-
-// The failures of Firestore (its error codes), by the kind of ApiError the
-// app already knows how to show. A code missing here is a failure of the
-// server, whose outcome is unknown.
-const KINDS_BY_CODE: ReadonlyMap<string, ApiErrorKind> = new Map([
-  ['permission-denied', ApiErrorKind.Unauthorized],
-  ['unauthenticated', ApiErrorKind.Unauthorized],
-  ['not-found', ApiErrorKind.NotFound],
-  ['resource-exhausted', ApiErrorKind.RateLimit],
-  ['invalid-argument', ApiErrorKind.BadRequest],
-  ['failed-precondition', ApiErrorKind.BadRequest],
-  ['unavailable', ApiErrorKind.Network],
-  ['deadline-exceeded', ApiErrorKind.Network],
-]);
-
-const MESSAGES_BY_KIND: Readonly<Record<ApiErrorKind, string>> = {
-  [ApiErrorKind.Unauthorized]: OWN_GAME_ERROR_MESSAGES.refused,
-  [ApiErrorKind.NotFound]: OWN_GAME_ERROR_MESSAGES.notFound,
-  [ApiErrorKind.RateLimit]: OWN_GAME_ERROR_MESSAGES.rateLimit,
-  [ApiErrorKind.BadRequest]: OWN_GAME_ERROR_MESSAGES.refused,
-  [ApiErrorKind.Network]: OWN_GAME_ERROR_MESSAGES.network,
-  [ApiErrorKind.Server]: OWN_GAME_ERROR_MESSAGES.failed,
-  [ApiErrorKind.InvalidResponse]: OWN_GAME_ERROR_MESSAGES.invalidData,
-};
-
-function toApiError(error: unknown): ApiError {
-  if (error instanceof ApiError) {
-    return error;
-  }
-  const code: string | undefined = error instanceof FirebaseError ? error.code : undefined;
-  const kind: ApiErrorKind =
-    (code === undefined ? undefined : KINDS_BY_CODE.get(code)) ?? ApiErrorKind.Server;
-
-  return new ApiError(kind, MESSAGES_BY_KIND[kind]);
-}
-
-// Runs the Firestore calls of one operation and turns any failure into an
-// ApiError, as the dialog expects of a backend
-async function run<T>(operation: () => Promise<T>): Promise<T> {
-  try {
-    return await operation();
-  } catch (error: unknown) {
-    throw toApiError(error);
-  }
-}
-
 function findGame(slug: string): OwnGame {
   const game: OwnGame | undefined = findOwnGame(slug);
   if (game === undefined) {
-    throw new ApiError(ApiErrorKind.NotFound, OWN_GAME_ERROR_MESSAGES.notFound);
+    throw new ApiError(ApiErrorKind.NotFound, FIRESTORE_ERROR_MESSAGES.notFound);
   }
 
   return game;
-}
-
-// The id of the user Firebase has signed in, or undefined for a guest. A
-// signed-in visitor's page has loaded sign-in already; a guest asks for no id,
-// so a guest's visit never downloads it.
-async function getUserId(userEmail: string | undefined): Promise<string | undefined> {
-  if (userEmail === undefined) {
-    return undefined;
-  }
-  const { getFirebaseAuth } = await import('../auth/firebase.ts');
-  const auth = getFirebaseAuth();
-  // After a reload Firebase reads its sign-in back first
-  await auth.authStateReady();
-
-  return auth.currentUser?.uid;
-}
-
-// A change needs the signed-in user: the rules accept it only from that user
-async function requireUserId(userEmail: string): Promise<string> {
-  const userId: string | undefined = await getUserId(userEmail);
-  if (userId === undefined) {
-    throw new ApiError(ApiErrorKind.Unauthorized, OWN_GAME_ERROR_MESSAGES.signedOut);
-  }
-
-  return userId;
 }
 
 function getFavorites(slug: string): CollectionReference {
@@ -233,7 +151,7 @@ async function toComment(
   const data: unknown = snapshot.data();
   const { authorName, text, createdAt } = isRecord(data) ? data : {};
   if (!isString(authorName) || !isString(text) || !(createdAt instanceof Timestamp)) {
-    throw new ApiError(ApiErrorKind.InvalidResponse, OWN_GAME_ERROR_MESSAGES.invalidData);
+    throw new ApiError(ApiErrorKind.InvalidResponse, FIRESTORE_ERROR_MESSAGES.invalidData);
   }
   const likes: CollectionReference = collection(snapshot.ref, LIKES);
   const [likesCount, isLikedByCurrentUser] = await Promise.all([
