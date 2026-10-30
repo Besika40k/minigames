@@ -4,5 +4,6 @@ import type { PageTitles } from '../types/route.ts';
 export const PAGE_TITLES: PageTitles = {
   home: 'MiniGames',
   library: 'Game Library | MiniGames',
+  profile: 'My Profile | MiniGames',
   notFound: 'Page Not Found | MiniGames',
 };

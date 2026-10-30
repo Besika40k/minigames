@@ -3,6 +3,7 @@ import type { AuthMode } from './auth.ts';
 export enum Route {
   Home = '/',
   Library = '/library',
+  Profile = '/profile',
 }
 
 // Where the app is: the path after the app's base, the page of that path
@@ -57,5 +58,6 @@ export interface RouteDefinition extends PageDefinition {
 export interface PageTitles {
   readonly home: string;
   readonly library: string;
+  readonly profile: string;
   readonly notFound: string;
 }
