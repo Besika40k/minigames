@@ -61,6 +61,10 @@ describe('header', (): void => {
 
     expect(getButtonTexts(header)).toEqual(['Log Out']);
     expect(header.element.querySelector('.header__profile')?.textContent).toBe('APAlex Pro');
+    // The name leads to the profile page
+    expect(header.element.querySelector('a.header__profile')?.getAttribute('href')).toBe(
+      '/profile',
+    );
     // The menu button stays
     expect(header.element.querySelector('.header__burger')).toBe(header.menuButton);
   });
