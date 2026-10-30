@@ -15,6 +15,7 @@ import {
   countOwnGameLikes,
   fetchOwnGameComments,
   fetchOwnGameDetails,
+  listOwnGameFavorites,
   postOwnGameComment,
   toggleOwnGameCommentLike,
   toggleOwnGameFavorite,
@@ -259,5 +260,17 @@ describe('toggleOwnGameCommentLike', (): void => {
       { path: `games/${SLUG}/comments/c1/likes/${USER_ID}` },
       { createdAt: 'server-time' },
     );
+  });
+});
+
+describe('listOwnGameFavorites', (): void => {
+  it("names the own games among the user's favorites", async (): Promise<void> => {
+    answerDocuments([`games/${SLUG}/favorites/${USER_ID}`]);
+
+    await expect(listOwnGameFavorites(EMAIL)).resolves.toEqual([SLUG]);
+  });
+
+  it('names none when the user has no favorite', async (): Promise<void> => {
+    await expect(listOwnGameFavorites(EMAIL)).resolves.toEqual([]);
   });
 });
