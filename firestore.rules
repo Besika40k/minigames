@@ -2,12 +2,14 @@ rules_version = '2';
 
 // The rules of the MiniGames Firestore database. Paste them in the Firebase
 // console (Firestore Database, Rules) and publish them; this file keeps the
-// published version with the code that depends on it (src/api/own-game-store.ts).
+// published version with the code that depends on it (src/api/own-game-store.ts
+// and src/api/profile-store.ts).
 //
-// Everyone may read. A signed-in user may add or remove only their own
-// favorite or like, a document named by their user id, and may add comments
-// in their own name. Nothing can be changed afterwards, and every document
-// carries the server's time.
+// Everyone may read the data of the games. A signed-in user may add or remove
+// only their own favorite or like, a document named by their user id, and may
+// add comments in their own name. Nothing of a game can be changed afterwards,
+// and every document carries the server's time. A profile belongs to its user
+// alone.
 service cloud.firestore {
   match /databases/{database}/documents {
     // The games of MiniGames itself: no other game has data here
@@ -36,6 +38,26 @@ service cloud.firestore {
         && comment.text.size() > 0
         && comment.text.size() <= 500
         && comment.createdAt == request.time;
+    }
+
+    // A profile holds a bio of at most 300 characters and a small picture in
+    // the text of a WebP or JPEG data: address, or an empty text for none
+    function isProfile() {
+      let profile = request.resource.data;
+      return profile.keys().hasOnly(['bio', 'photo', 'updatedAt'])
+        && profile.bio is string
+        && profile.bio.size() <= 300
+        && profile.photo is string
+        && (profile.photo == ''
+          || (profile.photo.size() <= 60000
+            && profile.photo.matches('data:image/(webp|jpeg);base64,[A-Za-z0-9+/=]+')))
+        && profile.updatedAt == request.time;
+    }
+
+    // Only its user may read or write a profile
+    match /users/{userId} {
+      allow read: if isUser(userId);
+      allow create, update: if isUser(userId) && isProfile();
     }
 
     match /games/{slug}/favorites/{userId} {
