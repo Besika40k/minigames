@@ -10,7 +10,7 @@ import { createIcon, IconName } from '../../utils/create-icon.ts';
 import { PageLinks } from '../../utils/page-links.ts';
 import { createButton } from '../button/button.ts';
 import { createLogo } from '../logo/logo.ts';
-import { createProfileSummary } from '../profile/profile.ts';
+import { createProfileLink } from '../profile/profile.ts';
 import './header.scss';
 
 export interface HeaderOptions {
@@ -144,7 +144,7 @@ export function createHeader(options: HeaderOptions = {}): Header {
       account.replaceChildren(
         ...(session === undefined
           ? guestButtons
-          : [createProfileSummary(session, 'header__profile'), logoutButton]),
+          : [createProfileLink(session, 'header__profile'), logoutButton]),
       );
       if (wasFocused) {
         account.querySelector('button')?.focus();

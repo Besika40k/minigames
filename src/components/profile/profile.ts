@@ -1,4 +1,7 @@
+import { getRouteHref } from '../../app/router.ts';
+import { PROFILE_CONTENT } from '../../data/profile.ts';
 import type { AuthProfile } from '../../types/auth.ts';
+import { Route } from '../../types/route.ts';
 import { createElement } from '../../utils/create-element.ts';
 import { createIcon, IconName } from '../../utils/create-icon.ts';
 import { getProfileInitials, getProfileName } from '../../utils/profile-name.ts';
@@ -45,6 +48,24 @@ export function createProfileSummary(profile: AuthProfile, className: string): H
 
   return createElement('div', {
     className: `profile-summary ${className}`,
+    children: [
+      createProfileAvatar(name, profile.avatarUrl),
+      createElement('span', { className: 'profile-summary__name', text: name }),
+    ],
+  });
+}
+
+// The avatar and the name of a signed-in user as a link to their profile
+// page. Screen readers hear where it leads before the name.
+export function createProfileLink(profile: AuthProfile, className: string): HTMLAnchorElement {
+  const name: string = getProfileName(profile);
+
+  return createElement('a', {
+    className: `profile-summary profile-summary--link ${className}`,
+    attributes: {
+      href: getRouteHref(Route.Profile),
+      'aria-label': `${PROFILE_CONTENT.title}: ${name}`,
+    },
     children: [
       createProfileAvatar(name, profile.avatarUrl),
       createElement('span', { className: 'profile-summary__name', text: name }),

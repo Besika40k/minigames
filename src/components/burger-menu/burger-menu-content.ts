@@ -10,7 +10,7 @@ import { createIcon, IconName } from '../../utils/create-icon.ts';
 import type { PageLinks } from '../../utils/page-links.ts';
 import { createButton } from '../button/button.ts';
 import { createLogo } from '../logo/logo.ts';
-import { createProfileSummary } from '../profile/profile.ts';
+import { createProfileLink } from '../profile/profile.ts';
 
 export interface MenuContent {
   readonly elements: readonly HTMLElement[];
@@ -109,11 +109,14 @@ function createActions(handlers: MenuContentHandlers): MenuActions {
   return {
     element,
     setSession: (session: AppSession | undefined): void => {
-      element.replaceChildren(
-        ...(session === undefined
-          ? guestButtons
-          : [createProfileSummary(session, 'mobile-menu__profile'), logOut]),
-      );
+      if (session === undefined) {
+        element.replaceChildren(...guestButtons);
+        return;
+      }
+      // The profile link leaves the menu like the page links do
+      const profileLink: HTMLAnchorElement = createProfileLink(session, 'mobile-menu__profile');
+      profileLink.addEventListener('click', handlers.onLinkClick);
+      element.replaceChildren(profileLink, logOut);
     },
   };
 }
