@@ -9,6 +9,7 @@ const ROUTES: ReadonlyMap<string, Route> = new Map([
   ['/', Route.Home],
   ['/home', Route.Home],
   ['/library', Route.Library],
+  ['/profile', Route.Profile],
 ]);
 
 const AUTH_MODES: ReadonlySet<string> = new Set<string>(Object.values(AuthMode));
