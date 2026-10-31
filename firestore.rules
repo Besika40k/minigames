@@ -8,8 +8,8 @@ rules_version = '2';
 // Everyone may read the data of the games. A signed-in user may add or remove
 // only their own favorite or like, a document named by their user id, and may
 // add comments in their own name. Nothing of a game can be changed afterwards,
-// and every document carries the server's time. A profile belongs to its user
-// alone.
+// but a record, which its player can only raise, and every document carries
+// the server's time. A profile belongs to its user alone.
 service cloud.firestore {
   match /databases/{database}/documents {
     // The games of MiniGames itself: no other game has data here
@@ -54,6 +54,24 @@ service cloud.firestore {
         && profile.updatedAt == request.time;
     }
 
+    // The best score of a player on one difficulty of a game, written by the
+    // game itself (Alchemist's Cauldron) and named by the user id and the
+    // difficulty, so a player has one record per difficulty
+    function isGameRecord(recordId) {
+      let record = request.resource.data;
+      return record.keys().hasOnly(['userId', 'playerName', 'score', 'difficulty', 'achievedAt'])
+        && record.userId == request.auth.uid
+        && record.difficulty in ['easy', 'medium', 'hard']
+        && recordId == record.userId + '_' + record.difficulty
+        && record.playerName is string
+        && record.playerName.size() > 0
+        && record.playerName.size() <= 100
+        && record.score is int
+        && record.score > 0
+        && record.score <= 1000000
+        && record.achievedAt == request.time;
+    }
+
     // Only its user may read or write a profile
     match /users/{userId} {
       allow read: if isUser(userId);
@@ -64,6 +82,16 @@ service cloud.firestore {
       allow read: if isOwnGame(slug);
       allow create: if isOwnGame(slug) && isUser(userId) && isStamp();
       allow delete: if isOwnGame(slug) && isUser(userId);
+    }
+
+    // Everyone may read the records; a signed-in player may only raise their own
+    match /games/{slug}/records/{recordId} {
+      allow read: if isOwnGame(slug);
+      allow create: if isOwnGame(slug) && request.auth != null && isGameRecord(recordId);
+      allow update: if isOwnGame(slug)
+        && request.auth != null
+        && isGameRecord(recordId)
+        && request.resource.data.score > resource.data.score;
     }
 
     match /games/{slug}/comments/{commentId} {
