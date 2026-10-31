@@ -16,6 +16,7 @@ import {
   fetchOwnGameComments,
   fetchOwnGameDetails,
   listOwnGameFavorites,
+  listOwnGameRecords,
   postOwnGameComment,
   toggleOwnGameCommentLike,
   toggleOwnGameFavorite,
@@ -40,6 +41,7 @@ vi.mock('firebase/firestore/lite', () => {
     query: vi.fn((reference: FakeReference) => reference),
     orderBy: vi.fn(),
     limit: vi.fn(),
+    where: vi.fn(),
     getCount: vi.fn(),
     getDoc: vi.fn(),
     getDocs: vi.fn(),
@@ -93,6 +95,17 @@ function answerDocuments(paths: readonly string[]): void {
   });
 }
 
+function createRecordDocument(data: unknown): unknown {
+  return { data: () => data };
+}
+
+// The records Firestore gives for every query of records
+function answerRecords(records: readonly unknown[]): void {
+  vi.mocked(getDocs).mockResolvedValue({
+    docs: records.map((data: unknown): unknown => createRecordDocument(data)),
+  } as Awaited<ReturnType<typeof getDocs>>);
+}
+
 function createCommentDocument(id: string, data: unknown): unknown {
   return { id, ref: { path: `games/${SLUG}/comments/${id}` }, data: () => data };
 }
@@ -110,6 +123,7 @@ beforeEach((): void => {
   auth.currentUser = { uid: USER_ID };
   answerCounts({});
   answerDocuments([]);
+  answerRecords([]);
 });
 
 describe('countOwnGameLikes', (): void => {
@@ -136,6 +150,46 @@ describe('fetchOwnGameDetails', (): void => {
     const details = await fetchOwnGameDetails(SLUG, SIGNAL, EMAIL);
 
     expect(details.isLikedByCurrentUser).toBe(true);
+  });
+
+  it('gives the best records with their places and difficulties', async (): Promise<void> => {
+    answerRecords([
+      { userId: 'u2', playerName: 'Mira', score: 2400, difficulty: 'hard', achievedAt: CREATED_AT },
+      {
+        userId: USER_ID,
+        playerName: 'Alex',
+        score: 900,
+        difficulty: 'easy',
+        achievedAt: CREATED_AT,
+      },
+    ]);
+
+    const details = await fetchOwnGameDetails(SLUG, SIGNAL);
+
+    expect(details.topRecords).toEqual([
+      {
+        position: 1,
+        playerName: 'Mira',
+        score: 2400,
+        detail: 'Hard',
+        achievedAt: '2026-10-28T10:00:00.000Z',
+      },
+      {
+        position: 2,
+        playerName: 'Alex',
+        score: 900,
+        detail: 'Easy',
+        achievedAt: '2026-10-28T10:00:00.000Z',
+      },
+    ]);
+  });
+
+  it('fails on a record without a score', async (): Promise<void> => {
+    answerRecords([{ playerName: 'Mira', difficulty: 'hard', achievedAt: CREATED_AT }]);
+
+    await expect(fetchOwnGameDetails(SLUG, SIGNAL)).rejects.toMatchObject({
+      kind: ApiErrorKind.InvalidResponse,
+    });
   });
 
   it('fails as not found for a game that is not one of MiniGames itself', async (): Promise<void> => {
@@ -272,5 +326,51 @@ describe('listOwnGameFavorites', (): void => {
 
   it('names none when the user has no favorite', async (): Promise<void> => {
     await expect(listOwnGameFavorites(EMAIL)).resolves.toEqual([]);
+  });
+});
+
+describe('listOwnGameRecords', (): void => {
+  it("gives the user's records in the own games, the best first", async (): Promise<void> => {
+    answerRecords([
+      {
+        userId: USER_ID,
+        playerName: 'Alex',
+        score: 600,
+        difficulty: 'easy',
+        achievedAt: CREATED_AT,
+      },
+      {
+        userId: USER_ID,
+        playerName: 'Alex',
+        score: 1500,
+        difficulty: 'hard',
+        achievedAt: CREATED_AT,
+      },
+    ]);
+
+    await expect(listOwnGameRecords(EMAIL)).resolves.toEqual([
+      {
+        gameSlug: SLUG,
+        gameName: "Alchemist's Cauldron",
+        playerName: 'Alex',
+        score: 1500,
+        detail: 'Hard',
+        achievedAt: '2026-10-28T10:00:00.000Z',
+      },
+      {
+        gameSlug: SLUG,
+        gameName: "Alchemist's Cauldron",
+        playerName: 'Alex',
+        score: 600,
+        detail: 'Easy',
+        achievedAt: '2026-10-28T10:00:00.000Z',
+      },
+    ]);
+  });
+
+  it('refuses a guest', async (): Promise<void> => {
+    auth.currentUser = undefined;
+
+    await expect(listOwnGameRecords(EMAIL)).rejects.toBeInstanceOf(ApiError);
   });
 });

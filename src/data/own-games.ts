@@ -5,6 +5,14 @@ import { FREE_PRICE } from './games.ts';
 // the app's own base ("/" or "/minigames/")
 const IMAGE_FOLDER = `${import.meta.env.BASE_URL}assets/images/games/`;
 
+// The difficulties of Alchemist's Cauldron, as its records name them, with
+// the names the records show
+export const RECORD_DETAILS: Readonly<Record<string, string>> = {
+  easy: 'Easy',
+  medium: 'Medium',
+  hard: 'Hard',
+};
+
 // The games made for MiniGames itself, shown before the API's games. Nobody
 // has rated them yet. Their likes are counted in Firestore: the number here
 // only shows until the count arrives, or when it cannot load.

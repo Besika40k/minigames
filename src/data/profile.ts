@@ -55,6 +55,10 @@ export const PROFILE_CONTENT: ProfileContent = {
   noFavoritesMessage: 'Add a game to your favorites from its details, and it shows up here.',
   libraryLinkText: 'Browse Library',
   recordsTitle: 'My Records',
+  recordsMessages: {
+    errorTitle: "Couldn't load your records",
+    successMessage: 'Your records are loaded',
+  },
   noRecordsTitle: 'No records yet',
   noRecordsMessage: "Play Alchemist's Cauldron to set your first record.",
   playText: "Play Alchemist's Cauldron",

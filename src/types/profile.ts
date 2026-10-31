@@ -22,6 +22,17 @@ export interface BioMessages extends ChangeMessages {
   readonly tooLong: string;
 }
 
+// A best score of the user in a game of MiniGames itself
+export interface UserRecord {
+  readonly gameSlug: string;
+  readonly gameName: string;
+  // What the score was reached on, such as a difficulty
+  readonly detail: string;
+  readonly score: number;
+  // An ISO date, such as "2026-10-31T14:30:00Z"
+  readonly achievedAt: string;
+}
+
 export interface ProfileContent {
   readonly title: string;
   // The page of a guest, with a way to log in
@@ -47,6 +58,7 @@ export interface ProfileContent {
   readonly noFavoritesMessage: string;
   readonly libraryLinkText: string;
   readonly recordsTitle: string;
+  readonly recordsMessages: LoadMessages;
   readonly noRecordsTitle: string;
   readonly noRecordsMessage: string;
   readonly playText: string;
