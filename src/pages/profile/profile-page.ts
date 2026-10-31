@@ -12,7 +12,7 @@ import {
   type ProfileFavorites,
 } from './profile-favorites/profile-favorites.ts';
 import './profile-page.scss';
-import { createProfileRecords } from './profile-records/profile-records.ts';
+import { createProfileRecords, type ProfileRecords } from './profile-records/profile-records.ts';
 
 const GUEST_TITLE_ID = 'profile-guest-title';
 
@@ -35,6 +35,7 @@ interface UserView {
   readonly email: string;
   readonly card: ProfileCard;
   readonly favorites: ProfileFavorites;
+  readonly records: ProfileRecords;
 }
 
 // The page a guest sees: what a profile holds, and a way to log in
@@ -79,14 +80,20 @@ export function renderProfilePage(location: AppLocation, options: ProfilePageOpt
   // Whether a game's details were open over the page at the last address
   let isGameOpen: boolean = location.query.has(DialogParameter.Game);
 
+  // Cancels the requests of the page drawn so far
+  const abortUser = (): void => {
+    user?.card.abort();
+    user?.favorites.abort();
+    user?.records.abort();
+  };
+
   const show = (session: AppSession | undefined): void => {
     const visitor: string = session?.email ?? '';
     if (visitor === shownVisitor) {
       return;
     }
     shownVisitor = visitor;
-    user?.card.abort();
-    user?.favorites.abort();
+    abortUser();
     if (session === undefined) {
       user = undefined;
       inner.replaceChildren(createGuestState(options.onLogin));
@@ -100,8 +107,9 @@ export function renderProfilePage(location: AppLocation, options: ProfilePageOpt
         onPhotoChange: options.onPhotoChange,
       }),
       favorites: createProfileFavorites(session.email, options.onGameOpen),
+      records: createProfileRecords(session.email),
     };
-    inner.replaceChildren(user.card.element, user.favorites.element, createProfileRecords());
+    inner.replaceChildren(user.card.element, user.favorites.element, user.records.element);
   };
 
   const unsubscribe: () => void = options.subscribe(show);
@@ -120,8 +128,7 @@ export function renderProfilePage(location: AppLocation, options: ProfilePageOpt
     },
     destroy: (): void => {
       unsubscribe();
-      user?.card.abort();
-      user?.favorites.abort();
+      abortUser();
     },
   };
 }

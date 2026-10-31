@@ -1,7 +1,7 @@
 import { OWN_GAMES } from '../data/own-games.ts';
 import type { Game, OwnGame } from '../types/game.ts';
 import type { GameDetails } from '../types/game-details.ts';
-import type { UserProfile } from '../types/profile.ts';
+import type { UserProfile, UserRecord } from '../types/profile.ts';
 import { loadOwnGameStore, type OwnGameStore } from './game-backend.ts';
 import { fetchAllGames, fetchGameDetails } from './games-api.ts';
 
@@ -70,4 +70,11 @@ export async function fetchFavoriteGames(
   ]);
 
   return [...ownGames, ...apiGames];
+}
+
+// The best scores of the user in the games of MiniGames itself
+export async function fetchUserRecords(userEmail: string): Promise<readonly UserRecord[]> {
+  const store: OwnGameStore = await loadOwnGameStore();
+
+  return store.listOwnGameRecords(userEmail);
 }
