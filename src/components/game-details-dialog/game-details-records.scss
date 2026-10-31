@@ -68,6 +68,14 @@ $record-height: 49px;
   white-space: nowrap;
 }
 
+// The difficulty of a record of a game of MiniGames itself
+.game-details__detail {
+  color: get-color(on-bg);
+  font-size: get-font-size(label-medium);
+  font-weight: get-font-weight(regular);
+  white-space: nowrap;
+}
+
 .game-details__score {
   white-space: nowrap;
 }
