@@ -7,8 +7,9 @@ import './game-details-records.scss';
 
 const TITLE_ID = 'game-details-records-title';
 
-// A player's place, name, score and how long ago it was reached. The medal is
-// decoration: the list is ordered, so the place is read out anyway.
+// A player's place, name, score and how long ago it was reached, with what it
+// was reached on when the game tells it. The medal is decoration: the list is
+// ordered, so the place is read out anyway.
 function createRecord(record: TopRecord): HTMLLIElement {
   const medal: string = GAME_DETAILS_CONTENT.medals[record.position - 1] ?? '';
   const date: HTMLTimeElement = createElement('time', {
@@ -26,6 +27,9 @@ function createRecord(record: TopRecord): HTMLLIElement {
         attributes: { 'aria-hidden': 'true' },
       }),
       createElement('span', { className: 'game-details__player', text: record.playerName }),
+      ...(record.detail === undefined
+        ? []
+        : [createElement('span', { className: 'game-details__detail', text: record.detail })]),
       createElement('span', {
         className: 'game-details__score',
         text: `${formatNumber(record.score)} ${GAME_DETAILS_CONTENT.pointsSuffix}`,
