@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
-import { fetchFavoriteGames, fetchUserProfile, saveUserProfile } from '../../api/profile-api.ts';
+import {
+  fetchFavoriteGames,
+  fetchUserProfile,
+  fetchUserRecords,
+  saveUserProfile,
+} from '../../api/profile-api.ts';
 import { showSnackbar } from '../../components/snackbar/snackbar.ts';
 import { BIO_MAX_LENGTH, PROFILE_CONTENT } from '../../data/profile.ts';
 import { SnackbarVariant } from '../../types/feedback.ts';
@@ -13,6 +18,7 @@ vi.mock('../../api/profile-api.ts', () => ({
   fetchUserProfile: vi.fn(),
   saveUserProfile: vi.fn(),
   fetchFavoriteGames: vi.fn(),
+  fetchUserRecords: vi.fn(),
 }));
 vi.mock('../../components/snackbar/snackbar.ts', () => ({ showSnackbar: vi.fn() }));
 vi.mock('../../utils/resize-image.ts', async (importOriginal) => ({
@@ -119,6 +125,7 @@ beforeEach((): void => {
   vi.mocked(fetchUserProfile).mockResolvedValue({ bio: 'I brew potions.' });
   vi.mocked(saveUserProfile).mockResolvedValue();
   vi.mocked(fetchFavoriteGames).mockResolvedValue([PALIA]);
+  vi.mocked(fetchUserRecords).mockResolvedValue([]);
   vi.mocked(resizeToSquare).mockResolvedValue(PHOTO);
 });
 
@@ -153,6 +160,33 @@ describe('profile page', (): void => {
     document.querySelector<HTMLButtonElement>('.profile-favorites__tile')?.click();
 
     expect(onGameOpen).toHaveBeenCalledExactlyOnceWith(PALIA);
+  });
+
+  it('shows the best scores of the user', async (): Promise<void> => {
+    vi.mocked(fetchUserRecords).mockResolvedValue([
+      {
+        gameSlug: 'alchemists-cauldron',
+        gameName: "Alchemist's Cauldron",
+        detail: 'Hard',
+        score: 2400,
+        achievedAt: '2026-10-30T10:00:00Z',
+      },
+    ]);
+    renderPage(SESSION);
+    await settle();
+
+    expect(fetchUserRecords).toHaveBeenCalledExactlyOnceWith(SESSION.email);
+    expect(getText('.profile-records__detail')).toBe('Hard');
+    expect(getText('.profile-records__score')).toBe('2,400 pts');
+  });
+
+  it('invites a user without records to play', async (): Promise<void> => {
+    renderPage(SESSION);
+    await settle();
+
+    expect(document.querySelector('.profile-records')?.textContent).toContain(
+      PROFILE_CONTENT.noRecordsTitle,
+    );
   });
 
   it('saves an edited bio and shows it', async (): Promise<void> => {

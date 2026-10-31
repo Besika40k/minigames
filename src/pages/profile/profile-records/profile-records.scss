@@ -1,7 +1,71 @@
 @use 'abstracts' as *;
 
+// The rows have the height of the records in the game details
+$row-height: 49px;
+
 .profile-records {
   display: flex;
   flex-direction: column;
   gap: get-size(3);
+}
+
+.profile-records__list {
+  display: flex;
+  flex-direction: column;
+  gap: get-size(1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// The game, its difficulty, then the score and the date on the right
+.profile-records__row {
+  display: flex;
+  align-items: center;
+  gap: get-size(2);
+  min-height: $row-height;
+  padding: 0 get-size(2);
+  border: $border-width solid get-color(on-primary);
+  border-radius: get-radius(small);
+  background-color: get-color(white);
+  color: get-color(on-primary);
+  font-size: get-font-size(label-large);
+  font-weight: get-font-weight(bold);
+
+  @include media-down(mobile) {
+    flex-wrap: wrap;
+    gap: get-size(0.5) get-size(1);
+    padding-block: get-size(1);
+  }
+}
+
+.profile-records__game {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  // a phone gives the name a line of its own
+  @include media-down(mobile) {
+    flex-basis: 100%;
+  }
+}
+
+.profile-records__detail,
+.profile-records__date {
+  color: get-color(on-bg);
+  font-size: get-font-size(label-medium);
+  font-weight: get-font-weight(regular);
+  white-space: nowrap;
+}
+
+.profile-records__score {
+  white-space: nowrap;
+}
+
+.profile-records__skeleton {
+  display: block;
+  height: $row-height;
+  border-radius: get-radius(small);
 }

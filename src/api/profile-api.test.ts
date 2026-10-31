@@ -2,15 +2,23 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Game } from '../types/game.ts';
 import type { GameDetails } from '../types/game-details.ts';
 import { fetchAllGames, fetchGameDetails } from './games-api.ts';
-import { listOwnGameFavorites } from './own-game-store.ts';
-import { fetchFavoriteGames, fetchUserProfile, saveUserProfile } from './profile-api.ts';
+import { listOwnGameFavorites, listOwnGameRecords } from './own-game-store.ts';
+import {
+  fetchFavoriteGames,
+  fetchUserProfile,
+  fetchUserRecords,
+  saveUserProfile,
+} from './profile-api.ts';
 import {
   fetchUserProfile as fetchStoredProfile,
   saveUserProfile as saveStoredProfile,
 } from './profile-store.ts';
 
 vi.mock('./games-api.ts', () => ({ fetchAllGames: vi.fn(), fetchGameDetails: vi.fn() }));
-vi.mock('./own-game-store.ts', () => ({ listOwnGameFavorites: vi.fn() }));
+vi.mock('./own-game-store.ts', () => ({
+  listOwnGameFavorites: vi.fn(),
+  listOwnGameRecords: vi.fn(),
+}));
 vi.mock('./profile-store.ts', () => ({ fetchUserProfile: vi.fn(), saveUserProfile: vi.fn() }));
 
 const EMAIL = 'alex@minigames.com';
@@ -72,5 +80,14 @@ describe('the profile of the user', (): void => {
     await saveUserProfile(EMAIL, { bio: 'Hello' });
 
     expect(saveStoredProfile).toHaveBeenCalledExactlyOnceWith(EMAIL, { bio: 'Hello' });
+  });
+});
+
+describe('fetchUserRecords', (): void => {
+  it('asks the store of the own games for the records of the user', async (): Promise<void> => {
+    vi.mocked(listOwnGameRecords).mockResolvedValue([]);
+
+    await expect(fetchUserRecords(EMAIL)).resolves.toEqual([]);
+    expect(listOwnGameRecords).toHaveBeenCalledExactlyOnceWith(EMAIL);
   });
 });
