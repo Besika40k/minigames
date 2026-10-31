@@ -14,6 +14,9 @@ export interface TopRecord {
   readonly score: number;
   // An ISO date, such as "2026-08-28T14:30:00Z"
   readonly achievedAt: string;
+  // What the score was reached on, such as the difficulty of a game of
+  // MiniGames itself; the API's records have none
+  readonly detail?: string;
 }
 
 // A comment on a game, with the field names of the API

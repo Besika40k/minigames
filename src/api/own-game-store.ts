@@ -12,6 +12,7 @@ import {
   serverTimestamp,
   setDoc,
   Timestamp,
+  where,
   type CollectionReference,
   type DocumentReference,
   type DocumentSnapshot,
@@ -19,7 +20,7 @@ import {
   type QueryDocumentSnapshot,
 } from 'firebase/firestore/lite';
 import { FIRESTORE_ERROR_MESSAGES } from '../data/firestore.ts';
-import { OWN_GAMES } from '../data/own-games.ts';
+import { OWN_GAMES, RECORD_DETAILS } from '../data/own-games.ts';
 import type { OwnGame } from '../types/game.ts';
 import type {
   CommentLikeState,
@@ -28,32 +29,41 @@ import type {
   GameCommentsPage,
   GameDetails,
   NewComment,
+  TopRecord,
 } from '../types/game-details.ts';
+import type { UserRecord } from '../types/profile.ts';
 import { ApiError, ApiErrorKind } from './api-error.ts';
 import { getDatabase, getUserId, requireUserId, run } from './firestore.ts';
-import { isRecord, isString } from './guards.ts';
+import { isNumber, isRecord, isString } from './guards.ts';
 import { findOwnGame, getOwnGameDetails } from './own-games.ts';
 
-// The only module that talks to Firestore. It keeps the favorites, comments
-// and comment likes of the games of MiniGames itself, in the shapes of the
-// course API, so the dialog shows them the same way. The data, with the rules
-// that guard it (firestore.rules):
+// The data of the games of MiniGames itself in Firestore: favorites,
+// comments, comment likes and records, in the shapes of the course API, so the
+// dialog shows them the same way. The data, with the rules that guard it
+// (firestore.rules):
 //
 //   games/{slug}/favorites/{userId}                       { createdAt }
 //   games/{slug}/comments/{commentId}                     { authorId, authorName, text, createdAt }
 //   games/{slug}/comments/{commentId}/likes/{userId}      { createdAt }
+//   games/{slug}/records/{userId}_{difficulty}            { userId, playerName, score, difficulty, achievedAt }
 //
 // A favorite or a like is a document named by the user's id, so a user has at
 // most one, and the numbers are counts of these documents, never a counter
-// that a page could set to anything.
+// that a page could set to anything. The game writes the records itself:
+// Alchemist's Cauldron keeps the best score of a signed-in player on each
+// difficulty, and this module only reads them.
 
 const GAMES = 'games';
 const FAVORITES = 'favorites';
 const COMMENTS = 'comments';
 const LIKES = 'likes';
+const RECORDS = 'records';
 
 // The dialog shows the three newest comments of a game, as for the API's games
 const LATEST_COMMENTS = 3;
+
+// and its three best records, as many as the API gives
+const TOP_RECORDS = 3;
 
 function findGame(slug: string): OwnGame {
   const game: OwnGame | undefined = findOwnGame(slug);
@@ -70,6 +80,50 @@ function getFavorites(slug: string): CollectionReference {
 
 function getComments(slug: string): CollectionReference {
   return collection(getDatabase(), GAMES, slug, COMMENTS);
+}
+
+function getRecords(slug: string): CollectionReference {
+  return collection(getDatabase(), GAMES, slug, RECORDS);
+}
+
+// A record as the dialog and the profile show it
+interface StoredRecord {
+  readonly playerName: string;
+  readonly score: number;
+  readonly detail: string;
+  readonly achievedAt: string;
+}
+
+// A document without the fields of a record is invalid data
+function toStoredRecord(snapshot: QueryDocumentSnapshot): StoredRecord {
+  const data: unknown = snapshot.data();
+  const { playerName, score, difficulty, achievedAt } = isRecord(data) ? data : {};
+  if (
+    !isString(playerName) ||
+    !isNumber(score) ||
+    !isString(difficulty) ||
+    !(achievedAt instanceof Timestamp)
+  ) {
+    throw new ApiError(ApiErrorKind.InvalidResponse, FIRESTORE_ERROR_MESSAGES.invalidData);
+  }
+
+  return {
+    playerName,
+    score,
+    detail: RECORD_DETAILS[difficulty] ?? difficulty,
+    achievedAt: achievedAt.toDate().toISOString(),
+  };
+}
+
+// The best scores of a game, the highest first
+async function fetchTopRecords(slug: string): Promise<readonly TopRecord[]> {
+  const best: Query = query(getRecords(slug), orderBy('score', 'desc'), limit(TOP_RECORDS));
+  const snapshot = await getDocs(best);
+
+  return snapshot.docs.map((record: QueryDocumentSnapshot, index: number): TopRecord => ({
+    position: index + 1,
+    ...toStoredRecord(record),
+  }));
 }
 
 async function countDocuments(reference: CollectionReference): Promise<number> {
@@ -121,12 +175,18 @@ export async function fetchOwnGameDetails(
     const userId: string | undefined = await getUserId(userEmail);
     signal.throwIfAborted();
     const favorites: CollectionReference = getFavorites(slug);
-    const [likesCount, isFavorite] = await Promise.all([
+    const [likesCount, isFavorite, topRecords] = await Promise.all([
       countDocuments(favorites),
       hasDocument(favorites, userId),
+      fetchTopRecords(slug),
     ]);
 
-    return { ...getOwnGameDetails(game), likesCount, isLikedByCurrentUser: isFavorite };
+    return {
+      ...getOwnGameDetails(game),
+      likesCount,
+      isLikedByCurrentUser: isFavorite,
+      topRecords,
+    };
   });
 }
 
@@ -238,5 +298,34 @@ export async function listOwnGameFavorites(userEmail: string): Promise<readonly 
     return OWN_GAMES.filter(
       (_game: OwnGame, index: number): boolean => favoriteFlags[index] === true,
     ).map((game: OwnGame): string => game.slug);
+  });
+}
+
+// The records of the user in one game, one for each difficulty they played
+async function fetchUserRecords(game: OwnGame, userId: string): Promise<readonly UserRecord[]> {
+  const own: Query = query(getRecords(game.slug), where('userId', '==', userId));
+  const snapshot = await getDocs(own);
+
+  return snapshot.docs.map((record: QueryDocumentSnapshot): UserRecord => ({
+    gameSlug: game.slug,
+    gameName: game.name,
+    ...toStoredRecord(record),
+  }));
+}
+
+// The best scores of the user in the games of MiniGames itself, the highest
+// first
+export async function listOwnGameRecords(userEmail: string): Promise<readonly UserRecord[]> {
+  return run(async (): Promise<readonly UserRecord[]> => {
+    const userId: string = await requireUserId(userEmail);
+    const records: readonly (readonly UserRecord[])[] = await Promise.all(
+      OWN_GAMES.map((game: OwnGame): Promise<readonly UserRecord[]> =>
+        fetchUserRecords(game, userId),
+      ),
+    );
+
+    return records
+      .flat()
+      .toSorted((first: UserRecord, second: UserRecord): number => second.score - first.score);
   });
 }

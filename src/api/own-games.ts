@@ -7,8 +7,8 @@ export function findOwnGame(slug: string): OwnGame | undefined {
   return OWN_GAMES.find((game: OwnGame): boolean => game.slug === slug);
 }
 
-// The details of a game of MiniGames itself, in the shape of the API's. It has
-// no records yet, and nobody can have it among their favorites.
+// The details of a game of MiniGames itself, in the shape of the API's, before
+// Firestore adds its likes, the user's favorite and its records
 export function getOwnGameDetails(game: OwnGame): GameDetails {
   return {
     slug: game.slug,
