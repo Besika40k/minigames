@@ -59,23 +59,25 @@ Signing in needs the web app config of a Firebase project: copy `.env.example` t
 src/
 ├── main.ts            # entry point
 ├── app/               # app bootstrap, the History API router and the URL helpers
-├── api/               # the REST API client: requests, answer checks and errors
+├── api/               # the REST API client, the Firestore stores, and the backend each game uses
 ├── auth/              # Firebase, sign-in and sign-out, the form rules and the app session
-├── components/        # UI reused across pages (button, logo, header, burger menu, footer, section title, auth dialog, game details dialog, skeleton, snackbar, and the loading, error and empty states)
+├── components/        # UI reused across pages (button, logo, header, burger menu, footer, section title, profile avatar, auth dialog, game details dialog, skeleton, snackbar, and the loading, error and empty states)
 ├── pages/             # one folder per page, each section in its own subfolder
 │   ├── home/          # hero, games slider, leaderboard, game developers section
-│   ├── library/       # title with filters and sorting, game cards, pagination, the Library's URL state
+│   ├── library/       # title with filters and sorting, MiniGames Originals, game cards, pagination, the Library's URL state
+│   ├── profile/       # profile card with the picture and the bio, favorite games, records
 │   └── not-found/     # the 404 page for an unknown address
 ├── data/              # static content (navigation links, footer content, the texts and messages of every section)
 ├── types/             # shared interfaces and enums
-├── utils/             # DOM, navigation, dialog, timer and formatting helpers
+├── utils/             # DOM, navigation, dialog, timer, picture and formatting helpers
 ├── assets/            # fonts, icons, images
 └── styles/
     ├── main.scss      # global styles entry point
     ├── abstracts/     # tokens, functions, mixins (no CSS output)
     └── base/          # global element styles and typography
 public/
-└── assets/images/games/  # the course's game pictures, at the paths the API names them by
+└── assets/images/games/  # the course's game pictures, at the paths the API names them by, and those of Alchemist's Cauldron
+firestore.rules        # the published rules of the Firestore database
 ```
 
 Each component and page section keeps its TypeScript and SCSS files together in one folder, and a module's unit tests sit next to it as `*.test.ts`.
@@ -88,12 +90,12 @@ The app is a single-page application: `index.html` has an empty `body` and one s
 
 The router (`src/app/router.ts`) is a small class over the History API, written without a library. Every page has a real path, and the query holds the rest of the state:
 
-| State                           | In the URL                                       | Example                                            |
-| ------------------------------- | ------------------------------------------------ | -------------------------------------------------- |
-| Page                            | `/` or `/home`, `/library`; other paths are 404s | `/library`                                         |
-| Library category, sort and page | `category`, `sort`, `page`                       | `/library?category=puzzle&sort=rating-desc&page=2` |
-| Game Details                    | `game=<slug>`, over any page                     | `/library?category=arcade&page=2&game=palia`       |
-| Auth dialog (guests only)       | `auth=login` or `auth=register`, over any page   | `/?auth=login`                                     |
+| State                           | In the URL                                                   | Example                                            |
+| ------------------------------- | ------------------------------------------------------------ | -------------------------------------------------- |
+| Page                            | `/` or `/home`, `/library`, `/profile`; other paths are 404s | `/library`                                         |
+| Library category, sort and page | `category`, `sort`, `page`                                   | `/library?category=puzzle&sort=rating-desc&page=2` |
+| Game Details                    | `game=<slug>`, over any page                                 | `/library?category=arcade&page=2&game=palia`       |
+| Auth dialog (guests only)       | `auth=login` or `auth=register`, over any page               | `/?auth=login`                                     |
 
 The URL is the single source of truth. A click on a chip, a sort option, a page button, a Details button or Log In only asks the router for a new URL (`router.navigate`). The router then passes the new location to the page and to the dialogs, which draw themselves and send their requests from it. A click, Back and Forward and a deep link all take this one way, so the same URL always shows the same screen.
 
@@ -235,4 +237,4 @@ Every push to `creative-extension` runs `.github/workflows/deploy.yml`, which bu
 
 The build reads the Firebase config from the repository variables (Settings, Secrets and variables, Actions, Variables) with the names of `.env.example`. The Firebase project lists `besika40k.github.io` among its authorized domains, so sign-in works on the deployed site.
 
-GitHub Pages serves only the files it has, so a deep link such as `/minigames/library?category=puzzle` would get its 404 page. The workflow copies `dist/index.html` to `dist/home.html` and `dist/library.html`, which Pages serves for `/home` and `/library` with status 200, and to `dist/404.html`, which it serves for every other path with status 404. Each copy starts the app, and the router shows the page of the path, or the app's own 404 page.
+GitHub Pages serves only the files it has, so a deep link such as `/minigames/library?category=puzzle` would get its 404 page. The workflow copies `dist/index.html` to `dist/home.html`, `dist/library.html` and `dist/profile.html`, which Pages serves for `/home`, `/library` and `/profile` with status 200, and to `dist/404.html`, which it serves for every other path with status 404. Each copy starts the app, and the router shows the page of the path, or the app's own 404 page.
