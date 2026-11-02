@@ -210,6 +210,48 @@ The favorite, the comment form and the likes work for a signed-in user only; a g
 - A commenter's avatar shows the first letter of the name and one of the `avatar-random` colors, picked at random and kept for that commenter while the dialog exists.
 - Every opening empties the comment form and scrolls the dialog to the top; a comment interrupted by a sign-in comes back in its game.
 
+## The Creative Extension
+
+The final task of the course connects MiniGames with Alchemist's Cauldron, the potion brewing game I wrote in the previous task ([repository](https://github.com/Besika40k/alchemists-cauldron), [play it](https://besika40k.github.io/alchemists-cauldron/)). The course API knows only its own games, so everything MiniGames keeps about Alchemist's Cauldron lives in a database of its own: Cloud Firestore, in the Firebase project MiniGames already signs in with.
+
+```text
+MiniGames  (/minigames/)                 Alchemist's Cauldron  (/alchemists-cauldron/)
+  │  reads the course's games                │  writes the best score
+  │  from the course REST API                │  of a signed-in player
+  │                                          │
+  └──────────────┐            ┌──────────────┘
+                 ▼            ▼
+        Firebase project (one config, one sign-in on besika40k.github.io)
+          ├── Authentication: accounts, Google sign-in
+          └── Firestore: likes, comments, favorites, profiles, records
+```
+
+### Alchemist's Cauldron in MiniGames
+
+The game is a "MiniGames Original" (`src/data/own-games.ts`): its card stands first in the Home slider and in a section of its own above the first page of the Library, for "All" and for its category, Puzzle. Its details open in the same dialog as the course's games, and Play Now opens the game.
+
+Every game has a backend (`getGameBackend` in `src/api/game-backend.ts`): the course's games use the REST API, and the games of MiniGames itself use the Firestore store (`src/api/own-game-store.ts`), which answers in the API's shapes, so the dialog, the favorite, the comments and the likes work as they do for any other game. Firestore Lite loads only when such a game needs it, in a chunk of its own, so a visit that never touches Alchemist's Cauldron does not download it.
+
+### The data and its rules
+
+| Document                                           | Fields                                                      |
+| -------------------------------------------------- | ----------------------------------------------------------- |
+| `games/{slug}/favorites/{userId}`                  | `createdAt`                                                 |
+| `games/{slug}/comments/{commentId}`                | `authorId`, `authorName`, `text`, `createdAt`               |
+| `games/{slug}/comments/{commentId}/likes/{userId}` | `createdAt`                                                 |
+| `games/{slug}/records/{userId}_{difficulty}`       | `userId`, `playerName`, `score`, `difficulty`, `achievedAt` |
+| `users/{userId}`                                   | `bio`, `photo`, `updatedAt`                                 |
+
+A favorite or a like is a document named by the user's id, so a user has at most one, and the numbers of likes are counts of these documents (`getCount`), never a counter a page could set. The rules (`firestore.rules`, published in the Firebase console) let everyone read the data of the games and let a signed-in user write only in their own name: their own favorite or like, a comment with their id, a record with their id that they may only raise, and every document with the server's time. A profile belongs to its user alone. A Firestore failure becomes the same `ApiError` as a failure of the API (`src/api/firestore.ts`), so the dialog shows it the same way.
+
+### Records from the game
+
+Both sites are served from `besika40k.github.io`, and the game starts Firebase with the same config and app name as MiniGames. Firebase keeps its sign-in in the site's IndexedDB, so a player who logged in on MiniGames is signed in in the game too, with no sign-in screen of its own.
+
+When a game ends with a score above 0, Alchemist's Cauldron writes it as the player's best on that difficulty (`games/alchemists-cauldron/records/{userId}_{difficulty}`), unless their best is already as high, and its Game Over dialog says what happened. A guest sees a link to log in on MiniGames. MiniGames reads the records back: the three best show under Top Records in the details of the game, with the difficulty next to the name, and a user's own on their profile.
+
+The record is named by the user's id and the difficulty, so the rules can check whose it is from its name, a player who plays a lot cannot fill the top three, and the top three need only a single `orderBy('score')`, without an extra index. The rules check the shape of a score (a whole number from 1 to 1,000,000, raised only by its owner) but cannot tell that it was really played: the game runs in the browser, and only a server that ran the game could be sure.
+
 ## Tests
 
 The unit tests run on Vitest in happy-dom, a browser-like DOM (`vitest.config.ts`): `npm test` runs them once, and `npm run test:coverage` runs them with v8 coverage and prints the table (an HTML report goes to `coverage/`). The coverage includes every file in `src/` except the tests themselves, the bootstrap `src/main.ts` and type declarations, and the run fails when the statements fall below 80%.
