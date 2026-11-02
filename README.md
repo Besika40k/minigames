@@ -6,12 +6,14 @@ The games, the categories, the leaderboard and the comments come from the course
 
 Visitors can register and sign in with an email and a password or with Google (Firebase Authentication). A signed-in user can add games to the favorites, write comments and like them; a guest can browse everything and is asked to log in for those actions. The sign-in lasts five minutes.
 
+The Creative Extension connects MiniGames with my own game, [Alchemist's Cauldron](https://besika40k.github.io/alchemists-cauldron/), which MiniGames now lists as a "MiniGames Original". Its likes, comments and favorites live in Cloud Firestore, and the game sends the best score of a signed-in player there, so the records show in its details and on the player's profile. The Profile page shows a signed-in user's picture, bio, favorite games and records. See [The Creative Extension](#the-creative-extension).
+
 The layout is responsive and follows the Figma design at three breakpoints: 375px, 768px and 1920px.
 
 ## Tech stack
 
 - TypeScript (strict mode), no frameworks
-- Firebase Authentication (the modular SDK), the only runtime dependency
+- Firebase Authentication and Cloud Firestore Lite (the modular SDK), the only runtime dependency
 - Vite
 - Sass (SCSS)
 - Vitest with happy-dom and v8 coverage for the unit tests
@@ -29,7 +31,7 @@ npm install
 npm run dev
 ```
 
-Signing in needs the web app config of a Firebase project: copy `.env.example` to `.env.local` (git ignores it) and fill in the values from the Firebase console (Project settings, Your apps). The project needs the Email/Password and Google sign-in methods, and the address the app runs on among its authorized domains (`localhost` is there by default). Everything else, the tests included, works without it.
+Signing in needs the web app config of a Firebase project: copy `.env.example` to `.env.local` (git ignores it) and fill in the values from the Firebase console (Project settings, Your apps). The project needs the Email/Password and Google sign-in methods, and the address the app runs on among its authorized domains (`localhost` is there by default). The data of Alchemist's Cauldron and the profiles also needs a Firestore database in that project, with the rules of `firestore.rules` published in the console (Firestore Database, Rules). Everything else, the tests included, works without it.
 
 ## Scripts
 
