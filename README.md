@@ -174,7 +174,7 @@ A successful sign-in starts the app session (`src/auth/session.ts`, `src/auth/se
 
 - The stored session is read and checked at startup, when the tab becomes visible again, before every page or dialog change, before every protected action, and when another tab changes it (the `storage` event). A timer also ends it at its exact expiry while the page is open.
 - An expired session removes only its key, signs out of Firebase, turns the UI to guest mode and shows one warning snackbar. Data that is not a valid session (not JSON, missing or wrong fields, a sign-in time in the future) is removed the same way, without a message.
-- The header and the mobile menu show the signed-in user (the Google photo, or the initials of the name) and a Log Out button. Logging out removes only the session key and signs out of Firebase; if that sign-out fails, the app still stays in guest mode and says so.
+- The header and the mobile menu show the signed-in user (the profile picture or the Google photo, or the initials of the name) as a link to the [Profile page](#profile-page), and a Log Out button. Logging out removes only the session key and signs out of Firebase; if that sign-out fails, the app still stays in guest mode and says so.
 - The auth dialog is for guests only. For a signed-in user, `?auth=...` is removed from the URL in place (the path, the other parameters and the hash stay) with one snackbar, whether it comes from a button, a link, a typed address or Back and Forward.
 - A protected action (a favorite, a comment or a like) checks the session first. A guest, or a user whose session has just expired, gets the auth dialog in place of Game Details, whose game stays in the URL (`?game=palia&auth=login`): closing the dialog or signing in brings Game Details back, for a guest or for the signed-in user. The action is never repeated by itself.
 
@@ -252,12 +252,20 @@ When a game ends with a score above 0, Alchemist's Cauldron writes it as the pla
 
 The record is named by the user's id and the difficulty, so the rules can check whose it is from its name, a player who plays a lot cannot fill the top three, and the top three need only a single `orderBy('score')`, without an extra index. The rules check the shape of a score (a whole number from 1 to 1,000,000, raised only by its owner) but cannot tell that it was really played: the game runs in the browser, and only a server that ran the game could be sure.
 
+### Profile page
+
+The name of a signed-in user in the header and in the mobile menu leads to `/profile` (`src/pages/profile`). A guest sees what a profile holds and a Log In button there, and the page draws itself again whenever someone signs in or out. Its three sections load on their own, each with a skeleton, an error banner with Retry and an empty state:
+
+- The profile card: the picture, the name and email of the session, and the bio. The picture and the bio come from `users/{userId}` (`src/api/profile-store.ts`). A chosen picture (JPEG, PNG, WebP or GIF, under 10 MB) is cut to a 128px square in the browser (`src/utils/resize-image.ts`) and kept in the profile as a WebP or JPEG `data:` address, small enough for a Firestore document, so the project needs no file storage. The header shows it in place of the account photo. The bio has at most 300 characters and is edited in a form in its place. A change shows only what the database confirms.
+- Favorite Games: the games of MiniGames itself from Firestore, then the course's games. The API has no list of a user's favorites, so the details of every game are asked for at the same time and the favorites are the ones it marks. A game opens in the details dialog over the page, and the list loads again when the dialog closes.
+- My Records: the best scores of the user in Alchemist's Cauldron, the highest first, with the difficulty and how long ago, or an invitation to play the game when there are none.
+
 ## Tests
 
 The unit tests run on Vitest in happy-dom, a browser-like DOM (`vitest.config.ts`): `npm test` runs them once, and `npm run test:coverage` runs them with v8 coverage and prints the table (an HTML report goes to `coverage/`). The coverage includes every file in `src/` except the tests themselves, the bootstrap `src/main.ts` and type declarations, and the run fails when the statements fall below 80%.
 
 - The tests check behavior: the form rules, the session (fake timers for the expiry), the URL decisions and the router, the API requests and how answers and failures are read, and the components through real clicks, keys and input events, down to the whole app started in happy-dom.
-- The tests mock only the boundaries: `fetch` returns prepared answers, Firebase is replaced by a fake module, and snackbars are spied on where a test asks what was said. No test needs a Firebase project or the network.
+- The tests mock only the boundaries: `fetch` returns prepared answers, Firebase and Firestore are replaced by fake modules (the Firestore fake answers each query by its path), and snackbars are spied on where a test asks what was said. No test needs a Firebase project or the network.
 - Every change sent to the API is tested for success, a refusal and an unknown outcome, and for being sent only once.
 
 ## Styling
